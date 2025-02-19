@@ -1,9 +1,8 @@
-package valid
+package ensure
 
 import (
 	"errors"
 	"fmt"
-	"reflect"
 )
 
 // define the max length for string contents in an error message
@@ -15,7 +14,7 @@ func shortenString(s string, maxLen int) string {
 		maxLen = 5
 	}
 
-	if len(s) < maxLen {
+	if len(s) <= maxLen {
 		return s
 	}
 
@@ -24,7 +23,6 @@ func shortenString(s string, maxLen int) string {
 	half := (maxLen - len(ellipsis)) / 2
 
 	return s[:half] + ellipsis + s[len(s)-half:]
-
 }
 
 type StringValidator struct {
@@ -38,10 +36,6 @@ func String() *StringValidator {
 
 func (v *StringValidator) Type() string {
 	return "string"
-}
-
-func (v *StringValidator) Kind() reflect.Kind {
-	return reflect.String
 }
 
 func (v *StringValidator) Validate(i interface{}) error {
@@ -61,11 +55,7 @@ func (v *StringValidator) Validate(i interface{}) error {
 	return nil
 }
 
-func (v *StringValidator) OneOf(vals ...string) *StringValidator {
-	return v
-}
-
-func (v *StringValidator) LongerThan(l int) *StringValidator {
+func (v *StringValidator) IsLongerThan(l int) *StringValidator {
 
 	v.tests = append(v.tests, func(str string) error {
 		if len(str) <= l {
@@ -83,7 +73,7 @@ func (v *StringValidator) LongerThan(l int) *StringValidator {
 	return v
 }
 
-func (v *StringValidator) ShorterThan(l int) *StringValidator {
+func (v *StringValidator) IsShorterThan(l int) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if len(str) >= l {
 			return errors.New(

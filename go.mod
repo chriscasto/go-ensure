@@ -1,4 +1,4 @@
-module github.com/chriscasto/go-valid
+module github.com/chriscasto/go-ensure
 
 go 1.23.6
 

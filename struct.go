@@ -1,4 +1,4 @@
-package valid
+package ensure
 
 import (
 	"fmt"
@@ -25,13 +25,23 @@ func Struct[T any](fv map[string]Validator) *StructValidator[T] {
 	for name, v := range fv {
 		field := ref.FieldByName(name)
 
+		if !field.IsValid() {
+			panic(
+				fmt.Sprintf(
+					"field %s does not exist in struct %s",
+					name,
+					ref.Type().String(),
+				),
+			)
+		}
+
 		if field.Type().String() != v.Type() {
 			panic(
 				fmt.Sprintf(
 					"field %s is type %s but validator expects %s",
 					name,
-					field.Kind(),
-					v.Kind(),
+					field.Type().String(),
+					v.Type(),
 				),
 			)
 		}
@@ -44,13 +54,23 @@ func Struct[T any](fv map[string]Validator) *StructValidator[T] {
 	}
 }
 
-func (v *StructValidator[T]) Validate(s T) error {
+func (v *StructValidator[T]) Type() string {
+	return v.refVal.Type().String()
+}
+
+func (v *StructValidator[T]) Validate(s interface{}) error {
 	sRef := reflect.ValueOf(s)
 	sRefType := sRef.Type()
 
 	if !sRef.IsValid() || sRefType != v.refVal.Type() {
 		return fmt.Errorf("invalid struct; expected %s, got %s", v.refVal.Type().String(), sRefType.String())
 	}
+
+	return v.ValidateStruct(s.(T))
+}
+
+func (v *StructValidator[T]) ValidateStruct(s T) error {
+	sRef := reflect.ValueOf(s)
 
 	for field, val := range v.validators {
 		fieldVal := sRef.FieldByName(field)

@@ -1,4 +1,4 @@
-package valid
+package ensure
 
 import (
 	"errors"
@@ -15,7 +15,6 @@ type NumberType interface {
 type NumberValidator[T NumberType] struct {
 	//zeroVal T
 	typeStr     string
-	kind        reflect.Kind
 	tests       []func(T) error
 	placeholder string
 }
@@ -24,19 +23,15 @@ func (v *NumberValidator[T]) Type() string {
 	return v.typeStr
 }
 
-func (v *NumberValidator[T]) Kind() reflect.Kind {
-	return v.kind
-}
-
 func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 	var zero T
 
 	kind := reflect.TypeOf(zero).Kind()
 
-	// int placeholder value
+	// Int placeholder value
 	ph := "%d"
 
-	// if it's actually a float, use that placeholder instead
+	// if it's actually a Float, use that placeholder instead
 	if string(kind.String()[0]) == "f" {
 		ph = "%g"
 	}
@@ -44,7 +39,6 @@ func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 	return &NumberValidator[T]{
 		//typeStr: reflect.TypeOf(zero).String(),
 		typeStr:     reflect.TypeOf(zero).String(),
-		kind:        kind,
 		placeholder: ph,
 	}
 }
@@ -76,7 +70,7 @@ func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
 	return v
 }
 
-func (v *NumberValidator[T]) LessThan(max T) *NumberValidator[T] {
+func (v *NumberValidator[T]) IsLessThan(max T) *NumberValidator[T] {
 	v.tests = append(v.tests, func(i T) error {
 		if i >= max {
 			return errors.New(
@@ -91,7 +85,7 @@ func (v *NumberValidator[T]) LessThan(max T) *NumberValidator[T] {
 	return v
 }
 
-func (v *NumberValidator[T]) GreaterThan(min T) *NumberValidator[T] {
+func (v *NumberValidator[T]) IsGreaterThan(min T) *NumberValidator[T] {
 	v.tests = append(v.tests, func(i T) error {
 		if i <= min {
 			return errors.New(
@@ -107,12 +101,12 @@ func (v *NumberValidator[T]) GreaterThan(min T) *NumberValidator[T] {
 }
 
 func (v *NumberValidator[T]) Validate(i interface{}) error {
-	valKind := reflect.TypeOf(i).Kind()
-	if valKind != v.kind {
+	valType := reflect.TypeOf(i).String()
+	if valType != v.typeStr {
 		return fmt.Errorf(
 			`number validator expects type "%s"; got "%s"`,
-			v.kind.String(),
-			valKind.String(),
+			v.typeStr,
+			valType,
 		)
 	}
 

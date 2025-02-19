@@ -1,4 +1,4 @@
-package valid
+package ensure
 
 import (
 	"errors"
@@ -7,25 +7,16 @@ import (
 )
 
 type ArrayValidator[T any] struct {
-	kind    reflect.Kind
 	typeStr string
 	tests   []func([]T) error
 }
 
-//func (v *ArrayValidator) Valid(arr []interface{}) bool {}
-
 func Array[T any]() *ArrayValidator[T] {
 	var zero T
 
-	//kind := reflect.TypeOf(zero).Kind()
-
-	//fmt.Println(reflect.TypeOf(zero).String())
 	typeStr := fmt.Sprintf("[]%s", reflect.TypeOf(zero).String())
-	//fmt.Println(typeStr)
 
-	//fmt.Println(kind.String())
 	return &ArrayValidator[T]{
-		kind:    reflect.Slice,
 		typeStr: typeStr,
 	}
 }
@@ -34,11 +25,7 @@ func (v *ArrayValidator[T]) Type() string {
 	return v.typeStr
 }
 
-func (v *ArrayValidator[T]) Kind() reflect.Kind {
-	return v.kind
-}
-
-func (v *ArrayValidator[T]) NotEmpty() *ArrayValidator[T] {
+func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
 	v.tests = append(v.tests, func(arr []T) error {
 		if len(arr) == 0 {
 			return errors.New(
@@ -52,7 +39,7 @@ func (v *ArrayValidator[T]) NotEmpty() *ArrayValidator[T] {
 	return v
 }
 
-func (v *ArrayValidator[T]) Count(l int) *ArrayValidator[T] {
+func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
 	v.tests = append(v.tests, func(arr []T) error {
 		if len(arr) != l {
 			return errors.New(
@@ -69,7 +56,7 @@ func (v *ArrayValidator[T]) Count(l int) *ArrayValidator[T] {
 	return v
 }
 
-func (v *ArrayValidator[T]) MoreThan(l int) *ArrayValidator[T] {
+func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
 	v.tests = append(v.tests, func(arr []T) error {
 		if len(arr) <= l {
 			return errors.New(
@@ -86,7 +73,7 @@ func (v *ArrayValidator[T]) MoreThan(l int) *ArrayValidator[T] {
 	return v
 }
 
-func (v *ArrayValidator[T]) FewerThan(l int) *ArrayValidator[T] {
+func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 	v.tests = append(v.tests, func(arr []T) error {
 		if len(arr) >= l {
 			return errors.New(

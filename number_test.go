@@ -1,99 +1,116 @@
-package valid
+package ensure_test
 
-import "testing"
+import (
+	"fmt"
+	ensure "github.com/chriscasto/go-ensure"
+	"testing"
+)
+
+type numTestCase[T ensure.NumberType] struct {
+	value    T
+	willPass bool
+}
+
+type numTestCases[T ensure.NumberType] map[string]numTestCase[T]
+
+func (tcs numTestCases[T]) run(t *testing.T, sv *ensure.NumberValidator[T], method string) {
+	for name, tc := range tcs {
+		t.Run(name, func(t *testing.T) {
+			err := sv.Validate(tc.value)
+			if err != nil && tc.willPass {
+				t.Errorf(`Number().%s.Validate(%v); expected no error, got "%s"`, method, tc.value, err)
+			} else if err == nil && !tc.willPass {
+				t.Errorf(`Number().%s.Validate(%v); expected error but got none`, method, tc.value)
+			}
+		})
+	}
+}
+
+func numTestType[T ensure.NumberType](t *testing.T, name string, expect string) {
+	t.Run(name, func(t *testing.T) {
+		av := ensure.Number[T]()
+		vType := av.Type()
+		if vType != expect {
+			t.Errorf("Number.Type() = %s; want %s", vType, expect)
+		}
+	})
+}
+
+func TestNumberValidator_Type(t *testing.T) {
+	numTestType[int](t, "int", "int")
+	numTestType[int8](t, "8-bit int", "int8")
+	numTestType[int64](t, "64-bit int", "int64")
+	numTestType[uint](t, "unsigned int", "uint")
+	numTestType[float64](t, "64-bit float", "float64")
+}
 
 func TestNumberValidator_InRange(t *testing.T) {
 	rangeMin := 1
 	rangeMax := 10
 
 	// Check to make sure the method panics if max < min
-	t.Run("panic", func(t *testing.T) {
+	t.Run("panic if max < min", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r == nil {
 				t.Errorf("The code did not panic")
 			}
 		}()
 
-		bad := Number[int]().InRange(rangeMax, rangeMin)
+		bad := ensure.Number[int]().InRange(rangeMax, rangeMin)
 		if err := bad.Validate(rangeMin); err != nil {
 			t.Errorf("validation occured and generated an error: %s", err.Error())
 		}
 
 	})
 
-	testCases := []struct {
-		name      string
-		i         int
-		expectErr bool
-	}{
-		{"less than", rangeMin - 1, true},
-		{"bottom of range", rangeMin, false},
-		{"top of range", rangeMax, true},
-		{"greater than", rangeMax + 1, true},
+	testCases := numTestCases[int]{
+		"less than":       {rangeMin - 1, false},
+		"bottom of range": {rangeMin, true},
+		"top of range":    {rangeMax, false},
+		"greater than":    {rangeMax + 1, false},
 	}
 
-	iv := Number[int]().InRange(rangeMin, rangeMax)
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := iv.Validate(tc.i)
-			if err != nil && !tc.expectErr {
-				t.Errorf("InRange(%d, %d).Validate(%d); expected no error, got %s", rangeMin, rangeMax, tc.i, err)
-			} else if err == nil && tc.expectErr {
-				t.Errorf("InRange(%d, %d).Validate(%d); expected error but got none", rangeMin, rangeMax, tc.i)
-			}
-		})
-	}
+	testCases.run(
+		t,
+		ensure.Number[int]().InRange(rangeMin, rangeMax),
+		fmt.Sprintf("InRange(%d, %d)", rangeMin, rangeMax),
+	)
 }
 
 func TestNumberValidator_LessThan(t *testing.T) {
-	testCases := []struct {
-		name      string
-		i         int
-		expectErr bool
-	}{
-		{"less than", 2, false},
-		{"equal to", 10, true},
-		{"greater than", 20, true},
-	}
-
 	valMax := 10
-	iv := Number[int]().LessThan(valMax)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := iv.Validate(tc.i)
-			if err != nil && !tc.expectErr {
-				t.Errorf("LessThan(%d).Validate(%d); expected no error, got %s", valMax, tc.i, err)
-			} else if err == nil && tc.expectErr {
-				t.Errorf("LessThan(%d).Validate(%d); expected error but got none", valMax, tc.i)
-			}
-		})
+	testCases := numTestCases[int]{
+		"less than":    {valMax - 1, true},
+		"equal to":     {valMax, false},
+		"greater than": {valMax + 1, false},
 	}
+
+	testCases.run(
+		t,
+		ensure.Number[int]().IsLessThan(valMax),
+		fmt.Sprintf("IsLessThan(%d)", valMax),
+	)
 }
 
 func TestNumberValidator_GreaterThan(t *testing.T) {
-	testCases := []struct {
-		name      string
-		i         int
-		expectErr bool
-	}{
-		{"less than", 2, true},
-		{"equal to", 10, true},
-		{"greater than", 20, false},
-	}
-
 	valMin := 10
-	iv := Number[int]().GreaterThan(valMin)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := iv.Validate(tc.i)
-			if err != nil && !tc.expectErr {
-				t.Errorf("GreaterThan(%d).Validate(%d); expected no error, got %s", valMin, tc.i, err)
-			} else if err == nil && tc.expectErr {
-				t.Errorf("GreaterThan(%d).Validate(%d); expected error but got none", valMin, tc.i)
-			}
-		})
+	testCases := numTestCases[int]{
+		"less than":    {valMin - 1, false},
+		"equal to":     {valMin, false},
+		"greater than": {valMin + 1, true},
 	}
+
+	testCases.run(
+		t,
+		ensure.Number[int]().IsGreaterThan(valMin),
+		fmt.Sprintf("IsGreaterThan(%d)", valMin),
+	)
+}
+
+func TestNumberValidator_Validate(t *testing.T) {
+	// see util_test.go
+	runDefaultValidatorTestCases(t, ensure.Number[int]())
+	runDefaultValidatorTestCases(t, ensure.Number[float64]())
 }
