@@ -88,9 +88,27 @@ func (v *StringValidator) StartsWith(prefix string) *StringValidator {
 		if !strings.HasPrefix(str, prefix) {
 			return errors.New(
 				fmt.Sprintf(
-					`string "%s" does not contain prefix "%s"`,
-					shortenString(str, defaultMaxPrintLength),
+					`string must begin with "%s"`,
 					prefix),
+			)
+		}
+
+		return nil
+	})
+
+	return v
+}
+
+// EndsWith adds a validation check that returns an error if the target string
+// does not end with the specified substring
+func (v *StringValidator) EndsWith(suffix string) *StringValidator {
+
+	v.tests = append(v.tests, func(str string) error {
+		if !strings.HasSuffix(str, suffix) {
+			return errors.New(
+				fmt.Sprintf(
+					`string must end with "%s"`,
+					suffix),
 			)
 		}
 

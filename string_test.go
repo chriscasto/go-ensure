@@ -258,3 +258,20 @@ func TestStringValidator_StartsWith(t *testing.T) {
 		fmt.Sprintf(`StartsWith("%s")`, prefix),
 	)
 }
+
+func TestStringValidator_EndsWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"bar", true},
+		"substr match": {"crowbar", true},
+		"uppercase":    {"CROWBAR", false},
+		"mixed case":   {"CROWBAr", false},
+		"no match":     {"rab", false},
+	}
+
+	suffix := "bar"
+	testCases.run(
+		t,
+		ensure.String().EndsWith(suffix),
+		fmt.Sprintf(`EndsWith("%s")`, suffix),
+	)
+}
