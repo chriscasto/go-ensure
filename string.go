@@ -83,7 +83,6 @@ func (v *StringValidator) Validate(i interface{}) error {
 // StartsWith adds a validation check that returns an error if the target string
 // does not start with the specified substring
 func (v *StringValidator) StartsWith(prefix string) *StringValidator {
-
 	v.tests = append(v.tests, func(str string) error {
 		if !strings.HasPrefix(str, prefix) {
 			return errors.New(
@@ -102,7 +101,6 @@ func (v *StringValidator) StartsWith(prefix string) *StringValidator {
 // EndsWith adds a validation check that returns an error if the target string
 // does not end with the specified substring
 func (v *StringValidator) EndsWith(suffix string) *StringValidator {
-
 	v.tests = append(v.tests, func(str string) error {
 		if !strings.HasSuffix(str, suffix) {
 			return errors.New(
@@ -121,12 +119,29 @@ func (v *StringValidator) EndsWith(suffix string) *StringValidator {
 // Contains adds a validation check that returns an error if the target string
 // does not contain the specified substring
 func (v *StringValidator) Contains(substr string) *StringValidator {
-
 	v.tests = append(v.tests, func(str string) error {
 		if !strings.Contains(str, substr) {
 			return errors.New(
 				fmt.Sprintf(
 					`string must contain "%s"`,
+					substr),
+			)
+		}
+
+		return nil
+	})
+
+	return v
+}
+
+// DoesNotContain adds a validation check that returns an error if the target string
+// contains the specified substring
+func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
+	v.tests = append(v.tests, func(str string) error {
+		if strings.Contains(str, substr) {
+			return errors.New(
+				fmt.Sprintf(
+					`string must not contain "%s"`,
 					substr),
 			)
 		}

@@ -293,3 +293,21 @@ func TestStringValidator_Contains(t *testing.T) {
 		fmt.Sprintf(`Contains("%s")`, substr),
 	)
 }
+
+func TestStringValidator_DoesNotContain(t *testing.T) {
+	testCases := strTestCases{
+		"exact match": {"boo", false},
+		"prefix":      {"book", false},
+		"suffix":      {"taboo", false},
+		"uppercase":   {"BOO", true},
+		"mixed case":  {"TaBoO", true},
+		"no match":    {"bu", true},
+	}
+
+	substr := "boo"
+	testCases.run(
+		t,
+		ensure.String().DoesNotContain(substr),
+		fmt.Sprintf(`DoesNotContain("%s")`, substr),
+	)
+}
