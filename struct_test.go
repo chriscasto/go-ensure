@@ -1,7 +1,7 @@
 package ensure_test
 
 import (
-	ensure "github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure"
 	"testing"
 )
 
