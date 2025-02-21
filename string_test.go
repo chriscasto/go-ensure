@@ -259,6 +259,22 @@ func TestStringValidator_StartsWith(t *testing.T) {
 	)
 }
 
+func TestStringValidator_DoesNotStartWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"foo", false},
+		"substr match": {"food", false},
+		"uppercase":    {"FOOD", true},
+		"no match":     {"f", true},
+	}
+
+	prefix := "foo"
+	testCases.run(
+		t,
+		ensure.String().DoesNotStartWith(prefix),
+		fmt.Sprintf(`DoesNotStartWith("%s")`, prefix),
+	)
+}
+
 func TestStringValidator_EndsWith(t *testing.T) {
 	testCases := strTestCases{
 		"exact match":  {"bar", true},
