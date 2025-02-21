@@ -81,6 +81,36 @@ func TestStringValidator_IsLongerThan(t *testing.T) {
 	)
 }
 
+func TestStringValidator_IsShorterThanOrEqualTo(t *testing.T) {
+	testCases := strTestCases{
+		"fewer letters": {"a", true},
+		"same letters":  {"abc", true},
+		"more letters":  {"wxyz", false},
+	}
+
+	strLen := 3
+	testCases.run(
+		t,
+		ensure.String().IsShorterThanOrEqualTo(strLen),
+		fmt.Sprintf("IsShorterThanOrEqualTo(%d)", strLen),
+	)
+}
+
+func TestStringValidator_IsLongerThanOrEqualTo(t *testing.T) {
+	testCases := strTestCases{
+		"fewer letters": {"a", false},
+		"same letters":  {"abc", true},
+		"more letters":  {"wxyz", true},
+	}
+
+	strLen := 3
+	testCases.run(
+		t,
+		ensure.String().IsLongerThanOrEqualTo(strLen),
+		fmt.Sprintf("IsLongerThanOrEqualTo(%d)", strLen),
+	)
+}
+
 func TestStringValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.String())

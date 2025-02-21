@@ -86,15 +86,11 @@ func (v *StringValidator) StartsWith(prefix string) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if !strings.HasPrefix(str, prefix) {
 			return errors.New(
-				fmt.Sprintf(
-					`string must begin with "%s"`,
-					prefix),
+				fmt.Sprintf(`string must start with "%s"`, prefix),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -104,15 +100,11 @@ func (v *StringValidator) DoesNotStartWith(prefix string) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if strings.HasPrefix(str, prefix) {
 			return errors.New(
-				fmt.Sprintf(
-					`string must not begin with "%s"`,
-					prefix),
+				fmt.Sprintf(`string must not start with "%s"`, prefix),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -122,15 +114,11 @@ func (v *StringValidator) EndsWith(suffix string) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if !strings.HasSuffix(str, suffix) {
 			return errors.New(
-				fmt.Sprintf(
-					`string must end with "%s"`,
-					suffix),
+				fmt.Sprintf(`string must end with "%s"`, suffix),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -140,15 +128,11 @@ func (v *StringValidator) DoesNotEndWith(suffix string) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if strings.HasSuffix(str, suffix) {
 			return errors.New(
-				fmt.Sprintf(
-					`string must not end with "%s"`,
-					suffix),
+				fmt.Sprintf(`string must not end with "%s"`, suffix),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -158,15 +142,11 @@ func (v *StringValidator) Contains(substr string) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if !strings.Contains(str, substr) {
 			return errors.New(
-				fmt.Sprintf(
-					`string must contain "%s"`,
-					substr),
+				fmt.Sprintf(`string must contain "%s"`, substr),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -176,15 +156,11 @@ func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if strings.Contains(str, substr) {
 			return errors.New(
-				fmt.Sprintf(
-					`string must not contain "%s"`,
-					substr),
+				fmt.Sprintf(`string must not contain "%s"`, substr),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -196,10 +172,8 @@ func (v *StringValidator) IsEmpty() *StringValidator {
 				fmt.Sprintf(`string must be empty`),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
@@ -211,65 +185,83 @@ func (v *StringValidator) IsNotEmpty() *StringValidator {
 				fmt.Sprintf(`string must not be empty`),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
+// IsLongerThan adds a validation check that returns an error if the target
+// string length is less than or equal to the specified value
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
-
 	v.tests = append(v.tests, func(str string) error {
 		if len(str) <= l {
 			return errors.New(
-				fmt.Sprintf(
-					`string "%s" is shorter than min length (%d)`,
-					shortenString(str, defaultMaxPrintLength),
-					l),
+				fmt.Sprintf(`string length must be greater than %d`, l),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
+// IsLongerThanOrEqualTo adds a validation check that returns an error if the target
+// string length is less than the specified value
+func (v *StringValidator) IsLongerThanOrEqualTo(l int) *StringValidator {
+	v.tests = append(v.tests, func(str string) error {
+		if len(str) < l {
+			return errors.New(
+				fmt.Sprintf(`string length must be greater than or equal to %d`, l),
+			)
+		}
+		return nil
+	})
+	return v
+}
+
+// IsShorterThan adds a validation check that returns an error if the target
+// string length is greater than or equal to the specified value
 func (v *StringValidator) IsShorterThan(l int) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if len(str) >= l {
 			return errors.New(
-				fmt.Sprintf(
-					`string "%s" is longer than max length (%d)`,
-					shortenString(str, defaultMaxPrintLength),
-					l),
+				fmt.Sprintf(`string length must be less than %d`, l),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
+// IsShorterThanOrEqualTo adds a validation check that returns an error if the target
+// string length is greater than the specified value
+func (v *StringValidator) IsShorterThanOrEqualTo(l int) *StringValidator {
+	v.tests = append(v.tests, func(str string) error {
+		if len(str) > l {
+			return errors.New(
+				fmt.Sprintf(`string length must be less than or equal to %d`, l),
+			)
+		}
+		return nil
+	})
+	return v
+}
+
+// HasLength adds a validation check that returns an error if the target
+// string length does not equal the specified value
 func (v *StringValidator) HasLength(l int) *StringValidator {
 	v.tests = append(v.tests, func(str string) error {
 		if len(str) != l {
 			return errors.New(
-				fmt.Sprintf(
-					`string "%s" does not have desired length (%d)`,
-					shortenString(str, defaultMaxPrintLength),
-					l),
+				fmt.Sprintf(`string must have a length of exactly %d`, l),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
 
+// Matches adds a validation check that returns an error if the target
+// string does not match the specified pattern
 func (v *StringValidator) Matches(pattern string) *StringValidator {
 	r, err := regexp.Compile(pattern)
 	if err != nil {
@@ -280,14 +272,11 @@ func (v *StringValidator) Matches(pattern string) *StringValidator {
 		if !r.MatchString(str) {
 			return errors.New(
 				fmt.Sprintf(
-					`string "%s" does not match expected pattern`,
-					shortenString(str, defaultMaxPrintLength),
+					`string does not match expected pattern`,
 				),
 			)
 		}
-
 		return nil
 	})
-
 	return v
 }
