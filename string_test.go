@@ -292,6 +292,23 @@ func TestStringValidator_EndsWith(t *testing.T) {
 	)
 }
 
+func TestStringValidator_DoesNotEndWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"bar", false},
+		"substr match": {"crowbar", false},
+		"uppercase":    {"CROWBAR", true},
+		"mixed case":   {"CROWBAr", true},
+		"no match":     {"rab", true},
+	}
+
+	suffix := "bar"
+	testCases.run(
+		t,
+		ensure.String().DoesNotEndWith(suffix),
+		fmt.Sprintf(`DoesNotEndWith("%s")`, suffix),
+	)
+}
+
 func TestStringValidator_Contains(t *testing.T) {
 	testCases := strTestCases{
 		"exact match": {"boo", true},

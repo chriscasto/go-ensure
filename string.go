@@ -134,6 +134,24 @@ func (v *StringValidator) EndsWith(suffix string) *StringValidator {
 	return v
 }
 
+// DoesNotEndWith adds a validation check that returns an error if the target string
+// ends with the specified substring
+func (v *StringValidator) DoesNotEndWith(suffix string) *StringValidator {
+	v.tests = append(v.tests, func(str string) error {
+		if strings.HasSuffix(str, suffix) {
+			return errors.New(
+				fmt.Sprintf(
+					`string must not end with "%s"`,
+					suffix),
+			)
+		}
+
+		return nil
+	})
+
+	return v
+}
+
 // Contains adds a validation check that returns an error if the target string
 // does not contain the specified substring
 func (v *StringValidator) Contains(substr string) *StringValidator {
