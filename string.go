@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -77,6 +78,26 @@ func (v *StringValidator) Validate(i interface{}) error {
 	}
 
 	return nil
+}
+
+// StartsWith adds a validation check that returns an error if the target string
+// does not start with the specified substring
+func (v *StringValidator) StartsWith(prefix string) *StringValidator {
+
+	v.tests = append(v.tests, func(str string) error {
+		if !strings.HasPrefix(str, prefix) {
+			return errors.New(
+				fmt.Sprintf(
+					`string "%s" does not contain prefix "%s"`,
+					shortenString(str, defaultMaxPrintLength),
+					prefix),
+			)
+		}
+
+		return nil
+	})
+
+	return v
 }
 
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
