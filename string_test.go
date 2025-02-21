@@ -379,3 +379,39 @@ func TestStringValidator_IsNotEmpty(t *testing.T) {
 		"IsNotEmpty()",
 	)
 }
+
+func TestStringValidator_IsOneOf(t *testing.T) {
+	testCases := strTestCases{
+		"in set":     {"one", true},
+		"not in set": {"two", false},
+		"upper":      {"ONE", false},
+	}
+
+	permitted := []string{
+		"one",
+		"three",
+	}
+	testCases.run(
+		t,
+		ensure.String().IsOneOf(permitted),
+		fmt.Sprintf(`IsOneOf(%v)`, permitted),
+	)
+}
+
+func TestStringValidator_IsNotOneOf(t *testing.T) {
+	testCases := strTestCases{
+		"in set":     {"one", false},
+		"not in set": {"two", true},
+		"upper":      {"ONE", true},
+	}
+
+	forbidden := []string{
+		"one",
+		"three",
+	}
+	testCases.run(
+		t,
+		ensure.String().IsNotOneOf(forbidden),
+		fmt.Sprintf(`IsNotOneOf(%v)`, forbidden),
+	)
+}

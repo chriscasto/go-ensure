@@ -170,6 +170,48 @@ func (v *StringValidator) IsNotEmpty() *StringValidator {
 	return v
 }
 
+// IsOneOf adds a validation check that returns an error if the target string
+// is not in the specified set
+func (v *StringValidator) IsOneOf(values []string) *StringValidator {
+	// convert list to map for O(1) lookups
+	lookup := map[string]bool{}
+
+	for _, str := range values {
+		lookup[str] = true
+	}
+
+	v.tests = append(v.tests, func(str string) error {
+		if _, ok := lookup[str]; !ok {
+			return errors.New(
+				fmt.Sprintf(`string must be one of the permitted values`),
+			)
+		}
+		return nil
+	})
+	return v
+}
+
+// IsNotOneOf adds a validation check that returns an error if the target string
+// is in the specified set
+func (v *StringValidator) IsNotOneOf(values []string) *StringValidator {
+	// convert list to map for O(1) lookups
+	lookup := map[string]bool{}
+
+	for _, str := range values {
+		lookup[str] = true
+	}
+
+	v.tests = append(v.tests, func(str string) error {
+		if _, ok := lookup[str]; ok {
+			return errors.New(
+				fmt.Sprintf(`string must not be one of the prohibited values`),
+			)
+		}
+		return nil
+	})
+	return v
+}
+
 // IsLongerThan adds a validation check that returns an error if the target
 // string length is less than or equal to the specified value
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
