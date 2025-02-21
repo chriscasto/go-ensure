@@ -116,29 +116,6 @@ func TestStringValidator_Validate(t *testing.T) {
 	runDefaultValidatorTestCases(t, ensure.String())
 }
 
-func TestShortenString(t *testing.T) {
-	testCases := map[string]struct {
-		input  string
-		maxLen int
-		want   string
-	}{
-		"short":      {"abc", 5, "abc"},
-		"min maxLen": {"abc", 1, "abc"}, // min val for maxLen is 5
-		"exact":      {"abcde", 5, "abcde"},
-		"long":       {"abcdefghijklmnopqrstuvwxyz", 10, "abc...xyz"},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			short := ensure.ShortenString(tc.input, tc.maxLen)
-
-			if short != tc.want {
-				t.Errorf(`got "%s"; want "%s" `, short, tc.want)
-			}
-		})
-	}
-}
-
 func TestStringValidator_Matches(t *testing.T) {
 	t.Run("panic if bad regex", func(t *testing.T) {
 		defer func() {

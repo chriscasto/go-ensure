@@ -30,26 +30,6 @@ const (
 	Sha512 = `^[0-9a-f]{128}$`
 )
 
-// define the max length for string contents in an error message
-const defaultMaxPrintLength = 30
-
-// shortens a string of arbitrary length to a reasonable value for logging
-func shortenString(s string, maxLen int) string {
-	if maxLen < 5 {
-		maxLen = 5
-	}
-
-	if len(s) <= maxLen {
-		return s
-	}
-
-	ellipsis := "..."
-
-	half := (maxLen - len(ellipsis)) / 2
-
-	return s[:half] + ellipsis + s[len(s)-half:]
-}
-
 type StringValidator struct {
 	zeroVal string
 	tests   []func(string) error
