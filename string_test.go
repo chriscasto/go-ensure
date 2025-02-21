@@ -344,3 +344,31 @@ func TestStringValidator_DoesNotContain(t *testing.T) {
 		fmt.Sprintf(`DoesNotContain("%s")`, substr),
 	)
 }
+
+func TestStringValidator_IsEmpty(t *testing.T) {
+	testCases := strTestCases{
+		"empty":      {"", true},
+		"whitespace": {"  ", false},
+		"not empty":  {"abc", false},
+	}
+
+	testCases.run(
+		t,
+		ensure.String().IsEmpty(),
+		"IsEmpty()",
+	)
+}
+
+func TestStringValidator_IsNotEmpty(t *testing.T) {
+	testCases := strTestCases{
+		"empty":      {"", false},
+		"whitespace": {"  ", true},
+		"not empty":  {"abc", true},
+	}
+
+	testCases.run(
+		t,
+		ensure.String().IsNotEmpty(),
+		"IsNotEmpty()",
+	)
+}

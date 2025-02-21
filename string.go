@@ -188,6 +188,36 @@ func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
 	return v
 }
 
+// IsEmpty adds a validation check that returns an error if the target string is not empty
+func (v *StringValidator) IsEmpty() *StringValidator {
+	v.tests = append(v.tests, func(str string) error {
+		if len(str) != 0 {
+			return errors.New(
+				fmt.Sprintf(`string must be empty`),
+			)
+		}
+
+		return nil
+	})
+
+	return v
+}
+
+// IsNotEmpty adds a validation check that returns an error if the target string is empty
+func (v *StringValidator) IsNotEmpty() *StringValidator {
+	v.tests = append(v.tests, func(str string) error {
+		if len(str) == 0 {
+			return errors.New(
+				fmt.Sprintf(`string must not be empty`),
+			)
+		}
+
+		return nil
+	})
+
+	return v
+}
+
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
 
 	v.tests = append(v.tests, func(str string) error {
