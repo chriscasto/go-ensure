@@ -81,32 +81,39 @@ func TestStringValidator_IsLongerThan(t *testing.T) {
 	)
 }
 
+func TestStringValidator_IsShorterThanOrEqualTo(t *testing.T) {
+	testCases := strTestCases{
+		"fewer letters": {"a", true},
+		"same letters":  {"abc", true},
+		"more letters":  {"wxyz", false},
+	}
+
+	strLen := 3
+	testCases.run(
+		t,
+		ensure.String().IsShorterThanOrEqualTo(strLen),
+		fmt.Sprintf("IsShorterThanOrEqualTo(%d)", strLen),
+	)
+}
+
+func TestStringValidator_IsLongerThanOrEqualTo(t *testing.T) {
+	testCases := strTestCases{
+		"fewer letters": {"a", false},
+		"same letters":  {"abc", true},
+		"more letters":  {"wxyz", true},
+	}
+
+	strLen := 3
+	testCases.run(
+		t,
+		ensure.String().IsLongerThanOrEqualTo(strLen),
+		fmt.Sprintf("IsLongerThanOrEqualTo(%d)", strLen),
+	)
+}
+
 func TestStringValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.String())
-}
-
-func TestShortenString(t *testing.T) {
-	testCases := map[string]struct {
-		input  string
-		maxLen int
-		want   string
-	}{
-		"short":      {"abc", 5, "abc"},
-		"min maxLen": {"abc", 1, "abc"}, // min val for maxLen is 5
-		"exact":      {"abcde", 5, "abcde"},
-		"long":       {"abcdefghijklmnopqrstuvwxyz", 10, "abc...xyz"},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			short := ensure.ShortenString(tc.input, tc.maxLen)
-
-			if short != tc.want {
-				t.Errorf(`got "%s"; want "%s" `, short, tc.want)
-			}
-		})
-	}
 }
 
 func TestStringValidator_Matches(t *testing.T) {
@@ -241,4 +248,170 @@ func TestStringValidator_Matches(t *testing.T) {
 			fmt.Sprintf(`Matches("%s")`, constRegex),
 		)
 	}
+}
+
+func TestStringValidator_StartsWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"foo", true},
+		"substr match": {"food", true},
+		"uppercase":    {"FOOD", false},
+		"no match":     {"f", false},
+	}
+
+	prefix := "foo"
+	testCases.run(
+		t,
+		ensure.String().StartsWith(prefix),
+		fmt.Sprintf(`StartsWith("%s")`, prefix),
+	)
+}
+
+func TestStringValidator_DoesNotStartWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"foo", false},
+		"substr match": {"food", false},
+		"uppercase":    {"FOOD", true},
+		"no match":     {"f", true},
+	}
+
+	prefix := "foo"
+	testCases.run(
+		t,
+		ensure.String().DoesNotStartWith(prefix),
+		fmt.Sprintf(`DoesNotStartWith("%s")`, prefix),
+	)
+}
+
+func TestStringValidator_EndsWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"bar", true},
+		"substr match": {"crowbar", true},
+		"uppercase":    {"CROWBAR", false},
+		"mixed case":   {"CROWBAr", false},
+		"no match":     {"rab", false},
+	}
+
+	suffix := "bar"
+	testCases.run(
+		t,
+		ensure.String().EndsWith(suffix),
+		fmt.Sprintf(`EndsWith("%s")`, suffix),
+	)
+}
+
+func TestStringValidator_DoesNotEndWith(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":  {"bar", false},
+		"substr match": {"crowbar", false},
+		"uppercase":    {"CROWBAR", true},
+		"mixed case":   {"CROWBAr", true},
+		"no match":     {"rab", true},
+	}
+
+	suffix := "bar"
+	testCases.run(
+		t,
+		ensure.String().DoesNotEndWith(suffix),
+		fmt.Sprintf(`DoesNotEndWith("%s")`, suffix),
+	)
+}
+
+func TestStringValidator_Contains(t *testing.T) {
+	testCases := strTestCases{
+		"exact match": {"boo", true},
+		"prefix":      {"book", true},
+		"suffix":      {"taboo", true},
+		"uppercase":   {"BOO", false},
+		"mixed case":  {"TaBoO", false},
+		"no match":    {"bu", false},
+	}
+
+	substr := "boo"
+	testCases.run(
+		t,
+		ensure.String().Contains(substr),
+		fmt.Sprintf(`Contains("%s")`, substr),
+	)
+}
+
+func TestStringValidator_DoesNotContain(t *testing.T) {
+	testCases := strTestCases{
+		"exact match": {"boo", false},
+		"prefix":      {"book", false},
+		"suffix":      {"taboo", false},
+		"uppercase":   {"BOO", true},
+		"mixed case":  {"TaBoO", true},
+		"no match":    {"bu", true},
+	}
+
+	substr := "boo"
+	testCases.run(
+		t,
+		ensure.String().DoesNotContain(substr),
+		fmt.Sprintf(`DoesNotContain("%s")`, substr),
+	)
+}
+
+func TestStringValidator_IsEmpty(t *testing.T) {
+	testCases := strTestCases{
+		"empty":      {"", true},
+		"whitespace": {"  ", false},
+		"not empty":  {"abc", false},
+	}
+
+	testCases.run(
+		t,
+		ensure.String().IsEmpty(),
+		"IsEmpty()",
+	)
+}
+
+func TestStringValidator_IsNotEmpty(t *testing.T) {
+	testCases := strTestCases{
+		"empty":      {"", false},
+		"whitespace": {"  ", true},
+		"not empty":  {"abc", true},
+	}
+
+	testCases.run(
+		t,
+		ensure.String().IsNotEmpty(),
+		"IsNotEmpty()",
+	)
+}
+
+func TestStringValidator_IsOneOf(t *testing.T) {
+	testCases := strTestCases{
+		"in set":     {"one", true},
+		"not in set": {"two", false},
+		"upper":      {"ONE", false},
+	}
+
+	permitted := []string{
+		"one",
+		"three",
+	}
+	testCases.run(
+		t,
+		ensure.String().IsOneOf(permitted),
+		fmt.Sprintf(`IsOneOf(%v)`, permitted),
+	)
+}
+
+func TestStringValidator_IsNotOneOf(t *testing.T) {
+	testCases := strTestCases{
+		"in set":     {"one", false},
+		"not in set": {"two", true},
+		"upper":      {"ONE", true},
+	}
+
+	forbidden := []string{
+		"one",
+		"three",
+	}
+	testCases.run(
+		t,
+		ensure.String().IsNotOneOf(forbidden),
+		fmt.Sprintf(`IsNotOneOf(%v)`, forbidden),
+	)
 }
