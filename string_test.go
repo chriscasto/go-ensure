@@ -275,3 +275,21 @@ func TestStringValidator_EndsWith(t *testing.T) {
 		fmt.Sprintf(`EndsWith("%s")`, suffix),
 	)
 }
+
+func TestStringValidator_Contains(t *testing.T) {
+	testCases := strTestCases{
+		"exact match": {"boo", true},
+		"prefix":      {"book", true},
+		"suffix":      {"taboo", true},
+		"uppercase":   {"BOO", false},
+		"mixed case":  {"TaBoO", false},
+		"no match":    {"bu", false},
+	}
+
+	substr := "boo"
+	testCases.run(
+		t,
+		ensure.String().Contains(substr),
+		fmt.Sprintf(`Contains("%s")`, substr),
+	)
+}

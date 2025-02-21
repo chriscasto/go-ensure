@@ -118,6 +118,25 @@ func (v *StringValidator) EndsWith(suffix string) *StringValidator {
 	return v
 }
 
+// Contains adds a validation check that returns an error if the target string
+// does not contain the specified substring
+func (v *StringValidator) Contains(substr string) *StringValidator {
+
+	v.tests = append(v.tests, func(str string) error {
+		if !strings.Contains(str, substr) {
+			return errors.New(
+				fmt.Sprintf(
+					`string must contain "%s"`,
+					substr),
+			)
+		}
+
+		return nil
+	})
+
+	return v
+}
+
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
 
 	v.tests = append(v.tests, func(str string) error {
