@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	ensure "github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure"
 )
 
 type testStruct struct {

@@ -2,7 +2,7 @@ package ensure_test
 
 import (
 	"fmt"
-	ensure "github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure"
 	"testing"
 )
 
