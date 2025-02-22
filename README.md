@@ -167,7 +167,7 @@ validator := ensure.Array[uint16]().HasMoreThan(3)
 ```
 
 While the array validator does have its own methods you can use for validating
-it directly, most of the time you will want to apply validation to each of the
+the array directly, most of the time you will want to apply validation to each of the
 items it contains.  You can do this by passing an appropriate validator to the
 `Each()` method.  For example, to make sure each string in an array contains at
 least one vowel, you could do something like this:
@@ -193,8 +193,18 @@ validator := ensure.Array[string]().Each(
 A struct is basically just a container for a group of values, so validating a 
 struct is just a matter of validating each of the fields it contains.  Because 
 of this, the magic of the struct validator is almost entirely in the constructor.
+The constructor takes a single value: a map of type `Fields`.  It looks something
+like this:
 
-Imagine you have a set of structs like this:
+```
+validStruct := ensure.Struct[MyStruct](ensure.Fields{
+    "Field1": ensure.String(),
+    "Field2": ensure.Number[int](),
+    "Field3": ensure.Array[float64](),
+})
+```
+
+For something a little more concrete, imagine you have a set of structs like this:
 
 ```
 type Company struct {
@@ -209,7 +219,7 @@ type Person struct {
 }
 ```
 
-You might have validation that looks something like this:
+You might then have validation that looks something like this:
 
 ```
 validator := ensure.Struct[Company](ensure.Fields{
@@ -225,8 +235,8 @@ validator := ensure.Struct[Company](ensure.Fields{
 ```
 
 Which can be a lot to take in all at once, but it should still be fairly easy to 
-understand what it's doing. We could also decompose things a bit to make it
-more readable:
+understand what it's doing by reading it line by line. We could also decompose 
+things a bit to make it more readable:
 
 ```
 validName := ensure.String().IsNotEmpty().Matches(ensure.Alpha)
