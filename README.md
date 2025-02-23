@@ -102,6 +102,7 @@ func main() {
 | IsOneOf([]string)           | Passes if the tested string is identical to one of the values in the provided array     |
 | IsNotOneOf([]string)        | Passes if the tested string is not identical to any of the values in the provided array |
 | Matches(str)                | Passes if the tested string matches the provided regular expression                     |
+| Is(func (str) error)        | Passes if the function passed does not produce an error during validation               |
 
 #### Predefined Regex Patterns
 
@@ -148,12 +149,12 @@ validator := ensure.Number[float64]().IsGreaterThan(10.0)
 
 #### Methods
 
-| Method             | Description                                                                                         |
-|--------------------|-----------------------------------------------------------------------------------------------------|
-| InRange(low, high) | Passes if the tested number is greater than or equal to the low value and lower than the high value |
-| IsLessThan(num)    | Passes if the tested number is less than the provided value                                         |
-| IsGreaterThan(num) | Passes if the tested number is less than the provided value                                         |
-|                    |                                                                                                     |
+| Method               | Description                                                                                         |
+|----------------------|-----------------------------------------------------------------------------------------------------|
+| InRange(low, high)   | Passes if the tested number is greater than or equal to the low value and lower than the high value |
+| IsLessThan(num)      | Passes if the tested number is less than the provided value                                         |
+| IsGreaterThan(num)   | Passes if the tested number is less than the provided value                                         |
+| Is(func (num) error) | Passes if the function passed does not produce an error during validation               |
 
 ### Arrays
 
@@ -179,13 +180,14 @@ validator := ensure.Array[string]().Each(
  )
 ```
 
-| Method            | Description                                                           |
-|-------------------|-----------------------------------------------------------------------|
-| IsNotEmpty()      | Passes if tested array is empty (len(arr) == 0)                       |
-| HasCount(int)     | Passes if the length of the tested array is equal to the passed int   |
-| HasFewerThan(int) | Passes if the length of the tested array is less than the passed int  |
-| HasMoreThan(int)  | Passes if the length of the tested array is more than the passed int  |
-| Each(v)           | Passes if the provided validator passes for each element in the array |
+| Method                | Description                                                               |
+|-----------------------|---------------------------------------------------------------------------|
+| IsNotEmpty()          | Passes if tested array is empty (len(arr) == 0)                           |
+| HasCount(int)         | Passes if the length of the tested array is equal to the passed int       |
+| HasFewerThan(int)     | Passes if the length of the tested array is less than the passed int      |
+| HasMoreThan(int)      | Passes if the length of the tested array is more than the passed int      |
+| Each(v)               | Passes if the provided validator passes for each element in the array     |
+| Is(func ([]T]) error) | Passes if the function passed does not produce an error during validation |
 
 
 ### Maps
@@ -201,15 +203,15 @@ validator = ensure.Map[string, int]().EachKey(
 )
 ```
 
-| Method            | Description                                                          |
-|-------------------|----------------------------------------------------------------------|
-| IsNotEmpty()      | Passes if tested map is empty (len(map) == 0)                        |
-| HasCount(int)     | Passes if the length of the tested map is equal to the passed int    |
-| HasFewerThan(int) | Passes if the length of the tested map is less than the passed int |
-| HasMoreThan(int)  | Passes if the length of the tested map is more than the passed int |
-| EachKey(v)        | Passes if the provided validator passes for each key in the map      |
-| EachValue(v)      | Passes if the provided validator passes for each value in the map    |
-
+| Method                   | Description                                                               |
+|--------------------------|---------------------------------------------------------------------------|
+| IsNotEmpty()             | Passes if tested map is empty (len(map) == 0)                             |
+| HasCount(int)            | Passes if the length of the tested map is equal to the passed int         |
+| HasFewerThan(int)        | Passes if the length of the tested map is less than the passed int        |
+| HasMoreThan(int)         | Passes if the length of the tested map is more than the passed int        |
+| EachKey(v)               | Passes if the provided validator passes for each key in the map           |
+| EachValue(v)             | Passes if the provided validator passes for each value in the map         |
+| Is(func (map[K]V) error) | Passes if the function passed does not produce an error during validation |
 
 
 ### Structs
@@ -276,6 +278,10 @@ validCompany := ensure.Struct[Company](ensure.Fields{
     "Employees": ensure.Array[Person].Each(validPerson),
 })
 ```
+
+| Method             | Description                                                               |
+|--------------------|---------------------------------------------------------------------------|
+| Is(func (T) error) | Passes if the function passed does not produce an error during validation |
 
 Note: due to the way visibility works in Go, only exported struct fields are
 able to be validated.  That is, you can validate `MyStruct.Foo` but not `MyStruct.foo`.
