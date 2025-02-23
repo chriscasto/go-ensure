@@ -13,17 +13,25 @@ type testStruct struct {
 
 func main() {
 	// struct should be type main.testStruct
-	s := ensure.Struct[testStruct](ensure.Fields{
-		// field Foo should be a string with more than 3 characters
-		"Foo": ensure.String().IsLongerThan(3),
-		// field Bar should be an integer > 10
-		"Bar": ensure.Number[int]().IsGreaterThan(10),
-		// field Baz is an array of floats
-		"Baz": ensure.Array[float64]().Each(
-			// each value should be between 1.0 and 10.0
-			ensure.Number[float64]().InRange(1.0, 10.0),
-		),
-	})
+	s := ensure.Struct[testStruct](
+		ensure.Fields{
+			// field Foo should be a string with more than 3 characters
+			"Foo": ensure.String().IsLongerThan(3),
+			// field Bar should be an integer > 10
+			"Bar": ensure.Number[int]().IsGreaterThan(10),
+			// field Baz is an array of floats
+			"Baz": ensure.Array[float64]().Each(
+				// each value should be between 1.0 and 10.0
+				ensure.Number[float64]().InRange(1.0, 10.0),
+			),
+		},
+		// define some user-friendly aliases for our fields to use when returning errors
+		ensure.FriendlyNames{
+			"Foo": "FOOOOOO!",
+			"Bar": "BAR BAR BAR",
+			"Baz": "Bazzler",
+		},
+	)
 
 	good := testStruct{
 		Foo: "quux",

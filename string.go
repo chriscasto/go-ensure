@@ -47,13 +47,12 @@ func (v *StringValidator) Validate(i interface{}) error {
 	str, ok := i.(string)
 
 	if !ok {
-		return fmt.Errorf("string expected")
+		return &TypeError{"string expected"}
 	}
 
 	for _, fn := range v.tests {
-		err := fn(str)
-		if err != nil {
-			return err
+		if err := fn(str); err != nil {
+			return NewValidationError(err.Error())
 		}
 	}
 
