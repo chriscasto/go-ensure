@@ -6,11 +6,13 @@ import (
 	"reflect"
 )
 
+type mapCheckFunc[K comparable, V any] func(map[K]V) error
+
 type MapValidator[K comparable, V any] struct {
 	typeStr        string
-	tests          []func(map[K]V) error
 	keyTypeStr     string
 	valueTypeStr   string
+	tests          []mapCheckFunc[K, V]
 	keyValidator   Validator
 	valueValidator Validator
 }
@@ -90,7 +92,7 @@ func (mv *MapValidator[K, V]) EachValue(vv Validator) *MapValidator[K, V] {
 }
 
 func (mv *MapValidator[K, V]) IsNotEmpty() *MapValidator[K, V] {
-	mv.tests = append(mv.tests, func(mapVal map[K]V) error {
+	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) == 0 {
 			return errors.New(
 				fmt.Sprintf(`map must not be empty`),
@@ -99,12 +101,10 @@ func (mv *MapValidator[K, V]) IsNotEmpty() *MapValidator[K, V] {
 
 		return nil
 	})
-
-	return mv
 }
 
 func (mv *MapValidator[K, V]) HasCount(l int) *MapValidator[K, V] {
-	mv.tests = append(mv.tests, func(mapVal map[K]V) error {
+	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) != l {
 			return errors.New(
 				fmt.Sprintf(
@@ -116,12 +116,10 @@ func (mv *MapValidator[K, V]) HasCount(l int) *MapValidator[K, V] {
 
 		return nil
 	})
-
-	return mv
 }
 
 func (mv *MapValidator[K, V]) HasMoreThan(l int) *MapValidator[K, V] {
-	mv.tests = append(mv.tests, func(mapVal map[K]V) error {
+	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) <= l {
 			return errors.New(
 				fmt.Sprintf(
@@ -133,12 +131,10 @@ func (mv *MapValidator[K, V]) HasMoreThan(l int) *MapValidator[K, V] {
 
 		return nil
 	})
-
-	return mv
 }
 
 func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
-	mv.tests = append(mv.tests, func(mapVal map[K]V) error {
+	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) >= l {
 			return errors.New(
 				fmt.Sprintf(
@@ -150,6 +146,9 @@ func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 
 		return nil
 	})
+}
 
-	return mv
+func (v *MapValidator[K, V]) Is(fn mapCheckFunc[K, V]) *MapValidator[K, V] {
+	v.tests = append(v.tests, fn)
+	return v
 }
