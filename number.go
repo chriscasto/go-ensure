@@ -55,7 +55,7 @@ func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
 		panic(fmt.Sprintf("max cannot be less than min"))
 	}
 
-	v.tests = append(v.tests, func(i T) error {
+	return v.Is(func(i T) error {
 		if i < min || i >= max {
 			return errors.New(
 				fmt.Sprintf(
@@ -66,12 +66,10 @@ func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *NumberValidator[T]) IsLessThan(max T) *NumberValidator[T] {
-	v.tests = append(v.tests, func(i T) error {
+	return v.Is(func(i T) error {
 		if i >= max {
 			return errors.New(
 				fmt.Sprintf(
@@ -81,12 +79,10 @@ func (v *NumberValidator[T]) IsLessThan(max T) *NumberValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *NumberValidator[T]) IsGreaterThan(min T) *NumberValidator[T] {
-	v.tests = append(v.tests, func(i T) error {
+	return v.Is(func(i T) error {
 		if i <= min {
 			return errors.New(
 				fmt.Sprintf(
@@ -96,8 +92,6 @@ func (v *NumberValidator[T]) IsGreaterThan(min T) *NumberValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *NumberValidator[T]) Validate(i interface{}) error {
@@ -112,4 +106,9 @@ func (v *NumberValidator[T]) Validate(i interface{}) error {
 	}
 
 	return nil
+}
+
+func (v *NumberValidator[T]) Is(fn func(T) error) *NumberValidator[T] {
+	v.tests = append(v.tests, fn)
+	return v
 }

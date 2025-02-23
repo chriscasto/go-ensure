@@ -31,8 +31,7 @@ const (
 )
 
 type StringValidator struct {
-	zeroVal string
-	tests   []func(string) error
+	tests []func(string) error
 }
 
 func String() *StringValidator {
