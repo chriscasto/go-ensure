@@ -188,6 +188,55 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 	}
 }
 
+func TestStructValidator_FriendlyNames(t *testing.T) {
+	validStruct := ensure.Struct[testStruct](
+		ensure.Fields{
+			"Str":   ensure.String().HasLength(3),
+			"Int":   ensure.Number[int]().IsGreaterThan(0),
+			"Float": ensure.Number[float64]().IsLessThan(4.2),
+		},
+		ensure.FriendlyNames{
+			"Str":   "String Value",
+			"Int":   "Integer Value",
+			"Float": "Decimal Value",
+		},
+	)
+
+	testCases := map[string]struct {
+		val            testStruct
+		expectStrInErr string
+	}{
+		"string err": {
+			testStruct{"a", 1, 1.0},
+			"String Value",
+		},
+		"int err": {
+			testStruct{"abc", 0, 1.0},
+			"Integer Value",
+		},
+		"float err": {
+			testStruct{"abc", 1, 10.0},
+			"Decimal Value",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := validStruct.Validate(tc.val)
+
+			if err == nil {
+				t.Errorf("expected error but got none")
+			}
+
+			errorChecker := ensure.String().Contains(tc.expectStrInErr)
+
+			if err2 := errorChecker.Validate(err.Error()); err2 != nil {
+				t.Errorf(`error should contain alias "%s" but did not (err: "%s")`, tc.expectStrInErr, err)
+			}
+		})
+	}
+}
+
 func TestStructValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.Struct[testStruct](ensure.Fields{}))
