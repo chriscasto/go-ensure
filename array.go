@@ -105,19 +105,12 @@ func (v *ArrayValidator[T]) Each(ev Validator) *ArrayValidator[T] {
 }
 
 func (v *ArrayValidator[T]) Validate(i interface{}) error {
-	valType := reflect.TypeOf(i).String()
-
-	if valType != v.typeStr {
-		return fmt.Errorf(
-			`array validator expects type "%s"; got "%s"`,
-			v.typeStr,
-			valType,
-		)
+	if err := testType(i, v.typeStr); err != nil {
+		return err
 	}
 
 	for _, fn := range v.tests {
-		err := fn(i.([]T))
-		if err != nil {
+		if err := fn(i.([]T)); err != nil {
 			return err
 		}
 	}

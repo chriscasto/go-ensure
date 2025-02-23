@@ -63,7 +63,7 @@ func (v *StructValidator[T]) Validate(s interface{}) error {
 	sRefType := sRef.Type()
 
 	if !sRef.IsValid() || sRefType != v.refVal.Type() {
-		return fmt.Errorf("invalid struct; expected %s, got %s", v.refVal.Type().String(), sRefType.String())
+		return newTypeErrorFromTypes(v.refVal.Type().String(), sRefType.String())
 	}
 
 	return v.ValidateStruct(s.(T))
@@ -75,7 +75,7 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 	for field, val := range v.validators {
 		fieldVal := sRef.FieldByName(field)
 		if err := val.Validate(fieldVal.Interface()); err != nil {
-			return err
+			return NewValidationError(fmt.Sprintf("%s: %s", field, err.Error()))
 		}
 	}
 	return nil
