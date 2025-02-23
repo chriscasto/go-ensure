@@ -26,7 +26,7 @@ func (v *ArrayValidator[T]) Type() string {
 }
 
 func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
-	v.tests = append(v.tests, func(arr []T) error {
+	return v.Is(func(arr []T) error {
 		if len(arr) == 0 {
 			return errors.New(
 				fmt.Sprintf(`array must not be empty`),
@@ -35,12 +35,10 @@ func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
-	v.tests = append(v.tests, func(arr []T) error {
+	return v.Is(func(arr []T) error {
 		if len(arr) != l {
 			return errors.New(
 				fmt.Sprintf(
@@ -52,12 +50,10 @@ func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
-	v.tests = append(v.tests, func(arr []T) error {
+	return v.Is(func(arr []T) error {
 		if len(arr) <= l {
 			return errors.New(
 				fmt.Sprintf(
@@ -69,12 +65,10 @@ func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
-	v.tests = append(v.tests, func(arr []T) error {
+	return v.Is(func(arr []T) error {
 		if len(arr) >= l {
 			return errors.New(
 				fmt.Sprintf(
@@ -86,12 +80,10 @@ func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *ArrayValidator[T]) Each(ev Validator) *ArrayValidator[T] {
-	v.tests = append(v.tests, func(arr []T) error {
+	return v.Is(func(arr []T) error {
 		for _, e := range arr {
 			if err := ev.Validate(e); err != nil {
 				return err
@@ -100,8 +92,6 @@ func (v *ArrayValidator[T]) Each(ev Validator) *ArrayValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *ArrayValidator[T]) Validate(i interface{}) error {
@@ -116,4 +106,9 @@ func (v *ArrayValidator[T]) Validate(i interface{}) error {
 	}
 
 	return nil
+}
+
+func (v *ArrayValidator[T]) Is(fn func([]T) error) *ArrayValidator[T] {
+	v.tests = append(v.tests, fn)
+	return v
 }
