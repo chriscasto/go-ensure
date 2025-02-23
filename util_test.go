@@ -46,7 +46,7 @@ func getDefaultValidatorTestCases(v ensure.Validator) validatorTestCases {
 		"[]ensure_test.testStruct": {[]testStruct{{Str: "foo"}}, false},
 
 		"map[string]int":        {map[string]int{"a": 1, "b": 2}, false},
-		"map[string][]int":      {map[string][]int{"a": []int{1, 2, 3}}, false},
+		"map[string][]int":      {map[string][]int{"a": {1, 2, 3}}, false},
 		"map[string]testStruct": {map[string][]testStruct{"a": {}}, false},
 	}
 
