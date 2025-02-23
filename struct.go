@@ -10,6 +10,7 @@ type StructValidator[T any] struct {
 	refVal     reflect.Value
 	validators map[string]Validator
 	aliases    FriendlyNames
+	tests      []func(T) error
 }
 
 func Struct[T any](fv map[string]Validator, friendlyNames ...FriendlyNames) *StructValidator[T] {
@@ -89,6 +90,12 @@ func (v *StructValidator[T]) Validate(s interface{}) error {
 func (v *StructValidator[T]) ValidateStruct(s T) error {
 	sRef := reflect.ValueOf(s)
 
+	for _, check := range v.tests {
+		if err := check(s); err != nil {
+			return err
+		}
+	}
+
 	for field, val := range v.validators {
 		fieldVal := sRef.FieldByName(field)
 		if err := val.Validate(fieldVal.Interface()); err != nil {
@@ -104,4 +111,9 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 		}
 	}
 	return nil
+}
+
+func (v *StructValidator[T]) Is(fn func(T) error) *StructValidator[T] {
+	v.tests = append(v.tests, fn)
+	return v
 }

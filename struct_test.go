@@ -1,8 +1,10 @@
 package ensure_test
 
 import (
+	"fmt"
 	"github.com/chriscasto/go-ensure"
 	"testing"
+	"time"
 )
 
 // constructBad generates a function that will call the constructor
@@ -15,6 +17,26 @@ func constructBad[T any](empty T, fields ensure.Fields) func() error {
 			return err
 		}
 		return nil
+	}
+}
+
+type structTestCase[T any] struct {
+	val      T
+	willPass bool
+}
+
+type structTestCases[T any] map[string]structTestCase[T]
+
+func (tcs structTestCases[T]) run(t *testing.T, av *ensure.StructValidator[T], method string) {
+	for name, tc := range tcs {
+		t.Run(name, func(t *testing.T) {
+			err := av.Validate(tc.val)
+			if err != nil && tc.willPass {
+				t.Errorf(`Struct().%s.Validate(%v); expected no error, got "%s"`, method, tc.val, err)
+			} else if err == nil && !tc.willPass {
+				t.Errorf(`Struct().%s.Validate(%v); expected error but got none`, method, tc.val)
+			}
+		})
 	}
 }
 
@@ -256,6 +278,45 @@ func TestStructValidator_FriendlyNames(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStructValidator_Is(t *testing.T) {
+	type Example struct {
+		Date time.Time
+	}
+
+	notOlderThanSixtyDays := func(date time.Time) error {
+		hourMax := 24 * 60
+
+		if time.Since(date).Hours() > float64(hourMax) {
+			return fmt.Errorf("time has expired")
+		}
+
+		return nil
+	}
+
+	testCases := structTestCases[Example]{
+		"now": {
+			Example{time.Now()},
+			true,
+		},
+		"yesterday": {
+			Example{time.Now().AddDate(0, 0, -1)},
+			true,
+		},
+		"90 days ago": {
+			Example{time.Now().AddDate(0, 0, -90)},
+			false,
+		},
+	}
+
+	testCases.run(
+		t,
+		ensure.Struct[Example](ensure.Fields{
+			"Date": ensure.Struct[time.Time](ensure.Fields{}).Is(notOlderThanSixtyDays),
+		}),
+		"Is()",
+	)
 }
 
 func TestStructValidator_Validate(t *testing.T) {
