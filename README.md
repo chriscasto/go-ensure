@@ -182,10 +182,34 @@ validator := ensure.Array[string]().Each(
 | Method            | Description                                                           |
 |-------------------|-----------------------------------------------------------------------|
 | IsNotEmpty()      | Passes if tested array is empty (len(arr) == 0)                       |
-| HasCount(int)     | Passes if the length of the tested array equal to the passed int      |
-| HasFewerThan(int) | Passes if the length of the tested array less than the passed int     |
-| HasMoreThan(int)  | Passes if the length of the tested array more than the passed int     |
+| HasCount(int)     | Passes if the length of the tested array is equal to the passed int   |
+| HasFewerThan(int) | Passes if the length of the tested array is less than the passed int  |
+| HasMoreThan(int)  | Passes if the length of the tested array is more than the passed int  |
 | Each(v)           | Passes if the provided validator passes for each element in the array |
+
+
+### Maps
+
+Validating maps is very similar to validating arrays.  The key difference is 
+that with maps you can apply validations to both keys and values.
+
+```
+validator = ensure.Map[string, int]().EachKey(
+    ensure.String()
+).EachValue(
+    ensure.Number[int]()
+)
+```
+
+| Method            | Description                                                          |
+|-------------------|----------------------------------------------------------------------|
+| IsNotEmpty()      | Passes if tested map is empty (len(map) == 0)                        |
+| HasCount(int)     | Passes if the length of the tested map is equal to the passed int    |
+| HasFewerThan(int) | Passes if the length of the tested map is less than the passed int |
+| HasMoreThan(int)  | Passes if the length of the tested map is more than the passed int |
+| EachKey(v)        | Passes if the provided validator passes for each key in the map      |
+| EachValue(v)      | Passes if the provided validator passes for each value in the map    |
+
 
 
 ### Structs
