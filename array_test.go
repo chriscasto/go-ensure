@@ -16,7 +16,7 @@ type arrayDummyStruct struct {
 	Bar int
 }
 
-func arrayTestType[T any](t *testing.T, name string, expect string) {
+func testArrayType[T any](t *testing.T, name string, expect string) {
 	t.Run(name, func(t *testing.T) {
 		av := ensure.Array[T]()
 		vType := av.Type()
@@ -42,11 +42,11 @@ func (tcs arrayTestCases[T]) run(t *testing.T, av *ensure.ArrayValidator[T], met
 }
 
 func TestArrayValidator_Type(t *testing.T) {
-	arrayTestType[string](t, "string", "[]string")
-	arrayTestType[int](t, "int", "[]int")
-	arrayTestType[float64](t, "float", "[]float64")
-	arrayTestType[arrayDummyStruct](t, "struct", "[]ensure_test.arrayDummyStruct")
-	arrayTestType[[]int](t, "array of int", "[][]int")
+	testArrayType[string](t, "string", "[]string")
+	testArrayType[int](t, "int", "[]int")
+	testArrayType[float64](t, "float", "[]float64")
+	testArrayType[arrayDummyStruct](t, "struct", "[]ensure_test.arrayDummyStruct")
+	testArrayType[[]int](t, "array of int", "[][]int")
 }
 
 func TestArrayValidator_IsNotEmpty(t *testing.T) {

@@ -29,7 +29,7 @@ func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
 	v.tests = append(v.tests, func(arr []T) error {
 		if len(arr) == 0 {
 			return errors.New(
-				fmt.Sprintf(`array is empty but shouldn't be`),
+				fmt.Sprintf(`array must not be empty`),
 			)
 		}
 
@@ -44,9 +44,9 @@ func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
 		if len(arr) != l {
 			return errors.New(
 				fmt.Sprintf(
-					`array has length %d but expects %d`,
-					len(arr),
-					l),
+					`array length must equal %d; got %d`,
+					l,
+					len(arr)),
 			)
 		}
 
@@ -61,9 +61,9 @@ func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
 		if len(arr) <= l {
 			return errors.New(
 				fmt.Sprintf(
-					`array has length %d which is shorter than min (%d)`,
-					len(arr),
-					l),
+					`array must have a length greater than %d; got %d`,
+					l,
+					len(arr)),
 			)
 		}
 
@@ -78,9 +78,9 @@ func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 		if len(arr) >= l {
 			return errors.New(
 				fmt.Sprintf(
-					`array has length %d which is longer than max (%d)`,
-					len(arr),
-					l),
+					`array must have a length less than %d; got %d`,
+					l,
+					len(arr)),
 			)
 		}
 

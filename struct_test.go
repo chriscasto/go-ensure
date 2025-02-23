@@ -189,6 +189,27 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 }
 
 func TestStructValidator_FriendlyNames(t *testing.T) {
+	t.Run("panic if field name doesn't exist", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+
+		bad := ensure.Struct[testStruct](
+			ensure.Fields{
+				"Str": ensure.String(),
+			},
+			ensure.FriendlyNames{
+				"String": "String Value",
+			},
+		)
+
+		if err := bad.Validate(""); err != nil {
+			t.Errorf("validation occured and generated an error: %s", err.Error())
+		}
+	})
+
 	validStruct := ensure.Struct[testStruct](
 		ensure.Fields{
 			"Str":   ensure.String().HasLength(3),
