@@ -12,10 +12,11 @@ type NumberType interface {
 	constraints.Integer | constraints.Float
 }
 
+type numCheckFunc[T NumberType] func(T) error
+
 type NumberValidator[T NumberType] struct {
-	//zeroVal T
 	typeStr     string
-	tests       []func(T) error
+	checks      []numCheckFunc[T]
 	placeholder string
 }
 
@@ -99,7 +100,7 @@ func (v *NumberValidator[T]) Validate(i interface{}) error {
 		return err
 	}
 
-	for _, fn := range v.tests {
+	for _, fn := range v.checks {
 		if err := fn(i.(T)); err != nil {
 			return err
 		}
@@ -108,7 +109,7 @@ func (v *NumberValidator[T]) Validate(i interface{}) error {
 	return nil
 }
 
-func (v *NumberValidator[T]) Is(fn func(T) error) *NumberValidator[T] {
-	v.tests = append(v.tests, fn)
+func (v *NumberValidator[T]) Is(fn numCheckFunc[T]) *NumberValidator[T] {
+	v.checks = append(v.checks, fn)
 	return v
 }

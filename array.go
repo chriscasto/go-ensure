@@ -6,9 +6,11 @@ import (
 	"reflect"
 )
 
+type arrCheckFunc[T any] func([]T) error
+
 type ArrayValidator[T any] struct {
 	typeStr string
-	tests   []func([]T) error
+	checks  []arrCheckFunc[T]
 }
 
 func Array[T any]() *ArrayValidator[T] {
@@ -99,7 +101,7 @@ func (v *ArrayValidator[T]) Validate(i interface{}) error {
 		return err
 	}
 
-	for _, fn := range v.tests {
+	for _, fn := range v.checks {
 		if err := fn(i.([]T)); err != nil {
 			return err
 		}
@@ -108,7 +110,7 @@ func (v *ArrayValidator[T]) Validate(i interface{}) error {
 	return nil
 }
 
-func (v *ArrayValidator[T]) Is(fn func([]T) error) *ArrayValidator[T] {
-	v.tests = append(v.tests, fn)
+func (v *ArrayValidator[T]) Is(fn arrCheckFunc[T]) *ArrayValidator[T] {
+	v.checks = append(v.checks, fn)
 	return v
 }

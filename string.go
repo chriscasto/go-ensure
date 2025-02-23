@@ -30,8 +30,10 @@ const (
 	Sha512 = `^[0-9a-f]{128}$`
 )
 
+type strCheckFunc func(string) error
+
 type StringValidator struct {
-	tests []func(string) error
+	checks []strCheckFunc
 }
 
 func String() *StringValidator {
@@ -49,7 +51,7 @@ func (v *StringValidator) Validate(i interface{}) error {
 		return &TypeError{"string expected"}
 	}
 
-	for _, fn := range v.tests {
+	for _, fn := range v.checks {
 		if err := fn(str); err != nil {
 			return NewValidationError(err.Error())
 		}
@@ -285,7 +287,7 @@ func (v *StringValidator) Matches(pattern string) *StringValidator {
 	})
 }
 
-func (v *StringValidator) Is(fn func(string) error) *StringValidator {
-	v.tests = append(v.tests, fn)
+func (v *StringValidator) Is(fn strCheckFunc) *StringValidator {
+	v.checks = append(v.checks, fn)
 	return v
 }

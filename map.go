@@ -12,7 +12,7 @@ type MapValidator[K comparable, V any] struct {
 	typeStr        string
 	keyTypeStr     string
 	valueTypeStr   string
-	tests          []mapCheckFunc[K, V]
+	checks         []mapCheckFunc[K, V]
 	keyValidator   Validator
 	valueValidator Validator
 }
@@ -40,7 +40,7 @@ func (mv *MapValidator[K, V]) Validate(i interface{}) error {
 
 	mp := i.(map[K]V)
 
-	for _, fn := range mv.tests {
+	for _, fn := range mv.checks {
 		if err := fn(mp); err != nil {
 			return NewValidationError(err.Error())
 		}
@@ -149,6 +149,6 @@ func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 }
 
 func (v *MapValidator[K, V]) Is(fn mapCheckFunc[K, V]) *MapValidator[K, V] {
-	v.tests = append(v.tests, fn)
+	v.checks = append(v.checks, fn)
 	return v
 }

@@ -5,12 +5,14 @@ import (
 	"reflect"
 )
 
+type structCheckFunc[T any] func(T) error
+
 type StructValidator[T any] struct {
 	zeroVal    T
 	refVal     reflect.Value
 	validators map[string]Validator
 	aliases    FriendlyNames
-	tests      []func(T) error
+	tests      []structCheckFunc[T]
 }
 
 func Struct[T any](fv map[string]Validator, friendlyNames ...FriendlyNames) *StructValidator[T] {
@@ -113,7 +115,7 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 	return nil
 }
 
-func (v *StructValidator[T]) Is(fn func(T) error) *StructValidator[T] {
+func (v *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
 	v.tests = append(v.tests, fn)
 	return v
 }
