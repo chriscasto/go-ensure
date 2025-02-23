@@ -6,3 +6,15 @@ type Validator interface {
 }
 
 type Fields map[string]Validator
+
+type TypeError struct {
+	err string
+}
+
+func NewTypeError(err string) *TypeError {
+	return &TypeError{err}
+}
+
+func (e *TypeError) Error() string {
+	return e.err
+}
