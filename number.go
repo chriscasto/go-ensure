@@ -12,10 +12,11 @@ type NumberType interface {
 	constraints.Integer | constraints.Float
 }
 
+type numCheckFunc[T NumberType] func(T) error
+
 type NumberValidator[T NumberType] struct {
-	//zeroVal T
 	typeStr     string
-	tests       []func(T) error
+	checks      []numCheckFunc[T]
 	placeholder string
 }
 
@@ -55,7 +56,7 @@ func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
 		panic(fmt.Sprintf("max cannot be less than min"))
 	}
 
-	v.tests = append(v.tests, func(i T) error {
+	return v.Is(func(i T) error {
 		if i < min || i >= max {
 			return errors.New(
 				fmt.Sprintf(
@@ -66,12 +67,10 @@ func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *NumberValidator[T]) IsLessThan(max T) *NumberValidator[T] {
-	v.tests = append(v.tests, func(i T) error {
+	return v.Is(func(i T) error {
 		if i >= max {
 			return errors.New(
 				fmt.Sprintf(
@@ -81,12 +80,10 @@ func (v *NumberValidator[T]) IsLessThan(max T) *NumberValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *NumberValidator[T]) IsGreaterThan(min T) *NumberValidator[T] {
-	v.tests = append(v.tests, func(i T) error {
+	return v.Is(func(i T) error {
 		if i <= min {
 			return errors.New(
 				fmt.Sprintf(
@@ -96,8 +93,6 @@ func (v *NumberValidator[T]) IsGreaterThan(min T) *NumberValidator[T] {
 
 		return nil
 	})
-
-	return v
 }
 
 func (v *NumberValidator[T]) Validate(i interface{}) error {
@@ -105,11 +100,16 @@ func (v *NumberValidator[T]) Validate(i interface{}) error {
 		return err
 	}
 
-	for _, fn := range v.tests {
+	for _, fn := range v.checks {
 		if err := fn(i.(T)); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (v *NumberValidator[T]) Is(fn numCheckFunc[T]) *NumberValidator[T] {
+	v.checks = append(v.checks, fn)
+	return v
 }
