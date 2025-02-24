@@ -229,36 +229,34 @@ func Test_IsEven(t *testing.T) {
 
 func TestNumberValidator_IsEven(t *testing.T) {
 	method := "IsEven()"
-	expectEven := true
-	makeIsEvenTestCases[int](expectEven).run(t, method)
-	makeIsEvenTestCases[int8](expectEven).run(t, method)
-	makeIsEvenTestCases[int16](expectEven).run(t, method)
-	makeIsEvenTestCases[int32](expectEven).run(t, method)
-	makeIsEvenTestCases[int64](expectEven).run(t, method)
-	makeIsEvenTestCases[uint](expectEven).run(t, method)
-	makeIsEvenTestCases[uint8](expectEven).run(t, method)
-	makeIsEvenTestCases[uint16](expectEven).run(t, method)
-	makeIsEvenTestCases[uint32](expectEven).run(t, method)
-	makeIsEvenTestCases[uint64](expectEven).run(t, method)
-	makeIsEvenTestCases[float32](expectEven).run(t, method)
-	makeIsEvenTestCases[float64](expectEven).run(t, method)
+	makeIsEvenTestCases[int](true).run(t, method)
+	makeIsEvenTestCases[int8](true).run(t, method)
+	makeIsEvenTestCases[int16](true).run(t, method)
+	makeIsEvenTestCases[int32](true).run(t, method)
+	makeIsEvenTestCases[int64](true).run(t, method)
+	makeIsEvenTestCases[uint](true).run(t, method)
+	makeIsEvenTestCases[uint8](true).run(t, method)
+	makeIsEvenTestCases[uint16](true).run(t, method)
+	makeIsEvenTestCases[uint32](true).run(t, method)
+	makeIsEvenTestCases[uint64](true).run(t, method)
+	makeIsEvenTestCases[float32](true).run(t, method)
+	makeIsEvenTestCases[float64](true).run(t, method)
 }
 
 func TestNumberValidator_IsOdd(t *testing.T) {
 	method := "IsOdd()"
-	expectEven := false
-	makeIsEvenTestCases[int](expectEven).run(t, method)
-	makeIsEvenTestCases[int8](expectEven).run(t, method)
-	makeIsEvenTestCases[int16](expectEven).run(t, method)
-	makeIsEvenTestCases[int32](expectEven).run(t, method)
-	makeIsEvenTestCases[int64](expectEven).run(t, method)
-	makeIsEvenTestCases[uint](expectEven).run(t, method)
-	makeIsEvenTestCases[uint8](expectEven).run(t, method)
-	makeIsEvenTestCases[uint16](expectEven).run(t, method)
-	makeIsEvenTestCases[uint32](expectEven).run(t, method)
-	makeIsEvenTestCases[uint64](expectEven).run(t, method)
-	makeIsEvenTestCases[float32](expectEven).run(t, method)
-	makeIsEvenTestCases[float64](expectEven).run(t, method)
+	makeIsEvenTestCases[int](false).run(t, method)
+	makeIsEvenTestCases[int8](false).run(t, method)
+	makeIsEvenTestCases[int16](false).run(t, method)
+	makeIsEvenTestCases[int32](false).run(t, method)
+	makeIsEvenTestCases[int64](false).run(t, method)
+	makeIsEvenTestCases[uint](false).run(t, method)
+	makeIsEvenTestCases[uint8](false).run(t, method)
+	makeIsEvenTestCases[uint16](false).run(t, method)
+	makeIsEvenTestCases[uint32](false).run(t, method)
+	makeIsEvenTestCases[uint64](false).run(t, method)
+	makeIsEvenTestCases[float32](false).run(t, method)
+	makeIsEvenTestCases[float64](false).run(t, method)
 }
 
 func TestNumberValidator_IsPositive(t *testing.T) {
