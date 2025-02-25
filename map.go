@@ -13,6 +13,7 @@ type MapValidator[K comparable, V any] struct {
 	keyTypeStr     string
 	valueTypeStr   string
 	checks         []mapCheckFunc[K, V]
+	lenValidator   *NumberValidator[int]
 	keyValidator   Validator
 	valueValidator Validator
 }
@@ -33,12 +34,24 @@ func (mv *MapValidator[K, V]) Type() string {
 	return mv.typeStr
 }
 
+// Length adds a NumberValidator for validating the length of the string
+func (mv *MapValidator[K, V]) Length(nv *NumberValidator[int]) *MapValidator[K, V] {
+	mv.lenValidator = nv
+	return mv
+}
+
 func (mv *MapValidator[K, V]) Validate(i interface{}) error {
 	if err := testType(i, mv.typeStr); err != nil {
 		return err
 	}
 
 	mp := i.(map[K]V)
+
+	if mv.lenValidator != nil {
+		if err := mv.lenValidator.Validate(len(mp)); err != nil {
+			return err
+		}
+	}
 
 	for _, fn := range mv.checks {
 		if err := fn(mp); err != nil {
@@ -148,7 +161,7 @@ func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 	})
 }
 
-func (v *MapValidator[K, V]) Is(fn mapCheckFunc[K, V]) *MapValidator[K, V] {
-	v.checks = append(v.checks, fn)
-	return v
+func (mv *MapValidator[K, V]) Is(fn mapCheckFunc[K, V]) *MapValidator[K, V] {
+	mv.checks = append(mv.checks, fn)
+	return mv
 }
