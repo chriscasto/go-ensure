@@ -9,8 +9,9 @@ import (
 type arrCheckFunc[T any] func([]T) error
 
 type ArrayValidator[T any] struct {
-	typeStr string
-	checks  []arrCheckFunc[T]
+	typeStr      string
+	lenValidator *NumberValidator[int]
+	checks       []arrCheckFunc[T]
 }
 
 func Array[T any]() *ArrayValidator[T] {
@@ -25,6 +26,23 @@ func Array[T any]() *ArrayValidator[T] {
 
 func (v *ArrayValidator[T]) Type() string {
 	return v.typeStr
+}
+
+func (v *ArrayValidator[T]) Length(nv *NumberValidator[int]) *ArrayValidator[T] {
+	v.lenValidator = nv
+	return v
+}
+
+func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
+	return v.Is(func(arr []T) error {
+		if len(arr) != 0 {
+			return errors.New(
+				fmt.Sprintf(`array must be empty`),
+			)
+		}
+
+		return nil
+	})
 }
 
 func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
@@ -101,8 +119,16 @@ func (v *ArrayValidator[T]) Validate(i interface{}) error {
 		return err
 	}
 
+	arr := i.([]T)
+
+	if v.lenValidator != nil {
+		if err := v.lenValidator.Validate(len(arr)); err != nil {
+			return err
+		}
+	}
+
 	for _, fn := range v.checks {
-		if err := fn(i.([]T)); err != nil {
+		if err := fn(arr); err != nil {
 			return err
 		}
 	}
