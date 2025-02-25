@@ -49,6 +49,15 @@ func TestArrayValidator_Type(t *testing.T) {
 	testArrayType[[]int](t, "array of int", "[][]int")
 }
 
+func TestArrayValidator_IsEmpty(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty": {[]int{}, true},
+		"one":   {[]int{1}, false},
+	}
+
+	testCases.run(t, ensure.Array[int]().IsEmpty(), "IsEmpty()")
+}
+
 func TestArrayValidator_IsNotEmpty(t *testing.T) {
 	testCases := arrayTestCases[int]{
 		"empty": {[]int{}, false},
