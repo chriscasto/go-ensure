@@ -28,6 +28,7 @@ func (v *ArrayValidator[T]) Type() string {
 	return v.typeStr
 }
 
+// Length adds a NumberValidator for validating the length of the array
 func (v *ArrayValidator[T]) Length(nv *NumberValidator[int]) *ArrayValidator[T] {
 	v.lenValidator = nv
 	return v
@@ -114,6 +115,7 @@ func (v *ArrayValidator[T]) Each(ev Validator) *ArrayValidator[T] {
 	})
 }
 
+// Validate applies all checks against the value being validated and returns an error if any fail
 func (v *ArrayValidator[T]) Validate(i interface{}) error {
 	if err := testType(i, v.typeStr); err != nil {
 		return err

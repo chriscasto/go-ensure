@@ -36,6 +36,21 @@ func TestStringValidator_Type(t *testing.T) {
 	}
 }
 
+func TestStringValidator_Length_Equals(t *testing.T) {
+	testCases := strTestCases{
+		"fewer letters": {"a", false},
+		"same letters":  {"abc", true},
+		"more letters":  {"wxyz", false},
+	}
+
+	strLen := 3
+	testCases.run(
+		t,
+		ensure.String().Length(ensure.Length().Equals(strLen)),
+		fmt.Sprintf("Length().Equals(%d)", strLen),
+	)
+}
+
 func TestStringValidator_HasLength(t *testing.T) {
 	testCases := strTestCases{
 		"fewer letters": {"a", false},

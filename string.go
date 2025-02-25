@@ -33,7 +33,8 @@ const (
 type strCheckFunc func(string) error
 
 type StringValidator struct {
-	checks []strCheckFunc
+	lenValidator *NumberValidator[int]
+	checks       []strCheckFunc
 }
 
 func String() *StringValidator {
@@ -44,11 +45,24 @@ func (v *StringValidator) Type() string {
 	return "string"
 }
 
+// Length adds a NumberValidator for validating the length of the string
+func (v *StringValidator) Length(nv *NumberValidator[int]) *StringValidator {
+	v.lenValidator = nv
+	return v
+}
+
+// Validate applies all checks against the value being validated and returns an error if any fail
 func (v *StringValidator) Validate(i interface{}) error {
 	str, ok := i.(string)
 
 	if !ok {
 		return &TypeError{"string expected"}
+	}
+
+	if v.lenValidator != nil {
+		if err := v.lenValidator.Validate(len(str)); err != nil {
+			return err
+		}
 	}
 
 	for _, fn := range v.checks {
