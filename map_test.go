@@ -55,6 +55,15 @@ func TestMapValidator_IsNotEmpty(t *testing.T) {
 	testCases.run(t, ensure.Map[string, int]().IsNotEmpty(), "IsNotEmpty()")
 }
 
+func TestMapValidator_IsEmpty(t *testing.T) {
+	testCases := mapTestCases[string, int]{
+		"empty": {map[string]int{}, true},
+		"one":   {map[string]int{"one": 1}, false},
+	}
+
+	testCases.run(t, ensure.Map[string, int]().IsEmpty(), "IsEmpty()")
+}
+
 func TestMapValidator_Length_Equals(t *testing.T) {
 	testCases := mapTestCases[string, int]{
 		"empty": {map[string]int{}, false},
@@ -66,7 +75,7 @@ func TestMapValidator_Length_Equals(t *testing.T) {
 	testCases.run(
 		t,
 		ensure.Map[string, int]().HasLengthWhere(ensure.Length().Equals(count)),
-		fmt.Sprintf("HasLengthWhere.Equals(%d)", count),
+		fmt.Sprintf("HasLengthWhere(Length().Equals(%d))", count),
 	)
 }
 
