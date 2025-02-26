@@ -65,8 +65,8 @@ func TestMapValidator_Length_Equals(t *testing.T) {
 	count := 1
 	testCases.run(
 		t,
-		ensure.Map[string, int]().Length(ensure.Length().Equals(count)),
-		fmt.Sprintf("Length.Equals(%d)", count),
+		ensure.Map[string, int]().HasLengthWhere(ensure.Length().Equals(count)),
+		fmt.Sprintf("HasLengthWhere.Equals(%d)", count),
 	)
 }
 

@@ -34,8 +34,8 @@ func (mv *MapValidator[K, V]) Type() string {
 	return mv.typeStr
 }
 
-// Length adds a NumberValidator for validating the length of the string
-func (mv *MapValidator[K, V]) Length(nv *NumberValidator[int]) *MapValidator[K, V] {
+// HasLengthWhere adds a NumberValidator for validating the length of the string
+func (mv *MapValidator[K, V]) HasLengthWhere(nv *NumberValidator[int]) *MapValidator[K, V] {
 	mv.lenValidator = nv
 	return mv
 }

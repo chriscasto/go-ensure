@@ -28,8 +28,8 @@ func (v *ArrayValidator[T]) Type() string {
 	return v.typeStr
 }
 
-// Length adds a NumberValidator for validating the length of the array
-func (v *ArrayValidator[T]) Length(nv *NumberValidator[int]) *ArrayValidator[T] {
+// HasLengthWhere adds a NumberValidator for validating the length of the array
+func (v *ArrayValidator[T]) HasLengthWhere(nv *NumberValidator[int]) *ArrayValidator[T] {
 	v.lenValidator = nv
 	return v
 }

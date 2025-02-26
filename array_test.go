@@ -77,8 +77,8 @@ func TestArrayValidator_Length_Equals(t *testing.T) {
 	count := 1
 	testCases.run(
 		t,
-		ensure.Array[int]().Length(ensure.Length().Equals(count)),
-		fmt.Sprintf("Length().Equals(%d)", count),
+		ensure.Array[int]().HasLengthWhere(ensure.Length().Equals(count)),
+		fmt.Sprintf("HasLengthWhere().Equals(%d)", count),
 	)
 }
 
@@ -107,8 +107,8 @@ func TestArrayValidator_Length_IsLessThan(t *testing.T) {
 	count := 1
 	testCases.run(
 		t,
-		ensure.Array[int]().Length(ensure.Length().IsLessThan(count)),
-		fmt.Sprintf("Length().IsLessThan(%d)", count),
+		ensure.Array[int]().HasLengthWhere(ensure.Length().IsLessThan(count)),
+		fmt.Sprintf("HasLengthWhere().IsLessThan(%d)", count),
 	)
 }
 

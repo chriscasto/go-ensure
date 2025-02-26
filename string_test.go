@@ -46,8 +46,8 @@ func TestStringValidator_Length_Equals(t *testing.T) {
 	strLen := 3
 	testCases.run(
 		t,
-		ensure.String().Length(ensure.Length().Equals(strLen)),
-		fmt.Sprintf("Length().Equals(%d)", strLen),
+		ensure.String().HasLengthWhere(ensure.Length().Equals(strLen)),
+		fmt.Sprintf("HasLengthWhere().Equals(%d)", strLen),
 	)
 }
 

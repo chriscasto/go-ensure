@@ -45,8 +45,8 @@ func (v *StringValidator) Type() string {
 	return "string"
 }
 
-// Length adds a NumberValidator for validating the length of the string
-func (v *StringValidator) Length(nv *NumberValidator[int]) *StringValidator {
+// HasLengthWhere adds a NumberValidator for validating the length of the string
+func (v *StringValidator) HasLengthWhere(nv *NumberValidator[int]) *StringValidator {
 	v.lenValidator = nv
 	return v
 }
