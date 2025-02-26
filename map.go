@@ -104,6 +104,22 @@ func (mv *MapValidator[K, V]) EachValue(vv Validator) *MapValidator[K, V] {
 	return mv
 }
 
+// IsEmpty adds a check that returns an error if the length of the map is not 0
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
+func (mv *MapValidator[K, V]) IsEmpty() *MapValidator[K, V] {
+	return mv.Is(func(mapVal map[K]V) error {
+		if len(mapVal) != 0 {
+			return errors.New(
+				fmt.Sprintf(`map must be empty`),
+			)
+		}
+
+		return nil
+	})
+}
+
+// IsNotEmpty adds a check that returns an error if the length of the map is 0
+// This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (mv *MapValidator[K, V]) IsNotEmpty() *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) == 0 {
@@ -116,6 +132,8 @@ func (mv *MapValidator[K, V]) IsNotEmpty() *MapValidator[K, V] {
 	})
 }
 
+// HasCount adds a check that returns an error if the length of the map is not the passed value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (mv *MapValidator[K, V]) HasCount(l int) *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) != l {

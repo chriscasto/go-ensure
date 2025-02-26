@@ -153,6 +153,7 @@ func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
 }
 
 // IsEmpty adds a validation check that returns an error if the target string is not empty
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
 func (v *StringValidator) IsEmpty() *StringValidator {
 	return v.Is(func(str string) error {
 		if len(str) != 0 {
@@ -165,6 +166,7 @@ func (v *StringValidator) IsEmpty() *StringValidator {
 }
 
 // IsNotEmpty adds a validation check that returns an error if the target string is empty
+// This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (v *StringValidator) IsNotEmpty() *StringValidator {
 	return v.Is(func(str string) error {
 		if len(str) == 0 {
@@ -270,6 +272,7 @@ func (v *StringValidator) IsShorterThanOrEqualTo(l int) *StringValidator {
 
 // HasLength adds a validation check that returns an error if the target
 // string length does not equal the specified value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (v *StringValidator) HasLength(l int) *StringValidator {
 	return v.Is(func(str string) error {
 		if len(str) != l {

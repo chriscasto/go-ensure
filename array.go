@@ -34,6 +34,8 @@ func (v *ArrayValidator[T]) HasLengthWhere(nv *NumberValidator[int]) *ArrayValid
 	return v
 }
 
+// IsEmpty adds a check that returns an error if the length of the array is not 0
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
 func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) != 0 {
@@ -46,6 +48,8 @@ func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
 	})
 }
 
+// IsNotEmpty adds a check that returns an error if the length of the array is
+// This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) == 0 {
@@ -58,6 +62,8 @@ func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
 	})
 }
 
+// HasCount adds a check that returns an error if the length of the array does not equal the provided value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) != l {
