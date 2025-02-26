@@ -84,7 +84,7 @@ func TestNumberValidator_InRange(t *testing.T) {
 			}
 		}()
 
-		bad := ensure.Number[int]().InRange(rangeMax, rangeMin)
+		bad := ensure.Number[int]().IsInRange(rangeMax, rangeMin)
 		if err := bad.Validate(rangeMin); err != nil {
 			t.Errorf("validation occured and generated an error: %s", err.Error())
 		}
@@ -100,8 +100,8 @@ func TestNumberValidator_InRange(t *testing.T) {
 
 	testCases.run(
 		t,
-		ensure.Number[int]().InRange(rangeMin, rangeMax),
-		fmt.Sprintf("InRange(%d, %d)", rangeMin, rangeMax),
+		ensure.Number[int]().IsInRange(rangeMin, rangeMax),
+		fmt.Sprintf("IsInRange(%d, %d)", rangeMin, rangeMax),
 	)
 }
 

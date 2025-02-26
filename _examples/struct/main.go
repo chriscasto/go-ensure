@@ -22,7 +22,7 @@ func main() {
 			// field Baz is an array of floats
 			"Baz": ensure.Array[float64]().Each(
 				// each value should be between 1.0 and 10.0
-				ensure.Number[float64]().InRange(1.0, 10.0),
+				ensure.Number[float64]().IsInRange(1.0, 10.0),
 			),
 		},
 		// define some user-friendly aliases for our fields to use when returning errors

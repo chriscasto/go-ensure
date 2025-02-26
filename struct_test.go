@@ -131,7 +131,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 		},
 		"single float expect pass": {
 			f: ensure.Fields{
-				"Float": ensure.Number[float64]().InRange(2.9, 3.1),
+				"Float": ensure.Number[float64]().IsInRange(2.9, 3.1),
 			},
 			s: testStruct{
 				Float: 3.0,
@@ -140,7 +140,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 		},
 		"single float expect err": {
 			f: ensure.Fields{
-				"Float": ensure.Number[float64]().InRange(2.9, 3.1),
+				"Float": ensure.Number[float64]().IsInRange(2.9, 3.1),
 			},
 			s: testStruct{
 				Float: 3.2,

@@ -97,9 +97,9 @@ func (v *NumberValidator[T]) fmtErrorMsg(msg string) string {
 	return strings.Replace(msg, "{}", v.placeholder, -1)
 }
 
-// InRange adds a check that returns an error if number being validated is not between the two numbers provided
+// IsInRange adds a check that returns an error if number being validated is not between the two numbers provided
 // Range is inclusive of the lower bound and exclusive of the upper bound
-func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
+func (v *NumberValidator[T]) IsInRange(min T, max T) *NumberValidator[T] {
 	if max < min {
 		panic(fmt.Sprintf("max cannot be less than min"))
 	}
