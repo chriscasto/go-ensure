@@ -39,9 +39,7 @@ func (v *ArrayValidator[T]) HasLengthWhere(nv *NumberValidator[int]) *ArrayValid
 func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) != 0 {
-			return errors.New(
-				fmt.Sprintf(`array must be empty`),
-			)
+			return errors.New(`array must be empty`)
 		}
 
 		return nil
@@ -53,9 +51,7 @@ func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
 func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) == 0 {
-			return errors.New(
-				fmt.Sprintf(`array must not be empty`),
-			)
+			return errors.New(`array must not be empty`)
 		}
 
 		return nil
@@ -144,6 +140,7 @@ func (v *ArrayValidator[T]) Validate(i interface{}) error {
 	return nil
 }
 
+// Is adds the provided function as a check against any values to be validated
 func (v *ArrayValidator[T]) Is(fn arrCheckFunc[T]) *ArrayValidator[T] {
 	v.checks = append(v.checks, fn)
 	return v

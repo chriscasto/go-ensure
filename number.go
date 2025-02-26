@@ -260,9 +260,7 @@ func (v *NumberValidator[T]) IsOneOf(values []T) *NumberValidator[T] {
 
 	return v.Is(func(num T) error {
 		if _, ok := lookup[num]; !ok {
-			return errors.New(
-				fmt.Sprintf(`number must be one of the permitted values`),
-			)
+			return errors.New(`number must be one of the permitted values`)
 		}
 		return nil
 	})
@@ -279,9 +277,7 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 
 	return v.Is(func(num T) error {
 		if _, ok := lookup[num]; ok {
-			return errors.New(
-				fmt.Sprintf(`number must not be one of the prohibited values`),
-			)
+			return errors.New(`number must not be one of the prohibited values`)
 		}
 		return nil
 	})

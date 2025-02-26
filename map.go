@@ -109,9 +109,7 @@ func (mv *MapValidator[K, V]) EachValue(vv Validator) *MapValidator[K, V] {
 func (mv *MapValidator[K, V]) IsEmpty() *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) != 0 {
-			return errors.New(
-				fmt.Sprintf(`map must be empty`),
-			)
+			return errors.New(`map must be empty`)
 		}
 
 		return nil
@@ -123,9 +121,7 @@ func (mv *MapValidator[K, V]) IsEmpty() *MapValidator[K, V] {
 func (mv *MapValidator[K, V]) IsNotEmpty() *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) == 0 {
-			return errors.New(
-				fmt.Sprintf(`map must not be empty`),
-			)
+			return errors.New(`map must not be empty`)
 		}
 
 		return nil
@@ -138,10 +134,7 @@ func (mv *MapValidator[K, V]) HasCount(l int) *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) != l {
 			return errors.New(
-				fmt.Sprintf(
-					`map length must equal %d; got %d`,
-					l,
-					len(mapVal)),
+				fmt.Sprintf(`map length must equal %d; got %d`, l, len(mapVal)),
 			)
 		}
 
@@ -153,10 +146,7 @@ func (mv *MapValidator[K, V]) HasMoreThan(l int) *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) <= l {
 			return errors.New(
-				fmt.Sprintf(
-					`map must have a length longer than %d; got %d`,
-					l,
-					len(mapVal)),
+				fmt.Sprintf(`map must have a length longer than %d; got %d`, l, len(mapVal)),
 			)
 		}
 
@@ -168,10 +158,7 @@ func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) >= l {
 			return errors.New(
-				fmt.Sprintf(
-					`map must have a length less than %d; got %d`,
-					l,
-					len(mapVal)),
+				fmt.Sprintf(`map must have a length less than %d; got %d`, l, len(mapVal)),
 			)
 		}
 
@@ -179,6 +166,7 @@ func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 	})
 }
 
+// Is adds the provided function as a check against any values to be validated
 func (mv *MapValidator[K, V]) Is(fn mapCheckFunc[K, V]) *MapValidator[K, V] {
 	mv.checks = append(mv.checks, fn)
 	return mv
