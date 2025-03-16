@@ -115,6 +115,7 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 	return nil
 }
 
+// Is adds the provided function as a check against any values to be validated
 func (v *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
 	v.tests = append(v.tests, fn)
 	return v

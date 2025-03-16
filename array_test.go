@@ -49,6 +49,15 @@ func TestArrayValidator_Type(t *testing.T) {
 	testArrayType[[]int](t, "array of int", "[][]int")
 }
 
+func TestArrayValidator_IsEmpty(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty": {[]int{}, true},
+		"one":   {[]int{1}, false},
+	}
+
+	testCases.run(t, ensure.Array[int]().IsEmpty(), "IsEmpty()")
+}
+
 func TestArrayValidator_IsNotEmpty(t *testing.T) {
 	testCases := arrayTestCases[int]{
 		"empty": {[]int{}, false},
@@ -56,6 +65,21 @@ func TestArrayValidator_IsNotEmpty(t *testing.T) {
 	}
 
 	testCases.run(t, ensure.Array[int]().IsNotEmpty(), "IsNotEmpty()")
+}
+
+func TestArrayValidator_Length_Equals(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty": {[]int{}, false},
+		"one":   {[]int{1}, true},
+		"two":   {[]int{1, 2}, false},
+	}
+
+	count := 1
+	testCases.run(
+		t,
+		ensure.Array[int]().HasLengthWhere(ensure.Length().Equals(count)),
+		fmt.Sprintf("HasLengthWhere(Length().Equals(%d))", count),
+	)
 }
 
 func TestArrayValidator_HasCount(t *testing.T) {

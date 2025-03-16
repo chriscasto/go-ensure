@@ -97,9 +97,9 @@ func (v *NumberValidator[T]) fmtErrorMsg(msg string) string {
 	return strings.Replace(msg, "{}", v.placeholder, -1)
 }
 
-// InRange adds a check that returns an error if number being validated is not between the two numbers provided
+// IsInRange adds a check that returns an error if number being validated is not between the two numbers provided
 // Range is inclusive of the lower bound and exclusive of the upper bound
-func (v *NumberValidator[T]) InRange(min T, max T) *NumberValidator[T] {
+func (v *NumberValidator[T]) IsInRange(min T, max T) *NumberValidator[T] {
 	if max < min {
 		panic(fmt.Sprintf("max cannot be less than min"))
 	}
@@ -260,9 +260,7 @@ func (v *NumberValidator[T]) IsOneOf(values []T) *NumberValidator[T] {
 
 	return v.Is(func(num T) error {
 		if _, ok := lookup[num]; !ok {
-			return errors.New(
-				fmt.Sprintf(`number must be one of the permitted values`),
-			)
+			return errors.New(`number must be one of the permitted values`)
 		}
 		return nil
 	})
@@ -279,9 +277,7 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 
 	return v.Is(func(num T) error {
 		if _, ok := lookup[num]; ok {
-			return errors.New(
-				fmt.Sprintf(`number must not be one of the prohibited values`),
-			)
+			return errors.New(`number must not be one of the prohibited values`)
 		}
 		return nil
 	})

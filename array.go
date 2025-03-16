@@ -9,8 +9,9 @@ import (
 type arrCheckFunc[T any] func([]T) error
 
 type ArrayValidator[T any] struct {
-	typeStr string
-	checks  []arrCheckFunc[T]
+	typeStr      string
+	lenValidator *NumberValidator[int]
+	checks       []arrCheckFunc[T]
 }
 
 func Array[T any]() *ArrayValidator[T] {
@@ -27,18 +28,38 @@ func (v *ArrayValidator[T]) Type() string {
 	return v.typeStr
 }
 
-func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
+// HasLengthWhere adds a NumberValidator for validating the length of the array
+func (v *ArrayValidator[T]) HasLengthWhere(nv *NumberValidator[int]) *ArrayValidator[T] {
+	v.lenValidator = nv
+	return v
+}
+
+// IsEmpty adds a check that returns an error if the length of the array is not 0
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
+func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
-		if len(arr) == 0 {
-			return errors.New(
-				fmt.Sprintf(`array must not be empty`),
-			)
+		if len(arr) != 0 {
+			return errors.New(`array must be empty`)
 		}
 
 		return nil
 	})
 }
 
+// IsNotEmpty adds a check that returns an error if the length of the array is
+// This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
+func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
+	return v.Is(func(arr []T) error {
+		if len(arr) == 0 {
+			return errors.New(`array must not be empty`)
+		}
+
+		return nil
+	})
+}
+
+// HasCount adds a check that returns an error if the length of the array does not equal the provided value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) != l {
@@ -96,13 +117,22 @@ func (v *ArrayValidator[T]) Each(ev Validator) *ArrayValidator[T] {
 	})
 }
 
+// Validate applies all checks against the value being validated and returns an error if any fail
 func (v *ArrayValidator[T]) Validate(i interface{}) error {
 	if err := testType(i, v.typeStr); err != nil {
 		return err
 	}
 
+	arr := i.([]T)
+
+	if v.lenValidator != nil {
+		if err := v.lenValidator.Validate(len(arr)); err != nil {
+			return err
+		}
+	}
+
 	for _, fn := range v.checks {
-		if err := fn(i.([]T)); err != nil {
+		if err := fn(arr); err != nil {
 			return err
 		}
 	}
@@ -110,6 +140,7 @@ func (v *ArrayValidator[T]) Validate(i interface{}) error {
 	return nil
 }
 
+// Is adds the provided function as a check against any values to be validated
 func (v *ArrayValidator[T]) Is(fn arrCheckFunc[T]) *ArrayValidator[T] {
 	v.checks = append(v.checks, fn)
 	return v

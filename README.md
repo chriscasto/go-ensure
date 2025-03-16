@@ -84,25 +84,24 @@ func main() {
 
 #### Methods
 
-| Method                      | Description                                                                             |
-|-----------------------------|-----------------------------------------------------------------------------------------|
-| IsEmpty()                   | Passes if the tested string is empty (len() == 0)                                       |
-| IsNotEmpty()                | Passes if the tested string is not empty (len() != 0)                                   |
-| StartsWith(str)             | Passes if the tested string begins with provided string value                           |
-| DoesNotStartWith(str)       | Passes if the tested string does not begin with provided string value                   |
-| EndsWith(str)               | Passes if the tested string ends with provided string value                             |
-| DoesNotEndWith(str)         | Passes if the tested string does not end with provided string value                     |
-| Contains(str)               | Passes if provided string value occurs anywhere in the tested string                    |
-| DoesNotContain(str)         | Passes if provided string value does not occur anywhere in the tested string            |
-| HasLength(int)              | Passes if the tested string's length is exactly the same as the provided int            |
-| IsShorterThan(int)          | Passes if the tested string's length is less than the provided int                      |
-| IsShorterThanOrEqualTo(int) | Passes if the tested string's length is less than or equal to the provided int          |
-| IsLongerThan(int)           | Passes if the tested string's length is greater than the provided int                   |
-| IsLongerThanOrEqualTo(int)  | Passes if the tested string's length is greater than or equal to than the provided int  |
-| IsOneOf([]string)           | Passes if the tested string is identical to one of the values in the provided array     |
-| IsNotOneOf([]string)        | Passes if the tested string is not identical to any of the values in the provided array |
-| Matches(str)                | Passes if the tested string matches the provided regular expression                     |
-| Is(func (str) error)        | Passes if the function passed does not produce an error during validation               |
+| Method                | Description                                                                             |
+|-----------------------|-----------------------------------------------------------------------------------------|
+| IsEmpty()             | Passes if the tested string is empty (len() == 0)                                       |
+| IsNotEmpty()          | Passes if the tested string is not empty (len() != 0)                                   |
+| StartsWith(str)       | Passes if the tested string begins with provided string value                           |
+| DoesNotStartWith(str) | Passes if the tested string does not begin with provided string value                   |
+| EndsWith(str)         | Passes if the tested string ends with provided string value                             |
+| DoesNotEndWith(str)   | Passes if the tested string does not end with provided string value                     |
+| Contains(str)         | Passes if provided string value occurs anywhere in the tested string                    |
+| DoesNotContain(str)   | Passes if provided string value does not occur anywhere in the tested string            |
+| HasLength(int)        | Passes if the tested string's length is exactly the same as the provided int            |
+| IsShorterThan(int)    | Passes if the tested string's length is less than the provided int                      |
+| IsLongerThan(int)     | Passes if the tested string's length is greater than the provided int                   |
+| HasLengthWhere(v)     | Adds a number validator that evaluates against the length of the string                 |
+| IsOneOf([]string)     | Passes if the tested string is identical to one of the values in the provided array     |
+| IsNotOneOf([]string)  | Passes if the tested string is not identical to any of the values in the provided array |
+| Matches(str)          | Passes if the tested string matches the provided regular expression                     |
+| Is(func (str) error)  | Passes if the function passed does not produce an error during validation               |
 
 #### Predefined Regex Patterns
 
@@ -153,7 +152,7 @@ validator := ensure.Number[float64]().IsGreaterThan(10.0)
 |-----------------------------|-----------------------------------------------------------------------------------------------------|
 | Equals(num)                 | Passes if the tested number is exactly the same as the provided value                               |
 | DoesNotEqual(num)           | Passes if the tested number is not the same as the provided value                                   |
-| InRange(low, high)          | Passes if the tested number is greater than or equal to the low value and lower than the high value |
+| IsInRange(low, high)        | Passes if the tested number is greater than or equal to the low value and lower than the high value |
 | IsLessThan(num)             | Passes if the tested number is less than the provided value                                         |
 | IsLessThanOrEqualTo(num)    | Passes if the tested number is less than or equal to the the provided value                         |
 | IsGreaterThan(num)          | Passes if the tested number is greater than the provided value                                      |
@@ -192,14 +191,16 @@ validator := ensure.Array[string]().Each(
  )
 ```
 
-| Method                | Description                                                               |
-|-----------------------|---------------------------------------------------------------------------|
-| IsNotEmpty()          | Passes if tested array is empty (len(arr) == 0)                           |
-| HasCount(int)         | Passes if the length of the tested array is equal to the passed int       |
-| HasFewerThan(int)     | Passes if the length of the tested array is less than the passed int      |
-| HasMoreThan(int)      | Passes if the length of the tested array is more than the passed int      |
-| Each(v)               | Passes if the provided validator passes for each element in the array     |
-| Is(func ([]T]) error) | Passes if the function passed does not produce an error during validation |
+| Method                 | Description                                                               |
+|------------------------|---------------------------------------------------------------------------|
+| IsEmpty()              | Passes if tested array is empty (len(arr) == 0)                           |
+| IsNotEmpty()           | Passes if tested array is not empty (len(arr) != 0)                       |
+| HasCount(int)          | Passes if the length of the tested array is equal to the passed int       |
+| HasFewerThan(int)      | Passes if the length of the tested array is less than the passed int      |
+| HasMoreThan(int)       | Passes if the length of the tested array is more than the passed int      |
+| HasLengthWhere(v)      | Adds a number validator that evaluates against the length of the array    |
+| Each(v)                | Passes if the provided validator passes for each element in the array     |
+| Is(func ([]T]) error)  | Passes if the function passed does not produce an error during validation |
 
 
 ### Maps
@@ -217,28 +218,69 @@ validator = ensure.Map[string, int]().EachKey(
 
 | Method                   | Description                                                               |
 |--------------------------|---------------------------------------------------------------------------|
-| IsNotEmpty()             | Passes if tested map is empty (len(map) == 0)                             |
+| IsEmpty()                | Passes if tested map is empty (len(arr) == 0)                             |
+| IsNotEmpty()             | Passes if tested map is not empty (len(map) != 0)                         |
 | HasCount(int)            | Passes if the length of the tested map is equal to the passed int         |
 | HasFewerThan(int)        | Passes if the length of the tested map is less than the passed int        |
 | HasMoreThan(int)         | Passes if the length of the tested map is more than the passed int        |
+| HasLengthWhere(v)        | Adds a number validator that evaluates against the length of the map      |
 | EachKey(v)               | Passes if the provided validator passes for each key in the map           |
 | EachValue(v)             | Passes if the provided validator passes for each value in the map         |
 | Is(func (map[K]V) error) | Passes if the function passed does not produce an error during validation |
 
+
+### A note on lengths
+
+Validators for types that have a length property (string, map, array) all have a
+method that enables comprehensive number validation against their length.  This
+method, `HasLengthWhere()` accepts a single number validator instance with arbitrary
+rules.  For instance, to only allow strings that have an odd number of characters,
+you could do something like this:
+
+```
+ensure.String().HasLengthWhere(
+    ensure.Length().IsOdd()
+)
+```
+
+Note the use of the `Length()` function.  This is a convenience function that returns
+exactly the right type of number validator for evaluating length properties, so you
+should use this anytime you need to validate based on length.
+
+These same validators also have a small number of convenience functions for 
+evaluating common length scenarios, such as whether or not an array is empty.  For
+these common cases, you should prefer these methods instead for their conciseness.
+
+Compare this:
+```
+ensure.Array[int]().IsNotEmpty()
+```
+
+to this:
+```
+ensure.Array[int]().HasLengthWhere(ensure.Length().DoesNotEqual(0))
+```
 
 ### Structs
 
 A struct is basically just a container for a group of values, so validating a 
 struct is just a matter of validating each of the fields it contains.  Because 
 of this, the magic of the struct validator is almost entirely in the constructor.
-The constructor takes a single value: a map of type `Fields`.  It looks something
-like this:
+The constructor takes a single required value, a map of type `Fields`, and a
+second optional value, a map of type `FriendlyNames`.  The former creates a
+validator for each field and the latter provides a set of human-readable (and
+user-friendly) names to use when identifying the field to which an error message
+belongs.  It looks something like this:
 
 ```
 validStruct := ensure.Struct[MyStruct](ensure.Fields{
     "Field1": ensure.String(),
     "Field2": ensure.Number[int](),
     "Field3": ensure.Array[float64](),
+}, ensure.FriendlyNames{
+    "Field1": "First Field"
+    "Field2": "Second Field"
+    "Field3": "Third Field"
 })
 ```
 

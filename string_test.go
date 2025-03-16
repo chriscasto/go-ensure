@@ -36,6 +36,21 @@ func TestStringValidator_Type(t *testing.T) {
 	}
 }
 
+func TestStringValidator_Length_Equals(t *testing.T) {
+	testCases := strTestCases{
+		"fewer letters": {"a", false},
+		"same letters":  {"abc", true},
+		"more letters":  {"wxyz", false},
+	}
+
+	strLen := 3
+	testCases.run(
+		t,
+		ensure.String().HasLengthWhere(ensure.Length().Equals(strLen)),
+		fmt.Sprintf("HasLengthWhere(Length().Equals(%d))", strLen),
+	)
+}
+
 func TestStringValidator_HasLength(t *testing.T) {
 	testCases := strTestCases{
 		"fewer letters": {"a", false},
@@ -78,36 +93,6 @@ func TestStringValidator_IsLongerThan(t *testing.T) {
 		t,
 		ensure.String().IsLongerThan(strLen),
 		fmt.Sprintf("IsLongerThan(%d)", strLen),
-	)
-}
-
-func TestStringValidator_IsShorterThanOrEqualTo(t *testing.T) {
-	testCases := strTestCases{
-		"fewer letters": {"a", true},
-		"same letters":  {"abc", true},
-		"more letters":  {"wxyz", false},
-	}
-
-	strLen := 3
-	testCases.run(
-		t,
-		ensure.String().IsShorterThanOrEqualTo(strLen),
-		fmt.Sprintf("IsShorterThanOrEqualTo(%d)", strLen),
-	)
-}
-
-func TestStringValidator_IsLongerThanOrEqualTo(t *testing.T) {
-	testCases := strTestCases{
-		"fewer letters": {"a", false},
-		"same letters":  {"abc", true},
-		"more letters":  {"wxyz", true},
-	}
-
-	strLen := 3
-	testCases.run(
-		t,
-		ensure.String().IsLongerThanOrEqualTo(strLen),
-		fmt.Sprintf("IsLongerThanOrEqualTo(%d)", strLen),
 	)
 }
 

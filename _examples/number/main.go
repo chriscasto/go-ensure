@@ -26,7 +26,7 @@ func main() {
 	}
 
 	// number should be a float between 1.0 and 10.0
-	f := ensure.Number[float64]().InRange(1.0, 2.0)
+	f := ensure.Number[float64]().IsInRange(1.0, 2.0)
 
 	goodFloat := 1.2345
 

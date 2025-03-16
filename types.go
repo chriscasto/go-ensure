@@ -20,6 +20,11 @@ type Fields map[string]Validator
 // Example: "FirstName" => "First Name", "Dob" => "Date of Birth"
 type FriendlyNames map[string]string
 
+// Length is a convenience function for creating a validator to be used on types with a length property
+func Length() *NumberValidator[int] {
+	return Number[int]()
+}
+
 // TypeError indicates a mismatch between the type expected by a validator and
 // the type of the value passed to the validator.  This should generally not
 // be passed back to the user.
