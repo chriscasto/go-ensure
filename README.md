@@ -29,7 +29,7 @@ doesn't contain an "@" sign, you would define your validation like this:
 validator := ensure.String().HasLength(8).DoesNotContain("@")
 ```
 
-You could then test a value with this validator using something like this:
+You could then test a value with the validator this produces using something like this:
 
 ```
 if err := validator.Validate("baseball"); err != nil {

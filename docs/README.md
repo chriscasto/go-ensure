@@ -4,13 +4,13 @@ You can read more about the options for validating different value types below.
 There are some code snippets for each type, but if you want fully runnable examples,
 check out the [_examples](../_examples) directory.
 
-| Type   | Basic Usage                                                             | Validator Type               | Documentation           |
-|--------|-------------------------------------------------------------------------|------------------------------|-------------------------|
-| String | `ensure.String().IsNotEmpty().StartsWith('abc')`                        | `ensure.StringValidator`     | [Strings](./strings.md) |
-| Number | `ensure.Number[int]().IsGreaterThan(0)`                                 | `ensure.NumberValidator[T]`  | [Numbers](./numbers.md) |
-| Array  | `ensure.Array[string]().Each(ensure.String().Matches("^\d+$"))`         | `ensure.ArrayValidator[T]`   | [Arrays](./arrays.md)   |
-| Map    | `ensure.Map[string,int]().EachKey(ensure.String().HasLength(3))`        | `ensure.MapValidator[K,V]`   | [Maps](./maps.md)       |
-| Struct | `ensure.Struct[MyStruct](ensure.Fields{ "Foo": ensure.Number[int]() })` | `ensure.StrucdtValidator[T]` | [Structs](./structs.md) |
+| Type   | Basic Usage                                                               | Validator Type              | Documentation           |
+|--------|---------------------------------------------------------------------------|-----------------------------|-------------------------|
+| String | `ensure.String().IsNotEmpty().StartsWith('abc')`                          | `ensure.StringValidator`    | [Strings](./strings.md) |
+| Number | `ensure.Number[int]().IsGreaterThan(0)`                                   | `ensure.NumberValidator[T]` | [Numbers](./numbers.md) |
+| Array  | `ensure.Array[string]().Each( ensure.String().Matches("^\d+$") )`         | `ensure.ArrayValidator[T]`  | [Arrays](./arrays.md)   |
+| Map    | `ensure.Map[string,int]().EachKey( ensure.String().HasLength(3) )`        | `ensure.MapValidator[K,V]`  | [Maps](./maps.md)       |
+| Struct | `ensure.Struct[MyStruct]( ensure.Fields{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
 
 
 ## Construction Errors
@@ -59,7 +59,7 @@ ensure.String().HasLengthWhere(
 ```
 
 Note the use of the `Length()` function.  This is a convenience function that returns
-just the right type of number validator for evaluating length properties, so you
+a number validator with the right generic type for evaluating length properties, so you
 should use this anytime you need to validate based on length.
 
 These same validators also have a small number of convenience functions for 
@@ -76,5 +76,77 @@ to this:
 ensure.Array[int]().HasLengthWhere(ensure.Length().DoesNotEqual(0))
 ```
 
+
+## The `Is` function
+
+While every effort has been made to provide a comprehensive set of validations
+for the broadest set of types and values possible, there are some validation
+rules that defy simple boolean logic.  In these cases where combining multiple
+rules still isn't enough to get the desired results, the `Is()` method can be
+used to provide a function with arbitrary logic that will be evaluated the same
+as any other rule.
+
+Consider a situation where we want to make sure that an expiration date is not 
+a time in the past and is less than 90 days in the future.  Here's one way you 
+could define that using the `Is()` function to add each rule independently.
+
+```
+func notInThePast(date time.Time) error {
+    if date.Before(time.Now()) {
+        return errors.New("expiration date cannot be in the past")
+    }
+	
+    return nil
+}
+
+func lessThanNinetyDaysFromNow(date time.Time) error {
+    if date.After(time.Now().Add(90 * 24 * time.Hour)) {
+        return errors.New("expiration date cannot be more than 90 days in the future")
+    }
+	
+    return nil
+}
+
+validExpiration := ensure.Struct[time.Time]().Is(notInThePast).Is(lessThanNinetyDaysFromNow)
+```
+
+Here's an alternate version that combines both rules into a single function.
+Both options are functionally the same, so do whatever works best for you.
+
+```
+func inExpectedTimeRange(date time.Time) error {
+    now := time.Now()
+
+    if date.Before(now) {
+        return errors.New("expiration date cannot be in the past")
+    }
+		
+    if date.After(now.Add(90 * 24 * time.Hour)) {
+        return errors.New("expiration date cannot be more than 90 days in the future")
+    }
+	
+    return nil
+}
+
+validExpiration := ensure.Struct[time.Time]().Is(inExpectedTimeRange)
+```
+
+You can, of course, also pass function literals
+
+```
+validExpiration := ensure.Struct[time.Time]().Is(func (date time.Time) error {
+    now := time.Now()
+
+    if date.Before(now) {
+        return errors.New("expiration date cannot be in the past")
+    }
+		
+    if date.After(now.Add(90 * 24 * time.Hour)) {
+        return errors.New("expiration date cannot be more than 90 days in the future")
+    }
+	
+    return nil
+})
+```
 
 

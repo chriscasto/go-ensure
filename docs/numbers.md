@@ -33,6 +33,16 @@ validator := ensure.Number[float64]().IsGreaterThan(10.0)
 | IsNegative()                | Passes if the tested number is less than zero                                                       |
 | IsZero()                    | Passes if the tested number is zero                                                                 |
 | IsNotZero()                 | Passes if the tested number is not zero                                                             |
-| IsOneOf([]num)              | Passes if the tested number is in the passed array                                                  |
-| IsNotOneOf([]num)           | Passes if the tested number is not in the passed array                                              |
+| IsOneOf([]T nums)           | Passes if the tested number is in the passed array                                                  |
+| IsNotOneOf([]T nums)        | Passes if the tested number is not in the passed array                                              |
 | Is(func (num) error)        | Passes if the function passed does not produce an error during validation                           |
+
+## Even and Odd
+
+The concepts of "even" and "odd" are only really valid for integer types.  Float
+values will always return false unless both of the following are true:
+
+1) it has a zero fractional component (eg 1.0, 2.0, etc) and
+2) the whole number component would itself return true
+
+For example, `IsEven(2.0)` will return true, but `IsEven(2.2)` and `IsEven(1.0)` will not.

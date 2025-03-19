@@ -24,13 +24,13 @@ validator := ensure.Array[string]().Each(
 
 ## Methods
 
-| Method                 | Description                                                               |
-|------------------------|---------------------------------------------------------------------------|
-| IsEmpty()              | Passes if tested array is empty (len(arr) == 0)                           |
-| IsNotEmpty()           | Passes if tested array is not empty (len(arr) != 0)                       |
-| HasCount(int)          | Passes if the length of the tested array is equal to the passed int       |
-| HasFewerThan(int)      | Passes if the length of the tested array is less than the passed int      |
-| HasMoreThan(int)       | Passes if the length of the tested array is more than the passed int      |
-| HasLengthWhere(v)      | Adds a number validator that evaluates against the length of the array    |
-| Each(v)                | Passes if the provided validator passes for each element in the array     |
-| Is(func ([]T]) error)  | Passes if the function passed does not produce an error during validation |
+| Method               | Description                                                               |
+|----------------------|---------------------------------------------------------------------------|
+| IsEmpty()            | Passes if tested array is empty (len(arr) == 0)                           |
+| IsNotEmpty()         | Passes if tested array is not empty (len(arr) != 0)                       |
+| HasCount(int)        | Passes if the length of the tested array is equal to the passed int       |
+| HasFewerThan(int)    | Passes if the length of the tested array is less than the passed int      |
+| HasMoreThan(int)     | Passes if the length of the tested array is more than the passed int      |
+| HasLengthWhere(v)    | Adds a number validator that evaluates against the length of the array    |
+| Each(v)              | Passes if the provided validator passes for each element in the array     |
+| Is(func ([]T) error) | Passes if the function passed does not produce an error during validation |
