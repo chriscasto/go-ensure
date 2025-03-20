@@ -14,13 +14,14 @@ type numTestCase[T ensure.NumberType] struct {
 type numTestCases[T ensure.NumberType] map[string]numTestCase[T]
 
 func (tcs numTestCases[T]) run(t *testing.T, sv *ensure.NumberValidator[T], method string) {
+	vType := sv.Type()
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
 			err := sv.Validate(tc.value)
 			if err != nil && tc.willPass {
-				t.Errorf(`Number().%s.Validate(%v); expected no error, got "%s"`, method, tc.value, err)
+				t.Errorf(`Number[%s]().%s.Validate(%v); expected no error, got "%s"`, vType, method, tc.value, err)
 			} else if err == nil && !tc.willPass {
-				t.Errorf(`Number().%s.Validate(%v); expected error but got none`, method, tc.value)
+				t.Errorf(`Number[%s]().%s.Validate(%v); expected error but got none`, vType, method, tc.value)
 			}
 		})
 	}
@@ -206,12 +207,12 @@ func Test_IsEven(t *testing.T) {
 	// just covering edge cases here
 
 	// this should be false because 2.1 is not a whole number
-	if ensure.IsEven[float32]("float32", 2.1) {
+	if ensure.IsEven("float32", float32(2.1)) {
 		t.Errorf("expect isEven() to return false for %v", 2.1)
 	}
 
 	// this should be false because 2.1 is not a whole number
-	if ensure.IsEven[float64]("float64", 2.1) {
+	if ensure.IsEven("float64", float64(2.1)) {
 		t.Errorf("expect isEven() to return false for %v", 2.1)
 	}
 
@@ -223,7 +224,33 @@ func Test_IsEven(t *testing.T) {
 		}()
 
 		// this should panic because the type string passed is not a valid number
-		ensure.IsEven[int]("string", 2)
+		ensure.IsEven("string", "2")
+	})
+}
+
+func Test_IsOdd(t *testing.T) {
+	// most cases are covered in the Number().IsEven()/IsOdd() tests below, so
+	// just covering edge cases here
+
+	// this should be false because 2.1 is not a whole number
+	if ensure.IsOdd("float32", float32(2.1)) {
+		t.Errorf("expect isOdd() to return false for %v", 2.1)
+	}
+
+	// this should be false because 2.1 is not a whole number
+	if ensure.IsOdd("float64", float64(2.1)) {
+		t.Errorf("expect isOdd() to return false for %v", 2.1)
+	}
+
+	t.Run("panic if type is not a number", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+
+		// this should panic because the type string passed is not a valid number
+		ensure.IsOdd("string", "2")
 	})
 }
 
@@ -241,6 +268,19 @@ func TestNumberValidator_IsEven(t *testing.T) {
 	makeIsEvenTestCases[uint64](true).run(t, method)
 	makeIsEvenTestCases[float32](true).run(t, method)
 	makeIsEvenTestCases[float64](true).run(t, method)
+
+	// test floats with non-zero decimal values
+	floatTests := isEvenTestCases[float64]{
+		ensure.Number[float64]().IsEven(),
+		numTestCases[float64]{
+			"odd decimal component":  {0.1, false},
+			"whole even":             {2.0, true},
+			"even decimal component": {2.2, false},
+			"whole odd":              {3.0, false},
+		},
+	}
+
+	floatTests.run(t, method)
 }
 
 func TestNumberValidator_IsOdd(t *testing.T) {
@@ -257,6 +297,31 @@ func TestNumberValidator_IsOdd(t *testing.T) {
 	makeIsEvenTestCases[uint64](false).run(t, method)
 	makeIsEvenTestCases[float32](false).run(t, method)
 	makeIsEvenTestCases[float64](false).run(t, method)
+
+	// test floats with non-zero decimal values
+	float32Tests := isEvenTestCases[float32]{
+		ensure.Number[float32]().IsOdd(),
+		numTestCases[float32]{
+			"odd decimal component":  {0.1, false},
+			"whole even":             {2.0, false},
+			"even decimal component": {2.2, false},
+			"whole odd":              {3.0, true},
+		},
+	}
+
+	float32Tests.run(t, method)
+
+	float64Tests := isEvenTestCases[float64]{
+		ensure.Number[float64]().IsOdd(),
+		numTestCases[float64]{
+			"odd decimal component":  {0.1, false},
+			"whole even":             {2.0, false},
+			"even decimal component": {2.2, false},
+			"whole odd":              {3.0, true},
+		},
+	}
+
+	float64Tests.run(t, method)
 }
 
 func TestNumberValidator_IsPositive(t *testing.T) {
