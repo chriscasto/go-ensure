@@ -13,49 +13,89 @@ type NumberType interface {
 	constraints.Integer | constraints.Float
 }
 
+// numCheckFunc is the type of function used for validating number types
 type numCheckFunc[T NumberType] func(T) error
 
-// isEven returns a boolean value indicating whether the provided number is even
-func isEven[T NumberType](typeStr string, i T) bool {
-	// always either 1 or 0, so we don't need a wide int
-	// setting result to 1 means the default case is false
-	result := int8(1)
+// isIntEven returns true if an int value can be considered even
+func isIntEven(typeStr string, i any) bool {
+	// we only use the last bit, so we don't need a wide int
+	var intVal int8
 
+	// coerce to the appropriate type, then downcast to int8
 	switch typeStr {
 	case "int":
-		result = int8(int(i) & 1)
+		intVal = int8(i.(int))
 	case "uint":
-		result = int8(uint(i) & 1)
+		intVal = int8(i.(uint))
 	case "int8":
-		result = int8(i) & 1
+		intVal, _ = i.(int8)
 	case "uint8":
-		result = int8(uint8(i) & 1)
+		intVal = int8(i.(uint8))
 	case "int16":
-		result = int8(int16(i) & 1)
+		intVal = int8(i.(int16))
 	case "uint16":
-		result = int8(uint16(i) & 1)
+		intVal = int8(i.(uint16))
 	case "int32":
-		result = int8(int32(i) & 1)
+		intVal = int8(i.(int32))
 	case "uint32":
-		result = int8(uint32(i) & 1)
+		intVal = int8(i.(uint32))
 	case "int64":
-		result = int8(int64(i) & 1)
+		intVal = int8(i.(int64))
 	case "uint64":
-		result = int8(uint64(i) & 1)
-	case "float32":
-		fallthrough
-	case "float64":
-		// can only be even if there is no decimal
-		if math.Mod(float64(i), 1) != 0 {
-			return false
-		}
-		result = int8(int64(i) & 1)
+		intVal = int8(i.(uint64))
 	default:
 		panic(fmt.Sprintf(`type "%s" cannot be even or odd`, typeStr))
 	}
 
-	// note that the default case is to just return false
-	return result == 0
+	// int is even if the 1 bit is not set
+	return (intVal & 1) == 0
+}
+
+// isFloatEven returns true if a float value can be considered even
+func isFloatEven(i float64) bool {
+	// can't be even if the decimal component is not zero
+	if math.Mod(i, 1) != 0 {
+		return false
+	}
+
+	// int component is even if the 1 bit is not set
+	return int8(int64(i)&1) == 0
+}
+
+// isFloatOdd returns true if a float value can be considered odd
+func isFloatOdd(i float64) bool {
+	// can't be odd if the decimal component is not zero
+	if math.Mod(i, 1) != 0 {
+		return false
+	}
+
+	// int component is odd if the 1 bit is set
+	return int8(int64(i)&1) == 1
+}
+
+// isEven returns a boolean value indicating whether the provided number is even
+func isEven(typeStr string, i any) bool {
+	// check to see whether it's a float
+	switch typeStr {
+	case "float32":
+		return isFloatEven(float64(i.(float32)))
+	case "float64":
+		return isFloatEven(i.(float64))
+	default:
+		return isIntEven(typeStr, i)
+	}
+}
+
+func isOdd(typeStr string, i any) bool {
+	// check to see whether it's a float
+	switch typeStr {
+	case "float32":
+		return isFloatOdd(float64(i.(float32)))
+	case "float64":
+		return isFloatOdd(i.(float64))
+	default:
+		return !isIntEven(typeStr, i)
+	}
 }
 
 type NumberValidator[T NumberType] struct {
@@ -204,7 +244,7 @@ func (v *NumberValidator[T]) IsGreaterThanOrEqualTo(target T) *NumberValidator[T
 // IsEven adds a check that returns an error if number being validated is not even
 func (v *NumberValidator[T]) IsEven() *NumberValidator[T] {
 	return v.Is(func(i T) error {
-		if !isEven[T](v.typeStr, i) {
+		if !isEven(v.typeStr, i) {
 			return errors.New(
 				fmt.Sprintf(
 					v.fmtErrorMsg("number must be even; got {}"), i),
@@ -218,7 +258,7 @@ func (v *NumberValidator[T]) IsEven() *NumberValidator[T] {
 // IsOdd adds a check that returns an error if number being validated is not odd
 func (v *NumberValidator[T]) IsOdd() *NumberValidator[T] {
 	return v.Is(func(i T) error {
-		if isEven[T](v.typeStr, i) {
+		if !isOdd(v.typeStr, i) {
 			return errors.New(
 				fmt.Sprintf(
 					v.fmtErrorMsg("number must be odd; got {}"), i),
