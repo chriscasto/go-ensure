@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 	"time"
 )
@@ -10,7 +11,7 @@ import (
 // constructBad generates a function that will call the constructor
 // This enables the call to be defined in a test case but called in a context
 // that can catch the anticipated panic.
-func constructBad[T any](empty T, fields ensure.Fields) func() error {
+func constructBad[T any](empty T, fields with.Fields) func() error {
 	return func() error {
 		bad := ensure.Struct[T](fields)
 		if err := bad.Validate(empty); err != nil {
@@ -46,30 +47,30 @@ func TestStructValidator_Construct(t *testing.T) {
 		construct func() error
 	}{
 		"not struct": {
-			construct: constructBad(1, ensure.Fields{
+			construct: constructBad(1, with.Fields{
 				"foo": ensure.String(),
 			}),
 		},
 		"invalid field": {
-			construct: constructBad(testStruct{}, ensure.Fields{
+			construct: constructBad(testStruct{}, with.Fields{
 				// Field "foo" does not exist in our struct
 				"foo": ensure.String(),
 			}),
 		},
 		"wrong field type": {
-			construct: constructBad(testStruct{}, ensure.Fields{
+			construct: constructBad(testStruct{}, with.Fields{
 				// This should be int, not string
 				"Int": ensure.String(),
 			}),
 		},
 		"wrong number subtype": {
-			construct: constructBad(testStruct{}, ensure.Fields{
+			construct: constructBad(testStruct{}, with.Fields{
 				// This should be int, not float64
 				"Int": ensure.Number[float64](),
 			}),
 		},
 		"wrong number size": {
-			construct: constructBad(testStruct{}, ensure.Fields{
+			construct: constructBad(testStruct{}, with.Fields{
 				// This should be int, not int8
 				"Int": ensure.Number[int8](),
 			}),
@@ -93,26 +94,26 @@ func TestStructValidator_Construct(t *testing.T) {
 
 func TestStructValidator_ValidateStruct(t *testing.T) {
 	testCases := map[string]struct {
-		f         ensure.Fields
+		f         with.Fields
 		s         testStruct
 		expectErr bool
 	}{
 		"single string expect pass": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Str": ensure.String().HasLength(3),
 			},
 			s:         testStruct{Str: "foo"},
 			expectErr: false,
 		},
 		"single string expect err": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Str": ensure.String().HasLength(4),
 			},
 			s:         testStruct{Str: "foo"},
 			expectErr: true,
 		},
 		"single int expect pass": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Int": ensure.Number[int]().IsGreaterThan(1),
 			},
 			s: testStruct{
@@ -121,7 +122,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: false,
 		},
 		"single int expect fail": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Int": ensure.Number[int]().IsGreaterThan(10),
 			},
 			s: testStruct{
@@ -130,7 +131,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: true,
 		},
 		"single float expect pass": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Float": ensure.Number[float64]().IsInRange(2.9, 3.1),
 			},
 			s: testStruct{
@@ -139,7 +140,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: false,
 		},
 		"single float expect err": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Float": ensure.Number[float64]().IsInRange(2.9, 3.1),
 			},
 			s: testStruct{
@@ -148,7 +149,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: true,
 		},
 		"multiple fields expect pass": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Str": ensure.String().HasLength(3),
 				"Int": ensure.Number[int]().IsGreaterThan(0),
 			},
@@ -159,7 +160,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: false,
 		},
 		"multiple fields expect err": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Str": ensure.String().HasLength(3),
 				"Int": ensure.Number[int]().IsGreaterThan(0),
 			},
@@ -170,7 +171,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: true,
 		},
 		"all fields expect pass": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Str":   ensure.String().HasLength(3),
 				"Int":   ensure.Number[int]().IsGreaterThan(0),
 				"Float": ensure.Number[float64]().IsLessThan(4.2),
@@ -183,7 +184,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 			expectErr: false,
 		},
 		"all fields expect err": {
-			f: ensure.Fields{
+			f: with.Fields{
 				"Str":   ensure.String().HasLength(3),
 				"Int":   ensure.Number[int]().IsGreaterThan(0),
 				"Float": ensure.Number[float64]().IsLessThan(4.2),
@@ -219,10 +220,10 @@ func TestStructValidator_FriendlyNames(t *testing.T) {
 		}()
 
 		bad := ensure.Struct[testStruct](
-			ensure.Fields{
+			with.Fields{
 				"Str": ensure.String(),
 			},
-			ensure.FriendlyNames{
+			with.FriendlyNames{
 				"String": "String Value",
 			},
 		)
@@ -233,12 +234,12 @@ func TestStructValidator_FriendlyNames(t *testing.T) {
 	})
 
 	validStruct := ensure.Struct[testStruct](
-		ensure.Fields{
+		with.Fields{
 			"Str":   ensure.String().HasLength(3),
 			"Int":   ensure.Number[int]().IsGreaterThan(0),
 			"Float": ensure.Number[float64]().IsLessThan(4.2),
 		},
-		ensure.FriendlyNames{
+		with.FriendlyNames{
 			"Str":   "String Value",
 			"Int":   "Integer Value",
 			"Float": "Decimal Value",
@@ -312,8 +313,8 @@ func TestStructValidator_Is(t *testing.T) {
 
 	testCases.run(
 		t,
-		ensure.Struct[Example](ensure.Fields{
-			"Date": ensure.Struct[time.Time](ensure.Fields{}).Is(notOlderThanSixtyDays),
+		ensure.Struct[Example](with.Fields{
+			"Date": ensure.Struct[time.Time](with.Fields{}).Is(notOlderThanSixtyDays),
 		}),
 		"Is()",
 	)
@@ -321,5 +322,5 @@ func TestStructValidator_Is(t *testing.T) {
 
 func TestStructValidator_Validate(t *testing.T) {
 	// see util_test.go
-	runDefaultValidatorTestCases(t, ensure.Struct[testStruct](ensure.Fields{}))
+	runDefaultValidatorTestCases(t, ensure.Struct[testStruct](with.Fields{}))
 }

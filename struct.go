@@ -2,6 +2,7 @@ package ensure
 
 import (
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
 
@@ -10,12 +11,12 @@ type structCheckFunc[T any] func(T) error
 type StructValidator[T any] struct {
 	zeroVal    T
 	refVal     reflect.Value
-	validators map[string]Validator
-	aliases    FriendlyNames
+	validators map[string]with.Validator
+	aliases    with.FriendlyNames
 	tests      []structCheckFunc[T]
 }
 
-func Struct[T any](fv map[string]Validator, friendlyNames ...FriendlyNames) *StructValidator[T] {
+func Struct[T any](fv map[string]with.Validator, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
 	// Create an empty instance of the struct
 	var zero T
 
@@ -51,7 +52,7 @@ func Struct[T any](fv map[string]Validator, friendlyNames ...FriendlyNames) *Str
 		}
 	}
 
-	aliases := FriendlyNames{}
+	aliases := with.FriendlyNames{}
 
 	// add friendly names for struct fields, if any
 	if len(friendlyNames) > 0 {

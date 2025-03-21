@@ -5,21 +5,6 @@ import (
 	"reflect"
 )
 
-// Validator represents an object that can evaluate a passed value against a set of checks
-type Validator interface {
-	// Validate runs any checks against the passed value
-	Validate(any) error
-	// Type returns the type of value this Validator is able to validate
-	Type() string
-}
-
-// Fields is a helper type for defining field validators for structs
-type Fields map[string]Validator
-
-// FriendlyNames provides a mapping from struct field name to human-understandable name
-// Example: "FirstName" => "First Name", "Dob" => "Date of Birth"
-type FriendlyNames map[string]string
-
 // Length is a convenience function for creating a validator to be used on types with a length property
 func Length() *NumberValidator[int] {
 	return Number[int]()
