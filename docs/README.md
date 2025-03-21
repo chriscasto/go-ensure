@@ -4,13 +4,13 @@ You can read more about the options for validating different value types below.
 There are some code snippets for each type, but if you want fully runnable examples,
 check out the [_examples](../_examples) directory.
 
-| Type   | Basic Usage                                                               | Validator Type              | Documentation           |
-|--------|---------------------------------------------------------------------------|-----------------------------|-------------------------|
-| String | `ensure.String().IsNotEmpty().StartsWith('abc')`                          | `ensure.StringValidator`    | [Strings](./strings.md) |
-| Number | `ensure.Number[int]().IsGreaterThan(0)`                                   | `ensure.NumberValidator[T]` | [Numbers](./numbers.md) |
-| Array  | `ensure.Array[string]().Each( ensure.String().Matches("^\d+$") )`         | `ensure.ArrayValidator[T]`  | [Arrays](./arrays.md)   |
-| Map    | `ensure.Map[string,int]().EachKey( ensure.String().HasLength(3) )`        | `ensure.MapValidator[K,V]`  | [Maps](./maps.md)       |
-| Struct | `ensure.Struct[MyStruct]( ensure.Fields{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
+| Type   | Basic Usage                                                             | Validator Type              | Documentation           |
+|--------|-------------------------------------------------------------------------|-----------------------------|-------------------------|
+| String | `ensure.String().IsNotEmpty().StartsWith('abc')`                        | `ensure.StringValidator`    | [Strings](./strings.md) |
+| Number | `ensure.Number[int]().IsGreaterThan(0)`                                 | `ensure.NumberValidator[T]` | [Numbers](./numbers.md) |
+| Array  | `ensure.Array[string]().Each( ensure.String().Matches("^\d+$") )`       | `ensure.ArrayValidator[T]`  | [Arrays](./arrays.md)   |
+| Map    | `ensure.Map[string,int]().EachKey( ensure.String().HasLength(3) )`      | `ensure.MapValidator[K,V]`  | [Maps](./maps.md)       |
+| Struct | `ensure.Struct[MyStruct]( with.Fields{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
 
 
 ## Construction Errors
@@ -19,10 +19,17 @@ Validation objects are intended to be constructed infrequently, typically once
 at startup, then used many times, basically for the life of the program.  It's 
 generally helpful to consider validators to be statically compiled constants
 rather than variables to be mutated dynamically.  This is not a hard rule, and
-there are plenty of valid use cases for dynamic construction, but be aware that
-validator builder methods will panic if used incorrectly, so be prepared to 
+there are certainly some valid use cases for dynamic construction, but be aware
+that validator builder methods will panic if used incorrectly, so be prepared to 
 `recover()` if you decide to instantiate validators dynamically outside of program
 initialization.
+
+We panic rather than return an error because an invalid validator is a risk to
+the security and integrity of your application, and using "soft" errors runs the
+risk of enabling a situation where the application may be running with validation
+that is incomplete or otherwise working differently than intended.  If the 
+validation cannot itself pass its own sanity checks, the app should be considered
+too unsafe to run.
 
 Most initialization errors can be caught by the compiler (such as mixing types
 like `Number[int]().IsLessThan(10.0)` or attempting to call an invalid method
@@ -35,7 +42,7 @@ type MyStruct {
     Bar string
 }
 
-validStruct := ensure.Struct[MyStruct](ensure.Fields{
+validStruct := ensure.Struct[MyStruct](with.Fields{
     # This will panic because the declared type doesn't match the actual field type
     "Foo": ensure.Number[int](),
     

@@ -10,11 +10,11 @@ user-friendly) names to use when identifying the field to which an error message
 belongs.  It looks something like this:
 
 ```
-validStruct := ensure.Struct[MyStruct](ensure.Fields{
+validStruct := ensure.Struct[MyStruct](with.Fields{
     "Field1": ensure.String(),
     "Field2": ensure.Number[int](),
     "Field3": ensure.Array[float64](),
-}, ensure.FriendlyNames{
+}, with.FriendlyNames{
     "Field1": "First Field"
     "Field2": "Second Field"
     "Field3": "Third Field"
@@ -39,11 +39,11 @@ type Person struct {
 You might then have validation that looks something like this:
 
 ```
-validator := ensure.Struct[Company](ensure.Fields{
+validator := ensure.Struct[Company](with.Fields{
     "Name": ensure.String().IsNotEmpty(),
     "Revenue": ensure.Number[float64]().IsGreaterThan(0.0),
     "Employees": ensure.Array[Person].Each(
-        ensure.Struct[Person](ensure.Fields{
+        ensure.Struct[Person](with.Fields{
             "FirstName": ensure.String().IsNotEmpty().Matches(ensure.Alpha),
             "LastName": ensure.String().IsNotEmpty().Matches(ensure.Alpha),
         },
@@ -58,12 +58,12 @@ things a bit to make it more readable:
 ```
 validName := ensure.String().IsNotEmpty().Matches(ensure.Alpha)
 
-validPerson := ensure.Struct[Person](ensure.Fields{
+validPerson := ensure.Struct[Person](with.Fields{
     "FirstName": validName,
     "LastName": validName,
 })
 
-validCompany := ensure.Struct[Company](ensure.Fields{
+validCompany := ensure.Struct[Company](with.Fields{
     "Name": ensure.String().IsNotEmpty(),
     "Revenue": ensure.Number[float64]().IsGreaterThan(0.0),
     "Employees": ensure.Array[Person].Each(validPerson),

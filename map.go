@@ -3,6 +3,7 @@ package ensure
 import (
 	"errors"
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
 
@@ -14,8 +15,8 @@ type MapValidator[K comparable, V any] struct {
 	valueTypeStr   string
 	checks         []mapCheckFunc[K, V]
 	lenValidator   *NumberValidator[int]
-	keyValidator   Validator
-	valueValidator Validator
+	keyValidator   with.Validator
+	valueValidator with.Validator
 }
 
 func Map[K comparable, V any]() *MapValidator[K, V] {
@@ -77,7 +78,7 @@ func (mv *MapValidator[K, V]) Validate(i interface{}) error {
 }
 
 // EachKey assigns a Validator to be used for validating map keys
-func (mv *MapValidator[K, V]) EachKey(kv Validator) *MapValidator[K, V] {
+func (mv *MapValidator[K, V]) EachKey(kv with.Validator) *MapValidator[K, V] {
 	if mv.keyTypeStr != kv.Type() {
 		panic(fmt.Sprintf(
 			`map validator has keys with type \"%s\", got key validator with type \"%s\"`,
@@ -91,7 +92,7 @@ func (mv *MapValidator[K, V]) EachKey(kv Validator) *MapValidator[K, V] {
 }
 
 // EachValue assigns a Validator to be used for validating map values
-func (mv *MapValidator[K, V]) EachValue(vv Validator) *MapValidator[K, V] {
+func (mv *MapValidator[K, V]) EachValue(vv with.Validator) *MapValidator[K, V] {
 	if mv.valueTypeStr != vv.Type() {
 		panic(fmt.Sprintf(
 			`map validator has values with type \"%s\", got value validator with type \"%s\"`,

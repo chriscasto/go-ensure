@@ -3,6 +3,7 @@ package ensure
 import (
 	"errors"
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
 
@@ -105,7 +106,7 @@ func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 	})
 }
 
-func (v *ArrayValidator[T]) Each(ev Validator) *ArrayValidator[T] {
+func (v *ArrayValidator[T]) Each(ev with.Validator) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		for _, e := range arr {
 			if err := ev.Validate(e); err != nil {

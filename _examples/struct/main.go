@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 )
 
 type testStruct struct {
@@ -14,7 +15,7 @@ type testStruct struct {
 func main() {
 	// struct should be type main.testStruct
 	s := ensure.Struct[testStruct](
-		ensure.Fields{
+		with.Fields{
 			// field Foo should be a string with more than 3 characters
 			"Foo": ensure.String().IsLongerThan(3),
 			// field Bar should be an integer > 10
@@ -26,7 +27,7 @@ func main() {
 			),
 		},
 		// define some user-friendly aliases for our fields to use when returning errors
-		ensure.FriendlyNames{
+		with.FriendlyNames{
 			"Foo": "FOOOOOO!",
 			"Bar": "BAR BAR BAR",
 			"Baz": "Bazzler",

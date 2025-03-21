@@ -1,7 +1,7 @@
 package ensure_test
 
 import (
-	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 )
 
@@ -18,7 +18,7 @@ type validatorTestCase struct {
 
 type validatorTestCases map[string]*validatorTestCase
 
-func (tcs *validatorTestCases) run(t *testing.T, v ensure.Validator) {
+func (tcs *validatorTestCases) run(t *testing.T, v with.Validator) {
 	for name, tc := range *tcs {
 		t.Run(name, func(t *testing.T) {
 			err := v.Validate(tc.input)
@@ -31,7 +31,7 @@ func (tcs *validatorTestCases) run(t *testing.T, v ensure.Validator) {
 	}
 }
 
-func getDefaultValidatorTestCases(v ensure.Validator) validatorTestCases {
+func getDefaultValidatorTestCases(v with.Validator) validatorTestCases {
 	testCases := validatorTestCases{
 		"string":   {"a", false},
 		"[]string": {[]string{"a", "b", "c"}, false},
@@ -58,7 +58,7 @@ func getDefaultValidatorTestCases(v ensure.Validator) validatorTestCases {
 	return testCases
 }
 
-func runDefaultValidatorTestCases(t *testing.T, v ensure.Validator) {
+func runDefaultValidatorTestCases(t *testing.T, v with.Validator) {
 	testCases := getDefaultValidatorTestCases(v)
 	testCases.run(t, v)
 }
