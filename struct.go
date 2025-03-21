@@ -9,14 +9,18 @@ import (
 type structCheckFunc[T any] func(T) error
 
 type StructValidator[T any] struct {
-	zeroVal    T
-	refVal     reflect.Value
-	validators map[string]with.Validator
-	aliases    with.FriendlyNames
-	tests      []structCheckFunc[T]
+	zeroVal T
+	refVal  reflect.Value
+	tests   []structCheckFunc[T]
+
+	fieldValidators with.Fields
+	fieldAliases    with.FriendlyNames
+
+	getterValidators with.Fields
+	getterAliases    with.FriendlyNames
 }
 
-func Struct[T any](fv map[string]with.Validator, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
+func Struct[T any]() *StructValidator[T] {
 	// Create an empty instance of the struct
 	var zero T
 
@@ -26,8 +30,21 @@ func Struct[T any](fv map[string]with.Validator, friendlyNames ...with.FriendlyN
 		panic("type T must be a struct")
 	}
 
+	return &StructValidator[T]{
+		zeroVal:          zero,
+		refVal:           ref,
+		fieldValidators:  with.Fields{},
+		fieldAliases:     with.FriendlyNames{},
+		getterValidators: with.Fields{},
+		getterAliases:    with.FriendlyNames{},
+	}
+}
+
+func (sv *StructValidator[T]) HasFields(fields with.Fields, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
+	ref := sv.refVal
+
 	// make sure that validator type matches field type
-	for name, v := range fv {
+	for name, validator := range fields {
 		field := ref.FieldByName(name)
 
 		if !field.IsValid() {
@@ -40,39 +57,95 @@ func Struct[T any](fv map[string]with.Validator, friendlyNames ...with.FriendlyN
 			)
 		}
 
-		if field.Type().String() != v.Type() {
+		if field.Type().String() != validator.Type() {
 			panic(
 				fmt.Sprintf(
-					"field %s is type %s but validator expects %s",
+					"field %s is type [%s] but validator expects [%s]",
 					name,
 					field.Type().String(),
-					v.Type(),
+					validator.Type(),
 				),
 			)
 		}
-	}
 
-	aliases := with.FriendlyNames{}
+		sv.fieldValidators[name] = validator
+	}
 
 	// add friendly names for struct fields, if any
 	if len(friendlyNames) > 0 {
 		for _, names := range friendlyNames {
 			for field, alias := range names {
-				if _, ok := fv[field]; !ok {
+				if _, ok := fields[field]; !ok {
 					panic(fmt.Sprintf(`cannot set alias for field "%s"; field does not exist`, field))
 				}
 
-				aliases[field] = alias
+				sv.fieldAliases[field] = alias
 			}
 		}
 	}
 
-	return &StructValidator[T]{
-		zeroVal:    zero,
-		refVal:     ref,
-		validators: fv,
-		aliases:    aliases,
+	return sv
+}
+
+func (sv *StructValidator[T]) HasGetters(methods with.Fields, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
+	ref := sv.refVal
+
+	// make sure that validator type matches field type
+	for name, validator := range methods {
+		method := ref.MethodByName(name)
+
+		if !method.IsValid() {
+			panic(
+				fmt.Sprintf(
+					"method %s() does not exist in struct %s",
+					name,
+					ref.Type().String(),
+				),
+			)
+		}
+
+		mType := method.Type()
+
+		if mType.NumOut() > 1 {
+			panic(
+				fmt.Sprintf(
+					"method %s() has %d return values but validator expects 1",
+					name,
+					mType.NumOut(),
+				),
+			)
+		}
+
+		retVal := mType.Out(0)
+
+		if retVal.String() != validator.Type() {
+			panic(
+				fmt.Sprintf(
+					"return value for method %s() is type [%s] but validator expects [%s]",
+					name,
+					retVal.String(),
+					validator.Type(),
+				),
+			)
+		}
+
+		sv.getterValidators[name] = validator
 	}
+
+	// add friendly names for struct methods, if any
+	if len(friendlyNames) > 0 {
+		for _, names := range friendlyNames {
+			for method, alias := range names {
+				if _, ok := methods[method]; !ok {
+					panic(fmt.Sprintf(`cannot set alias for method "%s()"; method does not exist`, method))
+				}
+
+				sv.getterAliases[method] = alias
+			}
+		}
+	}
+
+	return sv
 }
 
 func (v *StructValidator[T]) Type() string {
@@ -99,15 +172,32 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 		}
 	}
 
-	for field, val := range v.validators {
+	// validate fields
+	for field, val := range v.fieldValidators {
 		fieldVal := sRef.FieldByName(field)
 		if err := val.Validate(fieldVal.Interface()); err != nil {
 			var printName string
 
-			if alias, ok := v.aliases[field]; ok {
+			if alias, ok := v.fieldAliases[field]; ok {
 				printName = alias
 			} else {
 				printName = field
+			}
+
+			return NewValidationError(fmt.Sprintf("%s: %s", printName, err.Error()))
+		}
+	}
+
+	// validate getters
+	for method, val := range v.getterValidators {
+		methodVal := sRef.MethodByName(method)
+		if err := val.Validate(methodVal.Interface()); err != nil {
+			var printName string
+
+			if alias, ok := v.getterAliases[method]; ok {
+				printName = alias
+			} else {
+				printName = method
 			}
 
 			return NewValidationError(fmt.Sprintf("%s: %s", printName, err.Error()))

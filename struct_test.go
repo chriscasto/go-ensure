@@ -13,7 +13,7 @@ import (
 // that can catch the anticipated panic.
 func constructBad[T any](empty T, fields with.Fields) func() error {
 	return func() error {
-		bad := ensure.Struct[T](fields)
+		bad := ensure.Struct[T]().HasFields(fields)
 		if err := bad.Validate(empty); err != nil {
 			return err
 		}
@@ -200,7 +200,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			v := ensure.Struct[testStruct](tc.f)
+			v := ensure.Struct[testStruct]().HasFields(tc.f)
 			err := v.ValidateStruct(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
@@ -219,7 +219,7 @@ func TestStructValidator_FriendlyNames(t *testing.T) {
 			}
 		}()
 
-		bad := ensure.Struct[testStruct](
+		bad := ensure.Struct[testStruct]().HasFields(
 			with.Fields{
 				"Str": ensure.String(),
 			},
@@ -233,7 +233,7 @@ func TestStructValidator_FriendlyNames(t *testing.T) {
 		}
 	})
 
-	validStruct := ensure.Struct[testStruct](
+	validStruct := ensure.Struct[testStruct]().HasFields(
 		with.Fields{
 			"Str":   ensure.String().HasLength(3),
 			"Int":   ensure.Number[int]().IsGreaterThan(0),
@@ -313,8 +313,8 @@ func TestStructValidator_Is(t *testing.T) {
 
 	testCases.run(
 		t,
-		ensure.Struct[Example](with.Fields{
-			"Date": ensure.Struct[time.Time](with.Fields{}).Is(notOlderThanSixtyDays),
+		ensure.Struct[Example]().HasFields(with.Fields{
+			"Date": ensure.Struct[time.Time]().Is(notOlderThanSixtyDays),
 		}),
 		"Is()",
 	)
@@ -322,5 +322,5 @@ func TestStructValidator_Is(t *testing.T) {
 
 func TestStructValidator_Validate(t *testing.T) {
 	// see util_test.go
-	runDefaultValidatorTestCases(t, ensure.Struct[testStruct](with.Fields{}))
+	runDefaultValidatorTestCases(t, ensure.Struct[testStruct]())
 }
