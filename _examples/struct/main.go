@@ -14,8 +14,8 @@ type testStruct struct {
 
 func main() {
 	// struct should be type main.testStruct
-	s := ensure.Struct[testStruct](
-		with.Fields{
+	s := ensure.Struct[testStruct]().HasFields(
+		with.Validators{
 			// field Foo should be a string with more than 3 characters
 			"Foo": ensure.String().IsLongerThan(3),
 			// field Bar should be an integer > 10
