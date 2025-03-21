@@ -15,6 +15,7 @@ go get github.com/chriscasto/go-ensure
 ```
 import (
     "github.com/chriscasto/go-ensure"
+    "github.com/chriscasto/go-ensure/with"
 )
 ```
 
