@@ -11,7 +11,7 @@ type structCheckFunc[T any] func(T) error
 type validMethod struct {
 	ref         *reflect.Method
 	displayName string
-	isPtr       bool
+	hasValRcvr  bool
 	validator   with.Validator
 }
 
@@ -103,14 +103,14 @@ func (sv *StructValidator[T]) HasFields(validators with.Validators, displayNames
 }
 
 func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {
-	ref := sv.refVal
+	refType := sv.refVal.Type()
 
 	// To get all the methods on a struct, we have to look at the pointer value
-	ptr := reflect.PointerTo(ref.Type())
+	ptr := reflect.PointerTo(refType)
 
 	aliases := with.DisplayNames{}
 
-	// collect aliases for lookup during method processing
+	// Collect aliases for lookup during method processing
 	if len(displayNames) > 0 {
 		for _, names := range displayNames {
 			for method, alias := range names {
@@ -123,15 +123,32 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 		}
 	}
 
+	// Collect all methods with value receivers
+	// We use this as a simple check to know whether we should pass a value or a pointer at evaluation time
+	valMethods := map[string]reflect.Method{}
+
+	for i := range refType.NumMethod() {
+		method := refType.Method(i)
+		valMethods[method.Name] = method
+	}
+
 	for name, validator := range validators {
-		method, ok := ptr.MethodByName(name)
+		// First check to see if the method has a value type receiver
+		method, ok := valMethods[name]
+		hasValRcvr := true
+
+		// If we don't find it there, check the ptr version
+		if !ok {
+			hasValRcvr = false
+			method, ok = ptr.MethodByName(name)
+		}
 
 		if !ok {
 			panic(
 				fmt.Sprintf(
 					"method %s() does not exist in struct %s",
 					name,
-					ref.Type().String(),
+					refType.String(),
 				),
 			)
 		}
@@ -183,6 +200,7 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 		sv.getters = append(sv.getters, &validMethod{
 			displayName: displayName,
 			ref:         &method,
+			hasValRcvr:  hasValRcvr,
 			validator:   validator,
 		})
 	}
@@ -224,8 +242,16 @@ func (sv *StructValidator[T]) ValidateStruct(s T) error {
 
 	// validate getters
 	for _, method := range sv.getters {
+		var receiver reflect.Value
+
+		if method.hasValRcvr {
+			receiver = reflect.ValueOf(s)
+		} else {
+			receiver = reflect.ValueOf(&s)
+		}
+
 		// Call the getter method
-		result := method.ref.Func.Call([]reflect.Value{reflect.ValueOf(&s)})
+		result := method.ref.Func.Call([]reflect.Value{receiver})
 		retVal := result[0].Interface()
 
 		if err := method.validator.Validate(retVal); err != nil {

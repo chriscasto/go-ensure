@@ -12,26 +12,32 @@ type testStruct struct {
 	Float float64
 }
 
-func (ts *testStruct) GetStr() string {
+// GetStr is used to test getter validation on a string type
+func (ts testStruct) GetStr() string {
 	return ts.Str
 }
 
+// GetInt is used to test getter validation on an int type
+// Note that the use of a ptr receiver here is intentional to ensure both receiver types work as expected
 func (ts *testStruct) GetInt() int {
 	return ts.Int
 }
 
-func (ts *testStruct) GetFloat() float64 {
+// GetFloat is used to test getter validation on a float type
+func (ts testStruct) GetFloat() float64 {
 	return ts.Float
 }
 
-func (ts *testStruct) GetStrWithArg(upper bool) string {
+// GetStrWithArg is used to test that getter validation fails if method has an arg
+func (ts testStruct) GetStrWithArg(upper bool) string {
 	if upper {
 		return strings.ToUpper(ts.Str)
 	}
 	return ts.Str
 }
 
-func (ts *testStruct) GetStrWithError() (string, error) {
+// GetStrWithError is used to test that getter validation fails if method returns multiple values
+func (ts testStruct) GetStrWithError() (string, error) {
 	return ts.Str, nil
 }
 
