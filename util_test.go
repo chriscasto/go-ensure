@@ -2,6 +2,7 @@ package ensure_test
 
 import (
 	"github.com/chriscasto/go-ensure/with"
+	"strings"
 	"testing"
 )
 
@@ -21,6 +22,13 @@ func (ts *testStruct) GetInt() int {
 
 func (ts *testStruct) GetFloat() float64 {
 	return ts.Float
+}
+
+func (ts *testStruct) GetStrWithArg(upper bool) string {
+	if upper {
+		return strings.ToUpper(ts.Str)
+	}
+	return ts.Str
 }
 
 func (ts *testStruct) GetStrWithError() (string, error) {
@@ -47,6 +55,8 @@ func (tcs *validatorTestCases) run(t *testing.T, v with.Validator) {
 	}
 }
 
+// getDefaultValidatorTestCases generates a set of test cases to confirm that
+// validators only accept values of the correct type
 func getDefaultValidatorTestCases(v with.Validator) validatorTestCases {
 	testCases := validatorTestCases{
 		"string":   {"a", false},

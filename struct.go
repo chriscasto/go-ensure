@@ -63,7 +63,6 @@ func (sv *StructValidator[T]) HasFields(validators with.Validators, friendlyName
 		}
 	}
 
-	// make sure that validator type matches field type
 	for name, validator := range validators {
 		field := ref.FieldByName(name)
 
@@ -125,7 +124,6 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNam
 		}
 	}
 
-	// make sure that validator type matches field type
 	for name, validator := range validators {
 		method, ok := ptr.MethodByName(name)
 

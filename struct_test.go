@@ -245,8 +245,8 @@ func TestStructValidator_HasGetters(t *testing.T) {
 	}{
 		"invalid getter": {
 			construct: setBadGetters(testStruct{}, with.Validators{
-				// Method "GetBad" does not exist in our struct
-				"GetBad": ensure.String(),
+				// Method "Nonexistent" does not exist in our struct
+				"Nonexistent": ensure.String(),
 			}),
 		},
 		"wrong return type": {
@@ -265,6 +265,12 @@ func TestStructValidator_HasGetters(t *testing.T) {
 			construct: setBadGetters(testStruct{}, with.Validators{
 				// This should be int, not int8
 				"GetInt": ensure.Number[int8](),
+			}),
+		},
+		"too many args": {
+			construct: setBadGetters(testStruct{}, with.Validators{
+				// This method returns both string and error
+				"GetStrWithArg": ensure.String(),
 			}),
 		},
 		"too many return values": {
@@ -526,7 +532,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 	}
 }
 
-func TestStructValidator_FriendlyNames(t *testing.T) {
+func TestStructValidator_HasFields_FriendlyNames(t *testing.T) {
 	t.Run("panic if field name doesn't exist", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -558,6 +564,76 @@ func TestStructValidator_FriendlyNames(t *testing.T) {
 			"Str":   "String Value",
 			"Int":   "Integer Value",
 			"Float": "Decimal Value",
+		},
+	)
+
+	testCases := map[string]struct {
+		val            testStruct
+		expectStrInErr string
+	}{
+		"string err": {
+			testStruct{"a", 1, 1.0},
+			"String Value",
+		},
+		"int err": {
+			testStruct{"abc", 0, 1.0},
+			"Integer Value",
+		},
+		"float err": {
+			testStruct{"abc", 1, 10.0},
+			"Decimal Value",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := validStruct.Validate(tc.val)
+
+			if err == nil {
+				t.Errorf("expected error but got none")
+			}
+
+			errorChecker := ensure.String().Contains(tc.expectStrInErr)
+
+			if err2 := errorChecker.Validate(err.Error()); err2 != nil {
+				t.Errorf(`error should contain alias "%s" but did not (err: "%s")`, tc.expectStrInErr, err)
+			}
+		})
+	}
+}
+
+func TestStructValidator_HasGetters_FriendlyNames(t *testing.T) {
+	t.Run("panic if method doesn't exist", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+
+		bad := ensure.Struct[testStruct]().HasGetters(
+			with.Validators{
+				"GetStr": ensure.String(),
+			},
+			with.FriendlyNames{
+				"String": "String Value",
+			},
+		)
+
+		if err := bad.Validate(""); err != nil {
+			t.Errorf("validation occured and generated an error: %s", err.Error())
+		}
+	})
+
+	validStruct := ensure.Struct[testStruct]().HasGetters(
+		with.Validators{
+			"GetStr":   ensure.String().HasLength(3),
+			"GetInt":   ensure.Number[int]().IsGreaterThan(0),
+			"GetFloat": ensure.Number[float64]().IsLessThan(4.2),
+		},
+		with.FriendlyNames{
+			"GetStr":   "String Value",
+			"GetInt":   "Integer Value",
+			"GetFloat": "Decimal Value",
 		},
 	)
 
