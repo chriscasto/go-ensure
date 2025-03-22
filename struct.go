@@ -10,7 +10,6 @@ type structCheckFunc[T any] func(T) error
 
 type validMethod struct {
 	ref         *reflect.Method
-	name        string
 	displayName string
 	isPtr       bool
 	validator   with.Validator
@@ -182,7 +181,6 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 		}
 
 		sv.getters = append(sv.getters, &validMethod{
-			name:        name,
 			displayName: displayName,
 			ref:         &method,
 			validator:   validator,
