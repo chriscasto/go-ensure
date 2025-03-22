@@ -532,7 +532,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 	}
 }
 
-func TestStructValidator_HasFields_FriendlyNames(t *testing.T) {
+func TestStructValidator_HasFields_DisplayNames(t *testing.T) {
 	t.Run("panic if field name doesn't exist", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -544,7 +544,7 @@ func TestStructValidator_HasFields_FriendlyNames(t *testing.T) {
 			with.Validators{
 				"Str": ensure.String(),
 			},
-			with.FriendlyNames{
+			with.DisplayNames{
 				"String": "String Value",
 			},
 		)
@@ -560,7 +560,7 @@ func TestStructValidator_HasFields_FriendlyNames(t *testing.T) {
 			"Int":   ensure.Number[int]().IsGreaterThan(0),
 			"Float": ensure.Number[float64]().IsLessThan(4.2),
 		},
-		with.FriendlyNames{
+		with.DisplayNames{
 			"Str":   "String Value",
 			"Int":   "Integer Value",
 			"Float": "Decimal Value",
@@ -602,7 +602,7 @@ func TestStructValidator_HasFields_FriendlyNames(t *testing.T) {
 	}
 }
 
-func TestStructValidator_HasGetters_FriendlyNames(t *testing.T) {
+func TestStructValidator_HasGetters_DisplayNames(t *testing.T) {
 	t.Run("panic if method doesn't exist", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -614,7 +614,7 @@ func TestStructValidator_HasGetters_FriendlyNames(t *testing.T) {
 			with.Validators{
 				"GetStr": ensure.String(),
 			},
-			with.FriendlyNames{
+			with.DisplayNames{
 				"String": "String Value",
 			},
 		)
@@ -630,7 +630,7 @@ func TestStructValidator_HasGetters_FriendlyNames(t *testing.T) {
 			"GetInt":   ensure.Number[int]().IsGreaterThan(0),
 			"GetFloat": ensure.Number[float64]().IsLessThan(4.2),
 		},
-		with.FriendlyNames{
+		with.DisplayNames{
 			"GetStr":   "String Value",
 			"GetInt":   "Integer Value",
 			"GetFloat": "Decimal Value",

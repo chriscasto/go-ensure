@@ -6,7 +6,7 @@ the outputs of any getter methods it may have.  Because of this, the magic of
 the struct validator lies in two main methods: `HasFields` for validating field
 values and `HasGetters` for validating the output of getter methods. Each of
 these takes a single required value, a map of type `with.Validators`, and a second 
-optional value, a map of type `with.FriendlyNames`.  The former defines a validator 
+optional value, a map of type `with.DisplayNames`.  The former defines a validator 
 for each field or getter method and the latter provides a set of human-readable 
 (and user-friendly) names to use when identifying the field to which an error 
 message belongs.  It looks something like this:
@@ -16,7 +16,7 @@ validStruct := ensure.Struct[MyStruct]().HasFields(with.Validators{
     "Field1": ensure.String(),
     "Field2": ensure.Number[int](),
     "Field3": ensure.Array[float64](),
-}, with.FriendlyNames{
+}, with.DisplayNames{
     "Field1": "First Field"
     "Field2": "Second Field"
     "Field3": "Third Field"
@@ -52,12 +52,12 @@ validator := ensure.Struct[Company].HasFields(with.Validators{
         ensure.Struct[Person].HasFields(with.Validators{
             "FirstName": ensure.String().IsNotEmpty().Matches(ensure.Alpha),
             "LastName": ensure.String().IsNotEmpty().Matches(ensure.Alpha),
-        },with.FriendlyNames{
+        },with.DisplayNames{
             "FirstName": "First Name",
             "LastName": "Last Name",
         }).HasGetters(with.Validators{
             "FullName": ensure.String().Contains(" ")
-        },with.FriendlyNames{
+        },with.DisplayNames{
             "FullName": "Full Name",
         }),
     ),
@@ -74,12 +74,12 @@ validName := ensure.String().IsNotEmpty().Matches(ensure.Alpha)
 validPerson := ensure.Struct[Person].HasFields(with.Validators{
     "FirstName": validName,
     "LastName": validName,
-},with.FriendlyNames{
+},with.DisplayNames{
     "FirstName": "First Name",
     "LastName": "Last Name",
 }).HasGetters(with.Validators{
     "FullName": ensure.String().Contains(" "),
-},with.FriendlyNames{
+},with.DisplayNames{
     "FullName": "Full Name",
 }})
 
@@ -105,8 +105,8 @@ risk of exposing implementation details about your domain objects or DTOs.
 
 | Method                                          | Description                                                               |
 |-------------------------------------------------|---------------------------------------------------------------------------|
-| HasFields(with.Validators, with.FriendlyNames)  | Passes if each of the name fields passes validation                       |
-| HasGetters(with.Validators, with.FriendlyNames) | Passes if the return value of each getter passes validation               |
+| HasFields(with.Validators, with.DisplayNames)  | Passes if each of the name fields passes validation                       |
+| HasGetters(with.Validators, with.DisplayNames) | Passes if the return value of each getter passes validation               |
 | Is(func (T) error)                              | Passes if the function passed does not produce an error during validation |
 
 ## Field visibility

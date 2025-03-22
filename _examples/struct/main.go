@@ -38,7 +38,7 @@ func main() {
 			"Bar": ensure.Number[int]().IsGreaterThan(10),
 		},
 		// define some user-friendly aliases for our fields to use when returning errors
-		with.FriendlyNames{
+		with.DisplayNames{
 			"Foo": "FOOOOOO!",
 			"Bar": "BAR BAR BAR",
 		},
@@ -51,7 +51,7 @@ func main() {
 			// each value should be between 1.0 and 10.0
 			ensure.Number[float64]().IsInRange(1.0, 10.0),
 		),
-	}, with.FriendlyNames{
+	}, with.DisplayNames{
 		"GetBaz": "Bazzler",
 	})
 

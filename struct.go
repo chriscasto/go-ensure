@@ -46,16 +46,16 @@ func Struct[T any]() *StructValidator[T] {
 	}
 }
 
-func (sv *StructValidator[T]) HasFields(validators with.Validators, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
+func (sv *StructValidator[T]) HasFields(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {
 	ref := sv.refVal
-	aliases := with.FriendlyNames{}
+	aliases := with.DisplayNames{}
 
 	// collect aliases for lookup during field processing
-	if len(friendlyNames) > 0 {
-		for _, names := range friendlyNames {
+	if len(displayNames) > 0 {
+		for _, names := range displayNames {
 			for field, alias := range names {
 				if _, ok := validators[field]; !ok {
-					panic(fmt.Sprintf(`cannot set alias for field "%s"; field does not exist`, field))
+					panic(fmt.Sprintf(`cannot set display name for field "%s"; field is not in list of validators`, field))
 				}
 
 				aliases[field] = alias
@@ -103,20 +103,20 @@ func (sv *StructValidator[T]) HasFields(validators with.Validators, friendlyName
 	return sv
 }
 
-func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
+func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {
 	ref := sv.refVal
 
 	// To get all the methods on a struct, we have to look at the pointer value
 	ptr := reflect.PointerTo(ref.Type())
 
-	aliases := with.FriendlyNames{}
+	aliases := with.DisplayNames{}
 
 	// collect aliases for lookup during method processing
-	if len(friendlyNames) > 0 {
-		for _, names := range friendlyNames {
+	if len(displayNames) > 0 {
+		for _, names := range displayNames {
 			for method, alias := range names {
 				if _, ok := validators[method]; !ok {
-					panic(fmt.Sprintf(`cannot set alias for method "%s()"; method does not exist`, method))
+					panic(fmt.Sprintf(`cannot set display name for method "%s()"; method is not in list of validators`, method))
 				}
 
 				aliases[method] = alias
