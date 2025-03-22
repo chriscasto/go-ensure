@@ -49,6 +49,17 @@ func Struct[T any]() *StructValidator[T] {
 	}
 }
 
+// Type returns a string with the name of the struct this validator expects
+func (sv *StructValidator[T]) Type() string {
+	return sv.refVal.Type().String()
+}
+
+// Is adds the provided function as a check against any values to be validated
+func (sv *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
+	sv.checks = append(sv.checks, fn)
+	return sv
+}
+
 // HasFields accepts a map of named fields and their validators to evaluate against a struct during validation
 // It also accepts an optional map of field names to display names to use when printing error messages
 func (sv *StructValidator[T]) HasFields(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {
@@ -216,27 +227,8 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 	return sv
 }
 
-// Type returns a string with the name of the struct this validator expects
-func (sv *StructValidator[T]) Type() string {
-	return sv.refVal.Type().String()
-}
-
-// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (sv *StructValidator[T]) Validate(s interface{}) error {
-	sRef := reflect.ValueOf(s)
-	sRefType := sRef.Type()
-
-	if !sRef.IsValid() || sRefType != sv.refVal.Type() {
-		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
-	}
-
-	return sv.ValidateStruct(s.(T))
-}
-
-// ValidateStruct accepts a struct of the expected type and validates it
-func (sv *StructValidator[T]) ValidateStruct(s T) error {
-	sRef := reflect.ValueOf(s)
-
+// validateStruct is a helper method that does the actual validation used by Validate and ValidateStruct
+func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 	for _, check := range sv.checks {
 		if err := check(s); err != nil {
 			return err
@@ -273,8 +265,20 @@ func (sv *StructValidator[T]) ValidateStruct(s T) error {
 	return nil
 }
 
-// Is adds the provided function as a check against any values to be validated
-func (sv *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
-	sv.checks = append(sv.checks, fn)
-	return sv
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
+func (sv *StructValidator[T]) Validate(s interface{}) error {
+	sRef := reflect.ValueOf(s)
+	sRefType := sRef.Type()
+
+	if !sRef.IsValid() || sRefType != sv.refVal.Type() {
+		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
+	}
+
+	return sv.validateStruct(sRef, s.(T))
+}
+
+// ValidateStruct accepts a struct of the expected type and validates it
+func (sv *StructValidator[T]) ValidateStruct(s T) error {
+	sRef := reflect.ValueOf(s)
+	return sv.validateStruct(sRef, s)
 }
