@@ -6,8 +6,10 @@ import (
 	"reflect"
 )
 
+// structCheckFunc defines a function that can be used to validate some aspect of a struct
 type structCheckFunc[T any] func(T) error
 
+// validMethod contains information about a method that needs to be called during validation
 type validMethod struct {
 	ref         *reflect.Method
 	displayName string
@@ -15,12 +17,14 @@ type validMethod struct {
 	validator   with.Validator
 }
 
+// validField contains information about a field that needs to be accessed during validation
 type validField struct {
 	name        string
 	displayName string
 	validator   with.Validator
 }
 
+// StructValidator contains information and logic used to validate a struct of type T
 type StructValidator[T any] struct {
 	refVal  reflect.Value
 	checks  []structCheckFunc[T]
@@ -35,7 +39,7 @@ func Struct[T any]() *StructValidator[T] {
 	ref := reflect.ValueOf(zero)
 
 	if ref.Kind() != reflect.Struct {
-		panic("type T must be a struct")
+		panic("StructValidator type must be a struct")
 	}
 
 	return &StructValidator[T]{
@@ -45,11 +49,13 @@ func Struct[T any]() *StructValidator[T] {
 	}
 }
 
+// HasFields accepts a map of named fields and their validators to evaluate against a struct during validation
+// It also accepts an optional map of field names to display names to use when printing error messages
 func (sv *StructValidator[T]) HasFields(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {
 	ref := sv.refVal
 	aliases := with.DisplayNames{}
 
-	// collect aliases for lookup during field processing
+	// Collect aliases for lookup during field processing
 	if len(displayNames) > 0 {
 		for _, names := range displayNames {
 			for field, alias := range names {
@@ -102,6 +108,8 @@ func (sv *StructValidator[T]) HasFields(validators with.Validators, displayNames
 	return sv
 }
 
+// HasGetters accepts a map of named getter methods and their validators to evaluate against a struct during validation
+// It also accepts an optional map of method names to display names to use when printing error messages
 func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {
 	refType := sv.refVal.Type()
 
@@ -208,10 +216,12 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 	return sv
 }
 
+// Type returns a string with the name of the struct this validator expects
 func (sv *StructValidator[T]) Type() string {
 	return sv.refVal.Type().String()
 }
 
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
 func (sv *StructValidator[T]) Validate(s interface{}) error {
 	sRef := reflect.ValueOf(s)
 	sRefType := sRef.Type()
@@ -223,6 +233,7 @@ func (sv *StructValidator[T]) Validate(s interface{}) error {
 	return sv.ValidateStruct(s.(T))
 }
 
+// ValidateStruct accepts a struct of the expected type and validates it
 func (sv *StructValidator[T]) ValidateStruct(s T) error {
 	sRef := reflect.ValueOf(s)
 
@@ -232,7 +243,7 @@ func (sv *StructValidator[T]) ValidateStruct(s T) error {
 		}
 	}
 
-	// validate fields
+	// Validate fields
 	for _, field := range sv.fields {
 		fieldVal := sRef.FieldByName(field.name)
 		if err := field.validator.Validate(fieldVal.Interface()); err != nil {
@@ -240,7 +251,7 @@ func (sv *StructValidator[T]) ValidateStruct(s T) error {
 		}
 	}
 
-	// validate getters
+	// Validate getters
 	for _, method := range sv.getters {
 		var receiver reflect.Value
 
