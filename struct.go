@@ -20,7 +20,6 @@ type fieldValidator struct {
 }
 
 type StructValidator[T any] struct {
-	zeroVal T
 	refVal  reflect.Value
 	ptrType reflect.Type
 	tests   []structCheckFunc[T]
@@ -43,7 +42,6 @@ func Struct[T any]() *StructValidator[T] {
 	}
 
 	return &StructValidator[T]{
-		zeroVal:          zero,
 		refVal:           ref,
 		ptrType:          reflect.PointerTo(ref.Type()),
 		fieldValidators:  with.Validators{},
