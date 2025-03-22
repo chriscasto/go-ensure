@@ -8,10 +8,12 @@ import (
 
 type structCheckFunc[T any] func(T) error
 
-type methodValidator struct {
-	method    *reflect.Method
-	isPtr     bool
-	validator with.Validator
+type validMethod struct {
+	ref         *reflect.Method
+	name        string
+	displayName string
+	isPtr       bool
+	validator   with.Validator
 }
 
 type validField struct {
@@ -22,16 +24,9 @@ type validField struct {
 
 type StructValidator[T any] struct {
 	refVal  reflect.Value
-	ptrType reflect.Type
 	checks  []structCheckFunc[T]
-
-	fields []*validField
-
-	//fieldValidators with.Validators
-	//fieldAliases    with.FriendlyNames
-
-	getterValidators with.Validators
-	getterAliases    with.FriendlyNames
+	fields  []*validField
+	getters []*validMethod
 }
 
 func Struct[T any]() *StructValidator[T] {
@@ -46,12 +41,8 @@ func Struct[T any]() *StructValidator[T] {
 
 	return &StructValidator[T]{
 		refVal:  ref,
-		ptrType: reflect.PointerTo(ref.Type()),
 		fields:  []*validField{},
-		//fieldValidators:  with.Validators{},
-		//fieldAliases:     with.FriendlyNames{},
-		getterValidators: with.Validators{},
-		getterAliases:    with.FriendlyNames{},
+		getters: []*validMethod{},
 	}
 }
 
@@ -119,16 +110,20 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNam
 	// To get all the methods on a struct, we have to look at the pointer value
 	ptr := reflect.PointerTo(ref.Type())
 
-	//fmt.Println(ptr.NumMethod())
-	//fmt.Println(ptr.String())
-	//
-	//for i := 0; i < ptr.NumMethod(); i++ {
-	//	m := ptr.Method(i)
-	//	fmt.Println(m.Name)
-	//}
+	aliases := with.FriendlyNames{}
 
-	//valMethods := map[string]*reflect.Method{}
-	//ptrMethods := map[string]*reflect.Method{}
+	// collect aliases for lookup during method processing
+	if len(friendlyNames) > 0 {
+		for _, names := range friendlyNames {
+			for method, alias := range names {
+				if _, ok := validators[method]; !ok {
+					panic(fmt.Sprintf(`cannot set alias for method "%s()"; method does not exist`, method))
+				}
+
+				aliases[method] = alias
+			}
+		}
+	}
 
 	// make sure that validator type matches field type
 	for name, validator := range validators {
@@ -182,20 +177,18 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNam
 			)
 		}
 
-		sv.getterValidators[name] = validator
-	}
+		displayName, ok := aliases[name]
 
-	// add friendly names for struct validators, if any
-	if len(friendlyNames) > 0 {
-		for _, names := range friendlyNames {
-			for method, alias := range names {
-				if _, ok := validators[method]; !ok {
-					panic(fmt.Sprintf(`cannot set alias for method "%s()"; method does not exist`, method))
-				}
-
-				sv.getterAliases[method] = alias
-			}
+		if !ok {
+			displayName = name
 		}
+
+		sv.getters = append(sv.getters, &validMethod{
+			name:        name,
+			displayName: displayName,
+			ref:         &method,
+			validator:   validator,
+		})
 	}
 
 	return sv
@@ -233,33 +226,17 @@ func (sv *StructValidator[T]) ValidateStruct(s T) error {
 		}
 	}
 
-	ptrRef := reflect.PointerTo(sv.refVal.Type())
-
 	// validate getters
-	for method, val := range sv.getterValidators {
-		methodVal, ok := ptrRef.MethodByName(method)
-
-		// This shouldn't happen since we confirm method existence during HasGetter call
-		if !ok {
-			return NewValidationError(fmt.Sprintf("method %s does not exist", method))
-		}
-
+	for _, method := range sv.getters {
 		// Call the getter method
-		result := methodVal.Func.Call([]reflect.Value{reflect.ValueOf(&s)})
+		result := method.ref.Func.Call([]reflect.Value{reflect.ValueOf(&s)})
 		retVal := result[0].Interface()
 
-		if err := val.Validate(retVal); err != nil {
-			var printName string
-
-			if alias, ok := sv.getterAliases[method]; ok {
-				printName = alias
-			} else {
-				printName = method
-			}
-
-			return NewValidationError(fmt.Sprintf("%s: %s", printName, err.Error()))
+		if err := method.validator.Validate(retVal); err != nil {
+			return NewValidationError(fmt.Sprintf("%s: %s", method.displayName, err.Error()))
 		}
 	}
+
 	return nil
 }
 
