@@ -8,9 +8,21 @@ import (
 
 type structCheckFunc[T any] func(T) error
 
+type methodValidator struct {
+	method    *reflect.Method
+	isPtr     bool
+	validator with.Validator
+}
+
+type fieldValidator struct {
+	name      string
+	validator with.Validator
+}
+
 type StructValidator[T any] struct {
 	zeroVal T
 	refVal  reflect.Value
+	ptrType reflect.Type
 	tests   []structCheckFunc[T]
 
 	fieldValidators with.Validators
@@ -33,6 +45,7 @@ func Struct[T any]() *StructValidator[T] {
 	return &StructValidator[T]{
 		zeroVal:          zero,
 		refVal:           ref,
+		ptrType:          reflect.PointerTo(ref.Type()),
 		fieldValidators:  with.Validators{},
 		fieldAliases:     with.FriendlyNames{},
 		getterValidators: with.Validators{},
@@ -90,11 +103,25 @@ func (sv *StructValidator[T]) HasFields(validators with.Validators, friendlyName
 func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNames ...with.FriendlyNames) *StructValidator[T] {
 	ref := sv.refVal
 
+	// To get all the methods on a struct, we have to look at the pointer value
+	ptr := reflect.PointerTo(ref.Type())
+
+	//fmt.Println(ptr.NumMethod())
+	//fmt.Println(ptr.String())
+	//
+	//for i := 0; i < ptr.NumMethod(); i++ {
+	//	m := ptr.Method(i)
+	//	fmt.Println(m.Name)
+	//}
+
+	//valMethods := map[string]*reflect.Method{}
+	//ptrMethods := map[string]*reflect.Method{}
+
 	// make sure that validator type matches field type
 	for name, validator := range validators {
-		method := ref.MethodByName(name)
+		method, ok := ptr.MethodByName(name)
 
-		if !method.IsValid() {
+		if !ok {
 			panic(
 				fmt.Sprintf(
 					"method %s() does not exist in struct %s",
@@ -104,8 +131,20 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNam
 			)
 		}
 
-		mType := method.Type()
+		mType := method.Type
 
+		// Getters can only have a single arg (the receiver)
+		if mType.NumIn() != 1 {
+			panic(
+				fmt.Sprintf(
+					"method %s() has %d args but validator expects one (receiver)",
+					name,
+					mType.NumIn(),
+				),
+			)
+		}
+
+		// Getters must only return a single value
 		if mType.NumOut() > 1 {
 			panic(
 				fmt.Sprintf(
@@ -118,6 +157,7 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNam
 
 		retVal := mType.Out(0)
 
+		// The getter must return a value that matches the validator
 		if retVal.String() != validator.Type() {
 			panic(
 				fmt.Sprintf(
@@ -148,37 +188,37 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, friendlyNam
 	return sv
 }
 
-func (v *StructValidator[T]) Type() string {
-	return v.refVal.Type().String()
+func (sv *StructValidator[T]) Type() string {
+	return sv.refVal.Type().String()
 }
 
-func (v *StructValidator[T]) Validate(s interface{}) error {
+func (sv *StructValidator[T]) Validate(s interface{}) error {
 	sRef := reflect.ValueOf(s)
 	sRefType := sRef.Type()
 
-	if !sRef.IsValid() || sRefType != v.refVal.Type() {
-		return newTypeErrorFromTypes(v.refVal.Type().String(), sRefType.String())
+	if !sRef.IsValid() || sRefType != sv.refVal.Type() {
+		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
 	}
 
-	return v.ValidateStruct(s.(T))
+	return sv.ValidateStruct(s.(T))
 }
 
-func (v *StructValidator[T]) ValidateStruct(s T) error {
+func (sv *StructValidator[T]) ValidateStruct(s T) error {
 	sRef := reflect.ValueOf(s)
 
-	for _, check := range v.tests {
+	for _, check := range sv.tests {
 		if err := check(s); err != nil {
 			return err
 		}
 	}
 
 	// validate fields
-	for field, val := range v.fieldValidators {
+	for field, val := range sv.fieldValidators {
 		fieldVal := sRef.FieldByName(field)
 		if err := val.Validate(fieldVal.Interface()); err != nil {
 			var printName string
 
-			if alias, ok := v.fieldAliases[field]; ok {
+			if alias, ok := sv.fieldAliases[field]; ok {
 				printName = alias
 			} else {
 				printName = field
@@ -188,13 +228,25 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 		}
 	}
 
+	ptrRef := reflect.PointerTo(sv.refVal.Type())
+
 	// validate getters
-	for method, val := range v.getterValidators {
-		methodVal := sRef.MethodByName(method)
-		if err := val.Validate(methodVal.Interface()); err != nil {
+	for method, val := range sv.getterValidators {
+		methodVal, ok := ptrRef.MethodByName(method)
+
+		// This shouldn't happen since we confirm method existence during HasGetter call
+		if !ok {
+			return NewValidationError(fmt.Sprintf("method %s does not exist", method))
+		}
+
+		// Call the getter method
+		result := methodVal.Func.Call([]reflect.Value{reflect.ValueOf(&s)})
+		retVal := result[0].Interface()
+
+		if err := val.Validate(retVal); err != nil {
 			var printName string
 
-			if alias, ok := v.getterAliases[method]; ok {
+			if alias, ok := sv.getterAliases[method]; ok {
 				printName = alias
 			} else {
 				printName = method
@@ -207,7 +259,7 @@ func (v *StructValidator[T]) ValidateStruct(s T) error {
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
-	v.tests = append(v.tests, fn)
-	return v
+func (sv *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
+	sv.tests = append(sv.tests, fn)
+	return sv
 }

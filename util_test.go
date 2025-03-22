@@ -11,6 +11,22 @@ type testStruct struct {
 	Float float64
 }
 
+func (ts *testStruct) GetStr() string {
+	return ts.Str
+}
+
+func (ts *testStruct) GetInt() int {
+	return ts.Int
+}
+
+func (ts *testStruct) GetFloat() float64 {
+	return ts.Float
+}
+
+func (ts *testStruct) GetStrWithError() (string, error) {
+	return ts.Str, nil
+}
+
 type validatorTestCase struct {
 	input    any
 	willPass bool
