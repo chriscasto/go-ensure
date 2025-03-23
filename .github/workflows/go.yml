@@ -9,6 +9,7 @@ on:
 jobs:
 
   build:
+    name: Run unit tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -31,4 +32,12 @@ jobs:
       id: coverage
       run: |
         coverage=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+        echo "total_coverage=$coverage" >> $GITHUB_OUPUT
         echo "Coverage: $coverage%"
+
+    - name: Fail if coverage is below threshold
+      run: |
+        if (( $(echo "$total_coverage < 100" | bc -l) )); then
+          echo "Coverage ($total_coverage%) is below the threshold (100%)"
+          exit 1
+        fi
