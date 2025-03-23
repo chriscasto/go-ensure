@@ -28,8 +28,8 @@ We panic rather than return an error because an invalid validator is a risk to
 the security and integrity of your application, and using "soft" errors runs the
 risk of enabling a situation where the application may be running with validation
 that is incomplete or otherwise working differently than intended.  If the 
-validation cannot itself pass its own sanity checks, the app should be considered
-too unsafe to run.
+validation cannot pass its own sanity checks, the app should be considered too 
+unsafe to run.
 
 Most initialization errors can be caught by the compiler (such as mixing types
 like `Number[int]().IsLessThan(10.0)` or attempting to call an invalid method
@@ -50,6 +50,9 @@ validStruct := ensure.Struct[MyStruct](with.Fields{
     "Baz": ensure.String(),
 })
 ```
+
+In all cases, panics are used to indicate unrecoverable conditions that arise 
+solely due to invalid configurations.
 
 ## Lengths
 

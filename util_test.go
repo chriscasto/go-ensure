@@ -2,6 +2,7 @@ package ensure_test
 
 import (
 	"github.com/chriscasto/go-ensure/with"
+	"strings"
 	"testing"
 )
 
@@ -9,6 +10,35 @@ type testStruct struct {
 	Str   string
 	Int   int
 	Float float64
+}
+
+// GetStr is used to test getter validation on a string type
+func (ts testStruct) GetStr() string {
+	return ts.Str
+}
+
+// GetInt is used to test getter validation on an int type
+// Note that the use of a ptr receiver here is intentional to ensure both receiver types work as expected
+func (ts *testStruct) GetInt() int {
+	return ts.Int
+}
+
+// GetFloat is used to test getter validation on a float type
+func (ts testStruct) GetFloat() float64 {
+	return ts.Float
+}
+
+// GetStrWithArg is used to test that getter validation fails if method has an arg
+func (ts testStruct) GetStrWithArg(upper bool) string {
+	if upper {
+		return strings.ToUpper(ts.Str)
+	}
+	return ts.Str
+}
+
+// GetStrWithError is used to test that getter validation fails if method returns multiple values
+func (ts testStruct) GetStrWithError() (string, error) {
+	return ts.Str, nil
 }
 
 type validatorTestCase struct {
@@ -31,6 +61,8 @@ func (tcs *validatorTestCases) run(t *testing.T, v with.Validator) {
 	}
 }
 
+// getDefaultValidatorTestCases generates a set of test cases to confirm that
+// validators only accept values of the correct type
 func getDefaultValidatorTestCases(v with.Validator) validatorTestCases {
 	testCases := validatorTestCases{
 		"string":   {"a", false},

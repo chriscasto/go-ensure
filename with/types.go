@@ -8,9 +8,9 @@ type Validator interface {
 	Type() string
 }
 
-// Fields is a helper type for defining field validators for structs
-type Fields map[string]Validator
+// Validators is a helper type for defining field and method validators for structs
+type Validators map[string]Validator
 
-// FriendlyNames provides a mapping from struct field name to human-understandable name
+// DisplayNames provides a mapping from struct field name to human-understandable name
 // Example: "FirstName" => "First Name", "Dob" => "Date of Birth"
-type FriendlyNames map[string]string
+type DisplayNames map[string]string
