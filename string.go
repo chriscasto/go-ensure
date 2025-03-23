@@ -33,6 +33,7 @@ const (
 
 type strCheckFunc func(string) error
 
+// StringValidator contains information and logic used to validate a string
 type StringValidator struct {
 	lenValidator *NumberValidator[int]
 	checks       []strCheckFunc
@@ -42,6 +43,7 @@ func String() *StringValidator {
 	return &StringValidator{}
 }
 
+// Type returns the string "string"
 func (v *StringValidator) Type() string {
 	return "string"
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// NumberType defines the set of values accepted by NumberValidator
 type NumberType interface {
 	constraints.Integer | constraints.Float
 }
@@ -99,6 +100,7 @@ func isOdd(typeStr string, i any) bool {
 	}
 }
 
+// NumberValidator contains information and logic used to validate a number of type T
 type NumberValidator[T NumberType] struct {
 	typeStr     string
 	isFloat     bool
@@ -111,7 +113,7 @@ func (v *NumberValidator[T]) Type() string {
 	return v.typeStr
 }
 
-// Number constructs a NumberValidator instance and returns a pointer to it
+// Number constructs a NumberValidator instance of type T and returns a pointer to it
 func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 	var zero T
 

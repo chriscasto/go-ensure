@@ -32,6 +32,7 @@ type StructValidator[T any] struct {
 	getters []*validMethod
 }
 
+// Struct constructs a StructValidator instance of type T and returns a pointer to it
 func Struct[T any]() *StructValidator[T] {
 	// Create an empty instance of the struct
 	var zero T
