@@ -329,8 +329,12 @@ func (v *NumberValidator[T]) Validate(i interface{}) error {
 		return err
 	}
 
+	return v.ValidateNumber(i.(T))
+}
+
+func (v *NumberValidator[T]) ValidateNumber(n T) error {
 	for _, fn := range v.checks {
-		if err := fn(i.(T)); err != nil {
+		if err := fn(n); err != nil {
 			return err
 		}
 	}
