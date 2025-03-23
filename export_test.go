@@ -9,3 +9,7 @@ func IsEven(typeStr string, i any) bool {
 func IsOdd(typeStr string, i any) bool {
 	return isOdd(typeStr, i)
 }
+
+func NewTypeError(msg string) TypeError {
+	return TypeError{err: msg}
+}
