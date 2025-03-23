@@ -267,15 +267,15 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 }
 
 // Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (sv *StructValidator[T]) Validate(s interface{}) error {
-	sRef := reflect.ValueOf(s)
+func (sv *StructValidator[T]) Validate(value any) error {
+	sRef := reflect.ValueOf(value)
 	sRefType := sRef.Type()
 
 	if !sRef.IsValid() || sRefType != sv.refVal.Type() {
 		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
 	}
 
-	return sv.validateStruct(sRef, s.(T))
+	return sv.validateStruct(sRef, value.(T))
 }
 
 // ValidateStruct applies all checks against a struct of the expected type and returns an error if any fail

@@ -128,11 +128,11 @@ func (v *ArrayValidator[T]) Each(ev with.Validator) *ArrayValidator[T] {
 }
 
 // Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *ArrayValidator[T]) Validate(i interface{}) error {
-	if err := testType(i, v.typeStr); err != nil {
+func (v *ArrayValidator[T]) Validate(value any) error {
+	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
-	return v.ValidateArray(i.([]T))
+	return v.ValidateArray(value.([]T))
 }
 
 // ValidateArray applies all checks against an array and returns an error if any fail

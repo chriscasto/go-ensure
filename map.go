@@ -46,11 +46,11 @@ func (mv *MapValidator[K, V]) HasLengthWhere(nv *NumberValidator[int]) *MapValid
 }
 
 // Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (mv *MapValidator[K, V]) Validate(i interface{}) error {
-	if err := testType(i, mv.typeStr); err != nil {
+func (mv *MapValidator[K, V]) Validate(value any) error {
+	if err := testType(value, mv.typeStr); err != nil {
 		return err
 	}
-	return mv.ValidateMap(i.(map[K]V))
+	return mv.ValidateMap(value.(map[K]V))
 }
 
 // ValidateMap applies all checks against a map and returns an error if any fail

@@ -328,12 +328,12 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 }
 
 // Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *NumberValidator[T]) Validate(i interface{}) error {
-	if err := testType(i, v.typeStr); err != nil {
+func (v *NumberValidator[T]) Validate(value any) error {
+	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
 
-	return v.ValidateNumber(i.(T))
+	return v.ValidateNumber(value.(T))
 }
 
 // ValidateNumber applies all checks against a number of the expected type and returns an error if any fail

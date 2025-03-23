@@ -55,8 +55,8 @@ func (v *StringValidator) HasLengthWhere(nv *NumberValidator[int]) *StringValida
 }
 
 // Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *StringValidator) Validate(i interface{}) error {
-	str, ok := i.(string)
+func (v *StringValidator) Validate(value any) error {
+	str, ok := value.(string)
 
 	if !ok {
 		return &TypeError{"string expected"}
