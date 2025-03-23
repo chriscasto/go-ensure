@@ -37,7 +37,7 @@ jobs:
 
     - name: Fail if coverage is below threshold
       run: |
-        if (( $(echo "$total_coverage < 100" | bc -l) )); then
-          echo "Coverage ($total_coverage%) is below the threshold (100%)"
+        if (( $(echo "${{ steps.coverage.outputs.total_coverage }} < 100" | bc -l) )); then
+          echo "Coverage (${{ steps.coverage.outputs.total_coverage }}%) is below the threshold (100%)"
           exit 1
         fi
