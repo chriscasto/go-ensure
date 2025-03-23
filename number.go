@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// NumberType defines the set of values accepted by NumberValidator
 type NumberType interface {
 	constraints.Integer | constraints.Float
 }
@@ -86,6 +87,7 @@ func isEven(typeStr string, i any) bool {
 	}
 }
 
+// isOdd returns a boolean value indicating whether the provided number is odd
 func isOdd(typeStr string, i any) bool {
 	// check to see whether it's a float
 	switch typeStr {
@@ -98,6 +100,7 @@ func isOdd(typeStr string, i any) bool {
 	}
 }
 
+// NumberValidator contains information and logic used to validate a number of type T
 type NumberValidator[T NumberType] struct {
 	typeStr     string
 	isFloat     bool
@@ -105,11 +108,12 @@ type NumberValidator[T NumberType] struct {
 	placeholder string
 }
 
+// Type returns a string with the type of the number this validator expects
 func (v *NumberValidator[T]) Type() string {
 	return v.typeStr
 }
 
-// Number constructs a NumberValidator instance and returns a pointer to it
+// Number constructs a NumberValidator instance of type T and returns a pointer to it
 func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 	var zero T
 
@@ -323,14 +327,19 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 	})
 }
 
-// Validate applies all checks against the value being validated and returns an error if any fail
-func (v *NumberValidator[T]) Validate(i interface{}) error {
-	if err := testType(i, v.typeStr); err != nil {
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
+func (v *NumberValidator[T]) Validate(value any) error {
+	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
 
+	return v.ValidateNumber(value.(T))
+}
+
+// ValidateNumber applies all checks against a number of the expected type and returns an error if any fail
+func (v *NumberValidator[T]) ValidateNumber(n T) error {
 	for _, fn := range v.checks {
-		if err := fn(i.(T)); err != nil {
+		if err := fn(n); err != nil {
 			return err
 		}
 	}

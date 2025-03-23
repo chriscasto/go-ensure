@@ -13,6 +13,33 @@ check out the [_examples](../_examples) directory.
 | Struct | `ensure.Struct[MyStruct]( with.Fields{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
 
 
+## The `Validator` interface
+
+Each of the validators listed above implements the `Validator` interface, which
+defines two methods: `Type()` and `Validate(val)`.  The `Type()` method returns the
+type of value expected by the validator (eg "string", "int64", etc), and the
+`Validate(val)` method evaluates all the defined checks against the value passed
+to it.  The value passed to the `Validate()` method can be of any type, which is
+helpful in cases where you don't know the type of the validator or the value (or
+both). Each validator will do the necessary checks to make sure that the type of
+the value passed to it is the same as the type returned by `Type()`, and will 
+return a `TypeError` in the event of a mismatch.
+
+In the cases where you know the types for both the validator and the value to
+validate, it is more efficient to let the compiler do all the necessary type
+checks for you.  In addition to the `Validate()` method, each validator also has
+a separate, typed method for validating values of the appropriate type.  It is 
+recommended to use this method where possible.
+
+| Type   | Validator                   | Typed Validation Method  |
+|--------|-----------------------------|--------------------------|
+| String | `ensure.StringValidator`    | `ValidateString(string)` |
+| Number | `ensure.NumberValidator[T]` | `ValidateNumber(T)`      |
+| Array  | `ensure.ArrayValidator[T]`  | `ValidateArray([]T)`     |
+| Map    | `ensure.MapValidator[K,V]`  | `ValidateMap(map[K]V)`   |
+| Struct | `ensure.StructValidator[T]` | `ValidateStruct(T)`      |
+
+
 ## Construction Errors
 
 Validation objects are intended to be constructed infrequently, typically once 
@@ -87,7 +114,7 @@ ensure.Array[int]().HasLengthWhere(ensure.Length().DoesNotEqual(0))
 ```
 
 
-## The `Is` function
+## The `Is` method
 
 While every effort has been made to provide a comprehensive set of validations
 for the broadest set of types and values possible, there are some validation

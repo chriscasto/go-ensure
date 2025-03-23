@@ -32,6 +32,7 @@ type StructValidator[T any] struct {
 	getters []*validMethod
 }
 
+// Struct constructs a StructValidator instance of type T and returns a pointer to it
 func Struct[T any]() *StructValidator[T] {
 	// Create an empty instance of the struct
 	var zero T
@@ -266,18 +267,18 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 }
 
 // Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (sv *StructValidator[T]) Validate(s interface{}) error {
-	sRef := reflect.ValueOf(s)
+func (sv *StructValidator[T]) Validate(value any) error {
+	sRef := reflect.ValueOf(value)
 	sRefType := sRef.Type()
 
 	if !sRef.IsValid() || sRefType != sv.refVal.Type() {
 		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
 	}
 
-	return sv.validateStruct(sRef, s.(T))
+	return sv.validateStruct(sRef, value.(T))
 }
 
-// ValidateStruct accepts a struct of the expected type and validates it
+// ValidateStruct applies all checks against a struct of the expected type and returns an error if any fail
 func (sv *StructValidator[T]) ValidateStruct(s T) error {
 	sRef := reflect.ValueOf(s)
 	return sv.validateStruct(sRef, s)

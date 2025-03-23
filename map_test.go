@@ -16,7 +16,7 @@ type mapTestCases[K comparable, V any] map[string]mapTestCase[K, V]
 func (tcs mapTestCases[K, V]) run(t *testing.T, mv *ensure.MapValidator[K, V], method string) {
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			err := mv.Validate(tc.vals)
+			err := mv.ValidateMap(tc.vals)
 			if err != nil && tc.willPass {
 				t.Errorf(`Map().%s.Validate(%v); expected no error, got "%s"`, method, tc.vals, err)
 			} else if err == nil && !tc.willPass {

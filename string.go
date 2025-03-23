@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+//goland:noinspection GoCommentStart
 const (
 	// Basic patterns
 	Alpha    = `(?i)^[a-z]+$`
@@ -32,6 +33,7 @@ const (
 
 type strCheckFunc func(string) error
 
+// StringValidator contains information and logic used to validate a string
 type StringValidator struct {
 	lenValidator *NumberValidator[int]
 	checks       []strCheckFunc
@@ -41,6 +43,7 @@ func String() *StringValidator {
 	return &StringValidator{}
 }
 
+// Type returns the string "string"
 func (v *StringValidator) Type() string {
 	return "string"
 }
@@ -51,14 +54,19 @@ func (v *StringValidator) HasLengthWhere(nv *NumberValidator[int]) *StringValida
 	return v
 }
 
-// Validate applies all checks against the value being validated and returns an error if any fail
-func (v *StringValidator) Validate(i interface{}) error {
-	str, ok := i.(string)
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
+func (v *StringValidator) Validate(value any) error {
+	str, ok := value.(string)
 
 	if !ok {
 		return &TypeError{"string expected"}
 	}
 
+	return v.ValidateString(str)
+}
+
+// ValidateString applies all checks against a string value and returns an error if any fail
+func (v *StringValidator) ValidateString(str string) error {
 	if v.lenValidator != nil {
 		if err := v.lenValidator.Validate(len(str)); err != nil {
 			return err

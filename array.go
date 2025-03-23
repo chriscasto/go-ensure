@@ -7,14 +7,17 @@ import (
 	"reflect"
 )
 
+// arrCheckFunc defines a function that can be used to validate an array
 type arrCheckFunc[T any] func([]T) error
 
+// ArrayValidator contains information and logic used to validate an array of type T
 type ArrayValidator[T any] struct {
 	typeStr      string
 	lenValidator *NumberValidator[int]
 	checks       []arrCheckFunc[T]
 }
 
+// Array constructs an ArrayValidator instance of type T and returns a pointer to it
 func Array[T any]() *ArrayValidator[T] {
 	var zero T
 
@@ -25,6 +28,7 @@ func Array[T any]() *ArrayValidator[T] {
 	}
 }
 
+// Type returns a string with the type of array this validator expects
 func (v *ArrayValidator[T]) Type() string {
 	return v.typeStr
 }
@@ -76,6 +80,8 @@ func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
 	})
 }
 
+// HasMoreThan adds a check that returns an error if the length of the array is less than the provided value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().IsGreaterThan(l))
 func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) <= l {
@@ -91,6 +97,8 @@ func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
 	})
 }
 
+// HasFewerThan adds a check that returns an error if the length of the array is more than the provided value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().IsLessThan(l))
 func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		if len(arr) >= l {
@@ -106,6 +114,7 @@ func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 	})
 }
 
+// Each applies the provided validator to each element in an array and returns an error if any fail
 func (v *ArrayValidator[T]) Each(ev with.Validator) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		for _, e := range arr {
@@ -118,14 +127,16 @@ func (v *ArrayValidator[T]) Each(ev with.Validator) *ArrayValidator[T] {
 	})
 }
 
-// Validate applies all checks against the value being validated and returns an error if any fail
-func (v *ArrayValidator[T]) Validate(i interface{}) error {
-	if err := testType(i, v.typeStr); err != nil {
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
+func (v *ArrayValidator[T]) Validate(value any) error {
+	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
+	return v.ValidateArray(value.([]T))
+}
 
-	arr := i.([]T)
-
+// ValidateArray applies all checks against an array and returns an error if any fail
+func (v *ArrayValidator[T]) ValidateArray(arr []T) error {
 	if v.lenValidator != nil {
 		if err := v.lenValidator.Validate(len(arr)); err != nil {
 			return err

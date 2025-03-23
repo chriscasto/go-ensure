@@ -7,8 +7,10 @@ import (
 	"reflect"
 )
 
+// mapCheckFunc defines a function that can be used to validate a map
 type mapCheckFunc[K comparable, V any] func(map[K]V) error
 
+// MapValidator contains information and logic used to validate a map with keys of type K and values of type V
 type MapValidator[K comparable, V any] struct {
 	typeStr        string
 	keyTypeStr     string
@@ -19,6 +21,7 @@ type MapValidator[K comparable, V any] struct {
 	valueValidator with.Validator
 }
 
+// Map constructs a MapValidator instance with keys of type K and values of type V and returns a pointer to it
 func Map[K comparable, V any]() *MapValidator[K, V] {
 	var mapZero map[K]V
 	var keyZero K
@@ -31,6 +34,7 @@ func Map[K comparable, V any]() *MapValidator[K, V] {
 	}
 }
 
+// Type returns a string with the type of map this validator expects
 func (mv *MapValidator[K, V]) Type() string {
 	return mv.typeStr
 }
@@ -41,13 +45,16 @@ func (mv *MapValidator[K, V]) HasLengthWhere(nv *NumberValidator[int]) *MapValid
 	return mv
 }
 
-func (mv *MapValidator[K, V]) Validate(i interface{}) error {
-	if err := testType(i, mv.typeStr); err != nil {
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
+func (mv *MapValidator[K, V]) Validate(value any) error {
+	if err := testType(value, mv.typeStr); err != nil {
 		return err
 	}
+	return mv.ValidateMap(value.(map[K]V))
+}
 
-	mp := i.(map[K]V)
-
+// ValidateMap applies all checks against a map and returns an error if any fail
+func (mv *MapValidator[K, V]) ValidateMap(mp map[K]V) error {
 	if mv.lenValidator != nil {
 		if err := mv.lenValidator.Validate(len(mp)); err != nil {
 			return err
@@ -143,6 +150,8 @@ func (mv *MapValidator[K, V]) HasCount(l int) *MapValidator[K, V] {
 	})
 }
 
+// HasMoreThan adds a check that returns an error if the length of the map is less than the provided value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().IsGreaterThan(l))
 func (mv *MapValidator[K, V]) HasMoreThan(l int) *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) <= l {
@@ -155,6 +164,8 @@ func (mv *MapValidator[K, V]) HasMoreThan(l int) *MapValidator[K, V] {
 	})
 }
 
+// HasFewerThan adds a check that returns an error if the length of the map is more than the provided value
+// This is a convenience function that is equivalent to HasLengthWhere(Length().IsLessThan(l))
 func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 	return mv.Is(func(mapVal map[K]V) error {
 		if len(mapVal) >= l {
