@@ -86,6 +86,7 @@ func isEven(typeStr string, i any) bool {
 	}
 }
 
+// isOdd returns a boolean value indicating whether the provided number is odd
 func isOdd(typeStr string, i any) bool {
 	// check to see whether it's a float
 	switch typeStr {
@@ -105,6 +106,7 @@ type NumberValidator[T NumberType] struct {
 	placeholder string
 }
 
+// Type returns a string with the type of the number this validator expects
 func (v *NumberValidator[T]) Type() string {
 	return v.typeStr
 }
@@ -323,7 +325,7 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 	})
 }
 
-// Validate applies all checks against the value being validated and returns an error if any fail
+// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
 func (v *NumberValidator[T]) Validate(i interface{}) error {
 	if err := testType(i, v.typeStr); err != nil {
 		return err
@@ -332,6 +334,7 @@ func (v *NumberValidator[T]) Validate(i interface{}) error {
 	return v.ValidateNumber(i.(T))
 }
 
+// ValidateNumber applies all checks against a number of the expected type and returns an error if any fail
 func (v *NumberValidator[T]) ValidateNumber(n T) error {
 	for _, fn := range v.checks {
 		if err := fn(n); err != nil {

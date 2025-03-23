@@ -277,7 +277,7 @@ func (sv *StructValidator[T]) Validate(s interface{}) error {
 	return sv.validateStruct(sRef, s.(T))
 }
 
-// ValidateStruct accepts a struct of the expected type and validates it
+// ValidateStruct applies all checks against a struct of the expected type and returns an error if any fail
 func (sv *StructValidator[T]) ValidateStruct(s T) error {
 	sRef := reflect.ValueOf(s)
 	return sv.validateStruct(sRef, s)
