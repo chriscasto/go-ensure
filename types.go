@@ -17,17 +17,21 @@ type TypeError struct {
 	err string
 }
 
+func (e *TypeError) Error() string {
+	return e.err
+}
+
+func NewTypeError(err string) *TypeError {
+	return &TypeError{err}
+}
+
 // newTypeErrorFromTypes is a helper function for creating a TypeError in the
 // common scenario where you have the names of the type you want and the type
 // you have already available in string form
 func newTypeErrorFromTypes(want string, got string) *TypeError {
-	return &TypeError{fmt.Sprintf(
+	return NewTypeError(fmt.Sprintf(
 		`expected "%s"; got "%s"`, want, got,
-	)}
-}
-
-func (e *TypeError) Error() string {
-	return e.err
+	))
 }
 
 // ValidationError is used to indicate a failure while conducting validation
