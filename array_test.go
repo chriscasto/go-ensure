@@ -145,6 +145,7 @@ func TestArrayValidator_Each(t *testing.T) {
 
 func TestArrayValidator_Validate(t *testing.T) {
 	// see util_test.go
+	runDefaultValidatorTestCases(t, ensure.Array[bool]())
 	runDefaultValidatorTestCases(t, ensure.Array[string]())
 	runDefaultValidatorTestCases(t, ensure.Array[int]())
 	runDefaultValidatorTestCases(t, ensure.Array[float64]())
