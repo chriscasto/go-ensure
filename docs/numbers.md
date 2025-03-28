@@ -4,14 +4,14 @@ Validating numbers makes use of generics to specify size and type.  For example,
 if you want to make sure that an integer value is greater than 10, you could use
 something like this:
 
-```
+```go
 // ensure number of type int is greater than 10
 validator := ensure.Number[int]().IsGreaterThan(10)
 ```
 
 If you were expecting a float, it would instead look like this:
 
-```
+```go
 // ensure number of type float is greater than 10
 validator := ensure.Number[float64]().IsGreaterThan(10.0)
 ```

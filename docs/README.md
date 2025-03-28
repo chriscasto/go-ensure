@@ -63,17 +63,17 @@ like `Number[int]().IsLessThan(10.0)` or attempting to call an invalid method
 like `String().IsGreaterThan()`), but there are some cases where correctness has
 to be checked during validator composition.  For example:
 
-```
+```go
 type MyStruct {
     Foo int64
     Bar string
 }
 
 validStruct := ensure.Struct[MyStruct](with.Fields{
-    # This will panic because the declared type doesn't match the actual field type
+    // This will panic because the declared type doesn't match the actual field type
     "Foo": ensure.Number[int](),
     
-    # This will panic because the name of the field is wrong
+    // This will panic because the name of the field is wrong
     "Baz": ensure.String(),
 })
 ```
@@ -150,7 +150,7 @@ method, `HasLengthWhere()` accepts a single number validator instance with arbit
 rules.  For instance, to only allow strings that have an odd number of characters,
 you could do something like this:
 
-```
+```go
 ensure.String().HasLengthWhere(
     ensure.Length().IsOdd()
 )
@@ -165,12 +165,12 @@ evaluating common length scenarios, such as whether or not an array is empty.  F
 these common cases, you should prefer these methods instead for their conciseness.
 
 Compare this:
-```
+```go
 ensure.Array[int]().IsNotEmpty()
 ```
 
 to this:
-```
+```go
 ensure.Array[int]().HasLengthWhere(ensure.Length().DoesNotEqual(0))
 ```
 
@@ -188,7 +188,7 @@ Consider a situation where we want to make sure that an expiration date is not
 a time in the past and is less than 90 days in the future.  Here's one way you 
 could define that using the `Is()` function to add each rule independently.
 
-```
+```go
 func notInThePast(date time.Time) error {
     if date.Before(time.Now()) {
         return errors.New("expiration date cannot be in the past")
@@ -211,7 +211,7 @@ validExpiration := ensure.Struct[time.Time]().Is(notInThePast).Is(lessThanNinety
 Here's an alternate version that combines both rules into a single function.
 Both options are functionally the same, so do whatever works best for you.
 
-```
+```go
 func inExpectedTimeRange(date time.Time) error {
     now := time.Now()
 
@@ -231,7 +231,7 @@ validExpiration := ensure.Struct[time.Time]().Is(inExpectedTimeRange)
 
 You can, of course, also pass function literals
 
-```
+```go
 validExpiration := ensure.Struct[time.Time]().Is(func (date time.Time) error {
     now := time.Now()
 

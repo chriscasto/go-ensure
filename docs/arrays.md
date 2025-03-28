@@ -4,7 +4,7 @@ Array validators can be of any subtype (string, int, float64, etc).  As an
 example, to make sure your array of 16-bit unsigned integers has at least 3
 values, you could use something like this:
 
-```
+```go
 // ensure array of uint16 has more than 3 elements
 validator := ensure.Array[uint16]().HasMoreThan(3)
 ```
@@ -15,7 +15,7 @@ items it contains.  You can do this by passing an appropriate validator to the
 `Each()` method.  For example, to make sure each string in an array contains at
 least one vowel, you could do something like this:
 
-```
+```go
 // ensure in array of strings each string matches "(?i)[aeiuo]+"
 validator := ensure.Array[string]().Each(
     ensure.String().Matches("(?i)[aeiuo]+")
