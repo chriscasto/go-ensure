@@ -121,3 +121,41 @@ func TestOptionalPointer(t *testing.T) {
 		}
 	})
 }
+
+func TestPointer_ArrayOfPointers(t *testing.T) {
+	one := "one"
+	abc := "abc"
+
+	strPtrs := []*string{&one, &abc}
+
+	validArr := ensure.Array[*string]().Each(
+		ensure.Pointer(
+			ensure.String(),
+		),
+	)
+
+	// This should not cause an error
+	t.Run("array of pointers", func(t *testing.T) {
+		if err := validArr.Validate(strPtrs); err != nil {
+			t.Errorf(`expected no error but got "%s"`, err.Error())
+		}
+	})
+}
+
+func TestPointer_Nested(t *testing.T) {
+	str := "foo"
+	pStr := &str
+	ppStr := &pStr
+
+	// This should not cause an error
+	t.Run("pointer of pointer", func(t *testing.T) {
+		// Pointer of a pointer
+		ptr := ensure.Pointer(
+			ensure.Pointer(ensure.String()),
+		)
+
+		if err := ptr.Validate(ppStr); err != nil {
+			t.Errorf(`expected no error but got "%s"`, err.Error())
+		}
+	})
+}
