@@ -81,6 +81,67 @@ validStruct := ensure.Struct[MyStruct](with.Fields{
 In all cases, panics are used to indicate unrecoverable conditions that arise 
 solely due to invalid configurations.
 
+## Pointers
+
+All validators operate on values, not pointers.  Aside from the fact that the 
+value is what contains the useful information for validation, this also ensures
+that no validator can inadvertently mutate any values passed to it.  Pointers
+are a fact of life, though, especially when dealing with struct fields.  In most
+cases you can simply dereference the pointer, but other times, like when validating
+structs or arrays of pointers, it can be easier to just indicate that
+a pointer is expected.
+
+There are two functions you can use to indicate that a passed value will be a
+pointer: `Pointer()` and `OptionalPointer()`.  The only difference between the
+two is that `Pointer()` will return an error if the pointer is nil, whereas
+`OptionalPointer()` will return gracefully without attempting further validation.
+
+```go
+type Person struct {
+	FirstName string
+	LastName string
+	Pets []*Pet
+}
+
+type Pet struct {
+	Name string
+	Type string
+	License *License
+}
+
+validPet := ensure.Struct[Pet]().HasFields(with.Validators{
+	"Name": ensure.String(),
+	"Type": ensure.String(),
+	
+	// Not every pet will need a license, so only validate if it exists
+	"License": ensure.OptionalPointer(
+		ensure.Struct[License]()
+	)
+})
+
+validPerson := ensure.Struct[Person]().HasFields(with.Validators{
+	"FirstName": ensure.String(),
+	"LastName": ensure.String(),
+	
+	// We may not have any pets, but if we do each one should be valid
+	"Pets": ensure.Array[*Pet]().Each(
+		ensure.Pointer(validPet)
+	),
+})
+```
+
+There is no practical limit to how far you can nest pointers.
+
+```go
+str := "foo"
+pStr := &str
+ppStr := &pStr
+
+validStr := ensure.Pointer(
+    ensure.Pointer(ensure.String()),
+)
+```
+
 ## Lengths
 
 Validators for types that have a length property (string, map, array) all have a
