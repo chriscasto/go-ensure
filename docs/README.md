@@ -142,6 +142,41 @@ validStr := ensure.Pointer(
 )
 ```
 
+## The `Any` validator
+
+Validation rules added to a validator are evaluated in order via logical "AND".
+
+```go
+// ensure string starts with "foo" AND ends with "bar"
+ensure.String().StartsWith("foo").EndsWith("bar")
+```
+
+There may be some occasions where you want to consider multiple validation options
+for the same value.  For example, in the case where you want to validate a hostname,
+valid options could be an IPv4 address, an IPv6 address, a fully-qualified domain
+name, or maybe even just the word "localhost".  We can use the `Any()` validator
+to evaluate each of these in turn and consider the value valid if any of them 
+evaluates without error.
+
+```go
+validHost := ensure.Any(
+	ensure.String().Equals("localhost"),
+	ensure.String().Matches(ensure.Ipv4),
+	ensure.String().Matches(ensure.Ipv6),
+	// ...
+)
+```
+
+It should go without saying that all validators must be of the same type.  Mixing
+types will result in a panic.
+
+Validators are evaluated in order, so putting the validation method that completes
+the quickest first may be the most efficient option, assuming equal probability 
+of values. In the more likely event of an unequal distribution of values, it may
+make sense to start with the most common and order the rest accordingly.  In 
+most cases it is unlikely to make any real impact on performance, so don't sweat
+it too much if it isn't immediately obvious what order to use.
+
 ## Lengths
 
 Validators for types that have a length property (string, map, array) all have a
