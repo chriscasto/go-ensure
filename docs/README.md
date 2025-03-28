@@ -11,6 +11,7 @@ check out the [_examples](../_examples) directory.
 | Array  | `ensure.Array[string]().Each( ensure.String().Matches("^\d+$") )`       | `ensure.ArrayValidator[T]`  | [Arrays](./arrays.md)   |
 | Map    | `ensure.Map[string,int]().EachKey( ensure.String().HasLength(3) )`      | `ensure.MapValidator[K,V]`  | [Maps](./maps.md)       |
 | Struct | `ensure.Struct[MyStruct]( with.Fields{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
+| Bool   | `ensure.Bool().IsTrue()`                                                 | `ensure.BooleanValidator`   | [Bools](./bools.md)     |
 
 
 ## The `Validator` interface

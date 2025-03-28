@@ -65,6 +65,9 @@ func (tcs *validatorTestCases) run(t *testing.T, v with.Validator) {
 // validators only accept values of the correct type
 func getDefaultValidatorTestCases(v with.Validator) validatorTestCases {
 	testCases := validatorTestCases{
+		"bool":   {true, false},
+		"[]bool": {[]bool{true, false}, false},
+
 		"string":   {"a", false},
 		"[]string": {[]string{"a", "b", "c"}, false},
 

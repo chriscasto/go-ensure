@@ -39,6 +39,7 @@ type StringValidator struct {
 	checks       []strCheckFunc
 }
 
+// String returns an initialized StringValidator
 func String() *StringValidator {
 	return &StringValidator{}
 }
@@ -59,7 +60,7 @@ func (v *StringValidator) Validate(value any) error {
 	str, ok := value.(string)
 
 	if !ok {
-		return &TypeError{"string expected"}
+		return NewTypeError("string expected")
 	}
 
 	return v.ValidateString(str)
