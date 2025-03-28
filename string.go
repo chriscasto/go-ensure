@@ -82,6 +82,32 @@ func (v *StringValidator) ValidateString(str string) error {
 	return nil
 }
 
+// Equals adds a validation check that returns an error if the target string
+// is not identical to the specified string
+func (v *StringValidator) Equals(same string) *StringValidator {
+	return v.Is(func(str string) error {
+		if str != same {
+			return errors.New(
+				fmt.Sprintf(`string must equal "%s"`, same),
+			)
+		}
+		return nil
+	})
+}
+
+// DoesNotEqual adds a validation check that returns an error if the target string
+// is identical to the specified string
+func (v *StringValidator) DoesNotEqual(diff string) *StringValidator {
+	return v.Is(func(str string) error {
+		if str == diff {
+			return errors.New(
+				fmt.Sprintf(`string must not equal "%s"`, diff),
+			)
+		}
+		return nil
+	})
+}
+
 // StartsWith adds a validation check that returns an error if the target string
 // does not start with the specified substring
 func (v *StringValidator) StartsWith(prefix string) *StringValidator {
