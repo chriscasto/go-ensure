@@ -3,7 +3,7 @@
 Validating maps is very similar to validating arrays.  The key difference is
 that with maps you can apply validations to both keys and values.
 
-```
+```go
 validator = ensure.Map[string, int]().EachKey(
     ensure.String()
 ).EachValue(

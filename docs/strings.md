@@ -2,7 +2,7 @@
 
 You've probably already seen a few partial examples of a string validator, but 
 here's something a bit more complete (if no less contrived).
-```
+```go
 package main
 
 import (
@@ -28,7 +28,6 @@ func main() {
 	    fmt.Print(`you shouldn't get here`)
 	}
 }
-
 ```
 
 ## Methods
@@ -58,7 +57,7 @@ To simplify common use cases, there are predefined regular expressions available
 to use.  For example, if you wanted to ensure that the string only contains
 alphanumeric values, you could use something like this:
 
-```
+```go
 validator := ensure.String().Matches(ensure.AlphaNum)
 ```
 

@@ -11,7 +11,7 @@ for each field or getter method and the latter provides a set of human-readable
 (and user-friendly) names to use when identifying the field to which an error 
 message belongs.  It looks something like this:
 
-```
+```go
 validStruct := ensure.Struct[MyStruct]().HasFields(with.Validators{
     "Field1": ensure.String(),
     "Field2": ensure.Number[int](),
@@ -25,7 +25,7 @@ validStruct := ensure.Struct[MyStruct]().HasFields(with.Validators{
 
 For something a little more concrete, imagine you have a set of structs like this:
 
-```
+```go
 type Company struct {
     Name string
     Revenue float64
@@ -44,7 +44,7 @@ func (p Person) FullName() string {
 
 You might then have validation that looks something like this:
 
-```
+```go
 validator := ensure.Struct[Company].HasFields(with.Validators{
     "Name": ensure.String().IsNotEmpty(),
     "Revenue": ensure.Number[float64]().IsGreaterThan(0.0),
@@ -68,7 +68,7 @@ Which can be a lot to take in all at once, but it should still be fairly easy to
 understand what it's doing by reading it line by line. We could also decompose
 things a bit to make it more readable:
 
-```
+```go
 validName := ensure.String().IsNotEmpty().Matches(ensure.Alpha)
 
 validPerson := ensure.Struct[Person].HasFields(with.Validators{
@@ -77,7 +77,9 @@ validPerson := ensure.Struct[Person].HasFields(with.Validators{
 },with.DisplayNames{
     "FirstName": "First Name",
     "LastName": "Last Name",
-}).HasGetters(with.Validators{
+})
+
+validPerson.HasGetters(with.Validators{
     "FullName": ensure.String().Contains(" "),
 },with.DisplayNames{
     "FullName": "Full Name",

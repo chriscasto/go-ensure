@@ -63,23 +63,84 @@ like `Number[int]().IsLessThan(10.0)` or attempting to call an invalid method
 like `String().IsGreaterThan()`), but there are some cases where correctness has
 to be checked during validator composition.  For example:
 
-```
+```go
 type MyStruct {
     Foo int64
     Bar string
 }
 
 validStruct := ensure.Struct[MyStruct](with.Fields{
-    # This will panic because the declared type doesn't match the actual field type
+    // This will panic because the declared type doesn't match the actual field type
     "Foo": ensure.Number[int](),
     
-    # This will panic because the name of the field is wrong
+    // This will panic because the name of the field is wrong
     "Baz": ensure.String(),
 })
 ```
 
 In all cases, panics are used to indicate unrecoverable conditions that arise 
 solely due to invalid configurations.
+
+## Pointers
+
+All validators operate on values, not pointers.  Aside from the fact that the 
+value is what contains the useful information for validation, this also ensures
+that no validator can inadvertently mutate any values passed to it.  Pointers
+are a fact of life, though, especially when dealing with struct fields.  In most
+cases you can simply dereference the pointer, but other times, like when validating
+structs or arrays of pointers, it can be easier to just indicate that
+a pointer is expected.
+
+There are two functions you can use to indicate that a passed value will be a
+pointer: `Pointer()` and `OptionalPointer()`.  The only difference between the
+two is that `Pointer()` will return an error if the pointer is nil, whereas
+`OptionalPointer()` will return gracefully without attempting further validation.
+
+```go
+type Person struct {
+	FirstName string
+	LastName string
+	Pets []*Pet
+}
+
+type Pet struct {
+	Name string
+	Type string
+	License *License
+}
+
+validPet := ensure.Struct[Pet]().HasFields(with.Validators{
+	"Name": ensure.String(),
+	"Type": ensure.String(),
+	
+	// Not every pet will need a license, so only validate if it exists
+	"License": ensure.OptionalPointer(
+		ensure.Struct[License]()
+	)
+})
+
+validPerson := ensure.Struct[Person]().HasFields(with.Validators{
+	"FirstName": ensure.String(),
+	"LastName": ensure.String(),
+	
+	// We may not have any pets, but if we do each one should be valid
+	"Pets": ensure.Array[*Pet]().Each(
+		ensure.Pointer(validPet)
+	),
+})
+```
+
+There is no practical limit to how far you can nest pointers.
+
+```go
+str := "foo"
+pStr := &str
+ppStr := &pStr
+
+validStr := ensure.Pointer(
+    ensure.Pointer(ensure.String()),
+)
+```
 
 ## Lengths
 
@@ -89,7 +150,7 @@ method, `HasLengthWhere()` accepts a single number validator instance with arbit
 rules.  For instance, to only allow strings that have an odd number of characters,
 you could do something like this:
 
-```
+```go
 ensure.String().HasLengthWhere(
     ensure.Length().IsOdd()
 )
@@ -104,12 +165,12 @@ evaluating common length scenarios, such as whether or not an array is empty.  F
 these common cases, you should prefer these methods instead for their conciseness.
 
 Compare this:
-```
+```go
 ensure.Array[int]().IsNotEmpty()
 ```
 
 to this:
-```
+```go
 ensure.Array[int]().HasLengthWhere(ensure.Length().DoesNotEqual(0))
 ```
 
@@ -127,7 +188,7 @@ Consider a situation where we want to make sure that an expiration date is not
 a time in the past and is less than 90 days in the future.  Here's one way you 
 could define that using the `Is()` function to add each rule independently.
 
-```
+```go
 func notInThePast(date time.Time) error {
     if date.Before(time.Now()) {
         return errors.New("expiration date cannot be in the past")
@@ -150,7 +211,7 @@ validExpiration := ensure.Struct[time.Time]().Is(notInThePast).Is(lessThanNinety
 Here's an alternate version that combines both rules into a single function.
 Both options are functionally the same, so do whatever works best for you.
 
-```
+```go
 func inExpectedTimeRange(date time.Time) error {
     now := time.Now()
 
@@ -170,7 +231,7 @@ validExpiration := ensure.Struct[time.Time]().Is(inExpectedTimeRange)
 
 You can, of course, also pass function literals
 
-```
+```go
 validExpiration := ensure.Struct[time.Time]().Is(func (date time.Time) error {
     now := time.Now()
 
