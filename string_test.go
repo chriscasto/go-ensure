@@ -235,6 +235,36 @@ func TestStringValidator_Matches(t *testing.T) {
 	}
 }
 
+func TestStringValidator_Equals(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":   {"foo", true},
+		"partial match": {"food", false},
+		"uppercase":     {"FOO", false},
+	}
+
+	str := "foo"
+	testCases.run(
+		t,
+		ensure.String().Equals(str),
+		fmt.Sprintf(`Equals("%s")`, str),
+	)
+}
+
+func TestStringValidator_DoesNotEqual(t *testing.T) {
+	testCases := strTestCases{
+		"exact match":   {"foo", false},
+		"partial match": {"food", true},
+		"uppercase":     {"FOO", true},
+	}
+
+	str := "foo"
+	testCases.run(
+		t,
+		ensure.String().DoesNotEqual(str),
+		fmt.Sprintf(`DoesNotEqual("%s")`, str),
+	)
+}
+
 func TestStringValidator_StartsWith(t *testing.T) {
 	testCases := strTestCases{
 		"exact match":  {"foo", true},
