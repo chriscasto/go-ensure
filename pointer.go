@@ -36,7 +36,9 @@ func (v *PointerValidator) Validate(i any) error {
 	refVal := reflect.ValueOf(i)
 
 	if refVal.Kind() != reflect.Ptr {
-		return NewTypeError("value must be a pointer")
+		return NewTypeError(
+			fmt.Sprintf("value must be a pointer; expected %s, got %s", v.t, refVal.Type().String()),
+		)
 	}
 
 	if refVal.IsNil() {
