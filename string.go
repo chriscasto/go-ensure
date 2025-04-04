@@ -63,13 +63,13 @@ func (v *StringValidator) Validate(value any) error {
 		return NewTypeError("string expected")
 	}
 
-	return v.ValidateString(str)
+	return v.ValidateStrict(str)
 }
 
-// ValidateString applies all checks against a string value and returns an error if any fail
-func (v *StringValidator) ValidateString(str string) error {
+// ValidateStrict applies all checks against a string value and returns an error if any fail
+func (v *StringValidator) ValidateStrict(str string) error {
 	if v.lenValidator != nil {
-		if err := v.lenValidator.Validate(len(str)); err != nil {
+		if err := v.lenValidator.ValidateStrict(len(str)); err != nil {
 			return err
 		}
 	}

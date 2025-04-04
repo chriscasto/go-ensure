@@ -333,11 +333,11 @@ func (v *NumberValidator[T]) Validate(value any) error {
 		return err
 	}
 
-	return v.ValidateNumber(value.(T))
+	return v.ValidateStrict(value.(T))
 }
 
-// ValidateNumber applies all checks against a number of the expected type and returns an error if any fail
-func (v *NumberValidator[T]) ValidateNumber(n T) error {
+// ValidateStrict applies all checks against a number of the expected type and returns an error if any fail
+func (v *NumberValidator[T]) ValidateStrict(n T) error {
 	for _, fn := range v.checks {
 		if err := fn(n); err != nil {
 			return err

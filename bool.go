@@ -41,11 +41,11 @@ func (bv *BooleanValidator) Validate(i interface{}) error {
 		return NewTypeError("boolean expected")
 	}
 
-	return bv.ValidateBool(b)
+	return bv.ValidateStrict(b)
 }
 
-// ValidateBool applies all checks against a boolean value and returns an error if any fail
-func (bv *BooleanValidator) ValidateBool(b bool) error {
+// ValidateStrict applies all checks against a boolean value and returns an error if any fail
+func (bv *BooleanValidator) ValidateStrict(b bool) error {
 	// There are really only two possibilities, so we can just check those
 	// directly rather than using an array of functions
 

@@ -50,11 +50,11 @@ func (mv *MapValidator[K, V]) Validate(value any) error {
 	if err := testType(value, mv.typeStr); err != nil {
 		return err
 	}
-	return mv.ValidateMap(value.(map[K]V))
+	return mv.ValidateStrict(value.(map[K]V))
 }
 
-// ValidateMap applies all checks against a map and returns an error if any fail
-func (mv *MapValidator[K, V]) ValidateMap(mp map[K]V) error {
+// ValidateStrict applies all checks against a map and returns an error if any fail
+func (mv *MapValidator[K, V]) ValidateStrict(mp map[K]V) error {
 	if mv.lenValidator != nil {
 		if err := mv.lenValidator.Validate(len(mp)); err != nil {
 			return err

@@ -25,11 +25,11 @@ func TestBoolValidator_Type(t *testing.T) {
 func TestBoolValidator_IsTrue(t *testing.T) {
 	bv := ensure.Bool().IsTrue()
 
-	if err := bv.ValidateBool(true); err != nil {
+	if err := bv.ValidateStrict(true); err != nil {
 		t.Errorf(`expected no error, got "%s"`, err)
 	}
 
-	if err := bv.ValidateBool(false); err == nil {
+	if err := bv.ValidateStrict(false); err == nil {
 		t.Errorf(`expected error but got none`)
 	}
 }
@@ -38,11 +38,11 @@ func TestBoolValidator_IsTrue(t *testing.T) {
 func TestBoolValidator_IsFalse(t *testing.T) {
 	bv := ensure.Bool().IsFalse()
 
-	if err := bv.ValidateBool(false); err != nil {
+	if err := bv.ValidateStrict(false); err != nil {
 		t.Errorf(`expected no error, got "%s"`, err)
 	}
 
-	if err := bv.ValidateBool(true); err == nil {
+	if err := bv.ValidateStrict(true); err == nil {
 		t.Errorf(`expected error but got none`)
 	}
 }

@@ -132,11 +132,11 @@ func (v *ArrayValidator[T]) Validate(value any) error {
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
-	return v.ValidateArray(value.([]T))
+	return v.ValidateStrict(value.([]T))
 }
 
-// ValidateArray applies all checks against an array and returns an error if any fail
-func (v *ArrayValidator[T]) ValidateArray(arr []T) error {
+// ValidateStrict applies all checks against an array and returns an error if any fail
+func (v *ArrayValidator[T]) ValidateStrict(arr []T) error {
 	if v.lenValidator != nil {
 		if err := v.lenValidator.Validate(len(arr)); err != nil {
 			return err

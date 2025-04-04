@@ -8,6 +8,11 @@ type Validator interface {
 	Type() string
 }
 
+type StrictValidator[T any] interface {
+	// ValidateStrict validates a known type without relying on reflection
+	ValidateStrict(T) error
+}
+
 // Validators is a helper type for defining field and method validators for structs
 type Validators map[string]Validator
 
