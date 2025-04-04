@@ -228,7 +228,7 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 	return sv
 }
 
-// validateStruct is a helper method that does the actual validation used by Validate and ValidateStruct
+// validateStruct is a helper method that does the actual validation used by Validate and ValidateStrict
 func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 	for _, check := range sv.checks {
 		if err := check(s); err != nil {
@@ -278,8 +278,8 @@ func (sv *StructValidator[T]) Validate(value any) error {
 	return sv.validateStruct(sRef, value.(T))
 }
 
-// ValidateStruct applies all checks against a struct of the expected type and returns an error if any fail
-func (sv *StructValidator[T]) ValidateStruct(s T) error {
+// ValidateStrict applies all checks against a struct of the expected type and returns an error if any fail
+func (sv *StructValidator[T]) ValidateStrict(s T) error {
 	sRef := reflect.ValueOf(s)
 	return sv.validateStruct(sRef, s)
 }

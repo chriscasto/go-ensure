@@ -9,6 +9,8 @@ type Validator interface {
 }
 
 type StrictValidator[T any] interface {
+	Validator
+
 	// ValidateStrict validates a known type without relying on reflection
 	ValidateStrict(T) error
 }

@@ -18,11 +18,6 @@ func Any[T any](validators ...with.Validator) *AnyValidator[T] {
 	var zero T
 
 	typeStr := reflect.ValueOf(zero).Type().String()
-	//validator.Type()
-
-	//validators := []with.Validator{
-	//	validator,
-	//}
 
 	// Check to make sure that each validator implements the right type
 	for _, validator := range validators {
@@ -33,8 +28,6 @@ func Any[T any](validators ...with.Validator) *AnyValidator[T] {
 				validator.Type(),
 			))
 		}
-
-		//validators = append(validators, validator)
 	}
 
 	return &AnyValidator[T]{

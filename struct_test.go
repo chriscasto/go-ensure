@@ -228,7 +228,7 @@ func TestStructValidator_HasFields(t *testing.T) {
 	for name, tc := range evalTestCases {
 		t.Run(name, func(t *testing.T) {
 			v := ensure.Struct[testStruct]().HasFields(tc.f)
-			err := v.ValidateStruct(tc.s)
+			err := v.ValidateStrict(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
 			} else if err == nil && tc.expectErr {
@@ -403,7 +403,7 @@ func TestStructValidator_HasGetters(t *testing.T) {
 	for name, tc := range evalTestCases {
 		t.Run(name, func(t *testing.T) {
 			v := ensure.Struct[testStruct]().HasGetters(tc.validators)
-			err := v.ValidateStruct(tc.s)
+			err := v.ValidateStrict(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
 			} else if err == nil && tc.expectErr {
@@ -522,7 +522,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			v := ensure.Struct[testStruct]().HasFields(tc.f)
-			err := v.ValidateStruct(tc.s)
+			err := v.ValidateStrict(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
 			} else if err == nil && tc.expectErr {

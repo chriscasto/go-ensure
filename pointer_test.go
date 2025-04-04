@@ -15,19 +15,17 @@ func TestPointer_Type(t *testing.T) {
 		v            with.Validator
 		expectedType string
 	}{
-		"string": {ensure.String(), "*string"},
-		"int":    {ensure.Number[int](), "*int"},
-		"float":  {ensure.Number[float64](), "*float64"},
-		"map":    {ensure.Map[string, bool](), "*map[string]bool"},
-		"struct": {ensure.Struct[testStruct](), "*ensure_test.testStruct"},
+		"string": {ensure.Pointer[string](ensure.String()), "*string"},
+		"int":    {ensure.Pointer[int](ensure.Number[int]()), "*int"},
+		"float":  {ensure.Pointer[float64](ensure.Number[float64]()), "*float64"},
+		"map":    {ensure.Pointer[map[string]bool](ensure.Map[string, bool]()), "*map[string]bool"},
+		"struct": {ensure.Pointer[testStruct](ensure.Struct[testStruct]()), "*ensure_test.testStruct"},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ptr := ensure.Pointer(tc.v)
-
-			if ptr.Type() != tc.expectedType {
-				t.Errorf(`Pointer().Type(); expected %s, got "%s"`, tc.expectedType, ptr.Type())
+			if tc.v.Type() != tc.expectedType {
+				t.Errorf(`Pointer().Type(); expected %s, got "%s"`, tc.expectedType, tc.v.Type())
 			}
 		})
 	}
@@ -39,28 +37,26 @@ func TestPointer_Validate(t *testing.T) {
 		value    any
 		willPass bool
 	}{
-		"nil":                {ensure.String(), nil, false},
-		"valid string ptr":   {ensure.String().Contains("string"), ptrTo("string"), true},
-		"invalid string ptr": {ensure.String().Contains("string"), ptrTo("str"), false},
-		"string val":         {ensure.String().Contains("string"), "string", false},
-		"valid int ptr":      {ensure.Number[int]().IsOdd(), ptrTo(123), true},
-		"invalid int ptr":    {ensure.Number[int]().IsOdd(), ptrTo(12), false},
-		"int val":            {ensure.Number[int]().IsOdd(), 123, false},
-		"valid float ptr":    {ensure.Number[float64]().IsPositive(), ptrTo(1.0), true},
-		"invalid float ptr":  {ensure.Number[float64]().IsPositive(), ptrTo(-1.0), false},
-		"float val":          {ensure.Number[float64]().IsPositive(), 1.0, false},
-		"valid map ptr":      {ensure.Map[string, bool]().HasCount(1), ptrTo(map[string]bool{"abc": true}), true},
-		"invalid map ptr":    {ensure.Map[string, bool]().HasCount(1), ptrTo(map[string]bool{}), false},
-		"map val":            {ensure.Map[string, bool]().HasCount(1), map[string]bool{"abc": true}, false},
-		"struct ptr":         {ensure.Struct[testStruct](), ptrTo(testStruct{}), true},
-		"struct val":         {ensure.Struct[testStruct](), testStruct{}, false},
+		"nil":                {ensure.Pointer[string](ensure.String()), nil, false},
+		"valid string ptr":   {ensure.Pointer[string](ensure.String().Contains("string")), ptrTo("string"), true},
+		"invalid string ptr": {ensure.Pointer[string](ensure.String().Contains("string")), ptrTo("str"), false},
+		"string val":         {ensure.Pointer[string](ensure.String().Contains("string")), "string", false},
+		"valid int ptr":      {ensure.Pointer[int](ensure.Number[int]().IsOdd()), ptrTo(123), true},
+		"invalid int ptr":    {ensure.Pointer[int](ensure.Number[int]().IsOdd()), ptrTo(12), false},
+		"int val":            {ensure.Pointer[int](ensure.Number[int]().IsOdd()), 123, false},
+		"valid float ptr":    {ensure.Pointer[float64](ensure.Number[float64]().IsPositive()), ptrTo(1.0), true},
+		"invalid float ptr":  {ensure.Pointer[float64](ensure.Number[float64]().IsPositive()), ptrTo(-1.0), false},
+		"float val":          {ensure.Pointer[float64](ensure.Number[float64]().IsPositive()), 1.0, false},
+		"valid map ptr":      {ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)), ptrTo(map[string]bool{"abc": true}), true},
+		"invalid map ptr":    {ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)), ptrTo(map[string]bool{}), false},
+		"map val":            {ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)), map[string]bool{"abc": true}, false},
+		"struct ptr":         {ensure.Pointer[testStruct](ensure.Struct[testStruct]()), ptrTo(testStruct{}), true},
+		"struct val":         {ensure.Pointer[testStruct](ensure.Struct[testStruct]()), testStruct{}, false},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ptr := ensure.Pointer(tc.v)
-
-			err := ptr.Validate(tc.value)
+			err := tc.v.Validate(tc.value)
 			if err != nil && tc.willPass {
 				t.Errorf(`Pointer().Validate(%v); expected no error, got "%s"`, tc.value, err)
 			} else if err == nil && !tc.willPass {
@@ -76,7 +72,7 @@ func TestOptionalPointer(t *testing.T) {
 
 	// This should cause an error when dereferencing the nil pointer
 	t.Run("required pointer", func(t *testing.T) {
-		ptr := ensure.Pointer(validStr)
+		ptr := ensure.Pointer[string](validStr)
 
 		if err := ptr.Validate(nilStr); err == nil {
 			t.Errorf(`expected error but got none`)
@@ -85,7 +81,7 @@ func TestOptionalPointer(t *testing.T) {
 
 	// This should not cause an error because validation is optional
 	t.Run("optional pointer", func(t *testing.T) {
-		ptr := ensure.OptionalPointer(validStr)
+		ptr := ensure.OptionalPointer[string](validStr)
 
 		if err := ptr.Validate(nilStr); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
@@ -102,7 +98,7 @@ func TestOptionalPointer(t *testing.T) {
 	// This should cause an error when dereferencing the nil pointer
 	t.Run("required pointer", func(t *testing.T) {
 		reqPtr := ensure.Struct[testStructWithNil]().HasFields(with.Validators{
-			"Str": ensure.Pointer(ensure.String()),
+			"Str": ensure.Pointer[string](ensure.String()),
 		})
 
 		if err := reqPtr.Validate(nilStruct); err == nil {
@@ -113,7 +109,7 @@ func TestOptionalPointer(t *testing.T) {
 	// This should not cause an error because validation is optional
 	t.Run("optional pointer", func(t *testing.T) {
 		optPtr := ensure.Struct[testStructWithNil]().HasFields(with.Validators{
-			"Str": ensure.OptionalPointer(ensure.String()),
+			"Str": ensure.OptionalPointer[string](ensure.String()),
 		})
 
 		if err := optPtr.Validate(nilStruct); err != nil {
@@ -129,7 +125,7 @@ func TestPointer_ArrayOfPointers(t *testing.T) {
 	strPtrs := []*string{&one, &abc}
 
 	validArr := ensure.Array[*string]().Each(
-		ensure.Pointer(
+		ensure.Pointer[string](
 			ensure.String(),
 		),
 	)

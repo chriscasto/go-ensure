@@ -6,33 +6,33 @@ import (
 	"reflect"
 )
 
-type PointerValidator struct {
-	parent   with.Validator
+type PointerValidator[T any] struct {
+	parent   with.StrictValidator[T]
 	optional bool
 	t        string
 }
 
-func newPtrValidator(parent with.Validator, optional bool) *PointerValidator {
-	return &PointerValidator{
+func newPtrValidator[T any](parent with.StrictValidator[T], optional bool) *PointerValidator[T] {
+	return &PointerValidator[T]{
 		parent:   parent,
 		optional: optional,
 		t:        fmt.Sprintf("*%s", parent.Type()),
 	}
 }
 
-func Pointer(parent with.Validator) *PointerValidator {
-	return newPtrValidator(parent, false)
+func Pointer[T any](parent with.StrictValidator[T]) *PointerValidator[T] {
+	return newPtrValidator[T](parent, false)
 }
 
-func OptionalPointer(parent with.Validator) *PointerValidator {
-	return newPtrValidator(parent, true)
+func OptionalPointer[T any](parent with.StrictValidator[T]) *PointerValidator[T] {
+	return newPtrValidator[T](parent, true)
 }
 
-func (v *PointerValidator) Type() string {
+func (v *PointerValidator[T]) Type() string {
 	return v.t
 }
 
-func (v *PointerValidator) Validate(i any) error {
+func (v *PointerValidator[T]) Validate(i any) error {
 	refVal := reflect.ValueOf(i)
 
 	if refVal.Kind() != reflect.Ptr {
@@ -47,4 +47,8 @@ func (v *PointerValidator) Validate(i any) error {
 	}
 
 	return v.parent.Validate(refVal.Elem().Interface())
+}
+
+func (v *PointerValidator[T]) ValidateStrict(i *T) error {
+	return v.parent.ValidateStrict(*i)
 }
