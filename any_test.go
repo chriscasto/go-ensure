@@ -6,28 +6,6 @@ import (
 	"testing"
 )
 
-// TestAnyValidator_Construct checks to make sure construction fails with a panic
-// when invalid inputs are provided
-func TestAnyValidator_Construct(t *testing.T) {
-	t.Run("panic if mismatched types", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic")
-			}
-		}()
-
-		bad := ensure.Any[string](
-			ensure.String(),
-			ensure.Number[int](),
-		)
-
-		if err := bad.Validate(""); err != nil {
-			t.Errorf("validation occured and generated an error: %s", err.Error())
-		}
-
-	})
-}
-
 // TestAnyValidator_Type checks to make sure the AnyValidator returns the correct type
 func TestAnyValidator_Type(t *testing.T) {
 	testCases := map[string]struct {

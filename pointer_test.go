@@ -15,11 +15,26 @@ func TestPointer_Type(t *testing.T) {
 		v            with.Validator
 		expectedType string
 	}{
-		"string": {ensure.Pointer[string](ensure.String()), "*string"},
-		"int":    {ensure.Pointer[int](ensure.Number[int]()), "*int"},
-		"float":  {ensure.Pointer[float64](ensure.Number[float64]()), "*float64"},
-		"map":    {ensure.Pointer[map[string]bool](ensure.Map[string, bool]()), "*map[string]bool"},
-		"struct": {ensure.Pointer[testStruct](ensure.Struct[testStruct]()), "*ensure_test.testStruct"},
+		"string": {
+			ensure.Pointer[string](ensure.String()),
+			"*string",
+		},
+		"int": {
+			ensure.Pointer[int](ensure.Number[int]()),
+			"*int",
+		},
+		"float": {
+			ensure.Pointer[float64](ensure.Number[float64]()),
+			"*float64",
+		},
+		"map": {
+			ensure.Pointer[map[string]bool](ensure.Map[string, bool]()),
+			"*map[string]bool",
+		},
+		"struct": {
+			ensure.Pointer[testStruct](ensure.Struct[testStruct]()),
+			"*ensure_test.testStruct",
+		},
 	}
 
 	for name, tc := range testCases {
@@ -37,21 +52,81 @@ func TestPointer_Validate(t *testing.T) {
 		value    any
 		willPass bool
 	}{
-		"nil":                {ensure.Pointer[string](ensure.String()), nil, false},
-		"valid string ptr":   {ensure.Pointer[string](ensure.String().Contains("string")), ptrTo("string"), true},
-		"invalid string ptr": {ensure.Pointer[string](ensure.String().Contains("string")), ptrTo("str"), false},
-		"string val":         {ensure.Pointer[string](ensure.String().Contains("string")), "string", false},
-		"valid int ptr":      {ensure.Pointer[int](ensure.Number[int]().IsOdd()), ptrTo(123), true},
-		"invalid int ptr":    {ensure.Pointer[int](ensure.Number[int]().IsOdd()), ptrTo(12), false},
-		"int val":            {ensure.Pointer[int](ensure.Number[int]().IsOdd()), 123, false},
-		"valid float ptr":    {ensure.Pointer[float64](ensure.Number[float64]().IsPositive()), ptrTo(1.0), true},
-		"invalid float ptr":  {ensure.Pointer[float64](ensure.Number[float64]().IsPositive()), ptrTo(-1.0), false},
-		"float val":          {ensure.Pointer[float64](ensure.Number[float64]().IsPositive()), 1.0, false},
-		"valid map ptr":      {ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)), ptrTo(map[string]bool{"abc": true}), true},
-		"invalid map ptr":    {ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)), ptrTo(map[string]bool{}), false},
-		"map val":            {ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)), map[string]bool{"abc": true}, false},
-		"struct ptr":         {ensure.Pointer[testStruct](ensure.Struct[testStruct]()), ptrTo(testStruct{}), true},
-		"struct val":         {ensure.Pointer[testStruct](ensure.Struct[testStruct]()), testStruct{}, false},
+		"nil": {
+			ensure.Pointer[string](ensure.String()),
+			nil,
+			false,
+		},
+		"valid string ptr": {
+			ensure.Pointer[string](ensure.String().Contains("string")),
+			ptrTo("string"),
+			true,
+		},
+		"invalid string ptr": {
+			ensure.Pointer[string](ensure.String().Contains("string")),
+			ptrTo("str"),
+			false,
+		},
+		"string val": {
+			ensure.Pointer[string](ensure.String().Contains("string")),
+			"string",
+			false,
+		},
+		"valid int ptr": {
+			ensure.Pointer[int](ensure.Number[int]().IsOdd()),
+			ptrTo(123),
+			true,
+		},
+		"invalid int ptr": {
+			ensure.Pointer[int](ensure.Number[int]().IsOdd()),
+			ptrTo(12),
+			false,
+		},
+		"int val": {
+			ensure.Pointer[int](ensure.Number[int]().IsOdd()),
+			123,
+			false,
+		},
+		"valid float ptr": {
+			ensure.Pointer[float64](ensure.Number[float64]().IsPositive()),
+			ptrTo(1.0),
+			true,
+		},
+		"invalid float ptr": {
+			ensure.Pointer[float64](ensure.Number[float64]().IsPositive()),
+			ptrTo(-1.0),
+			false,
+		},
+		"float val": {
+			ensure.Pointer[float64](ensure.Number[float64]().IsPositive()),
+			1.0,
+			false,
+		},
+		"valid map ptr": {
+			ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)),
+			ptrTo(map[string]bool{"abc": true}),
+			true,
+		},
+		"invalid map ptr": {
+			ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)),
+			ptrTo(map[string]bool{}),
+			false,
+		},
+		"map val": {
+			ensure.Pointer[map[string]bool](ensure.Map[string, bool]().HasCount(1)),
+			map[string]bool{"abc": true},
+			false,
+		},
+		"struct ptr": {
+			ensure.Pointer[testStruct](ensure.Struct[testStruct]()),
+			ptrTo(testStruct{}),
+			true,
+		},
+		"struct val": {
+			ensure.Pointer[testStruct](ensure.Struct[testStruct]()),
+			testStruct{},
+			false,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -74,7 +149,7 @@ func TestOptionalPointer(t *testing.T) {
 	t.Run("required pointer", func(t *testing.T) {
 		ptr := ensure.Pointer[string](validStr)
 
-		if err := ptr.Validate(nilStr); err == nil {
+		if err := ptr.ValidateStrict(nilStr); err == nil {
 			t.Errorf(`expected error but got none`)
 		}
 	})
@@ -83,7 +158,7 @@ func TestOptionalPointer(t *testing.T) {
 	t.Run("optional pointer", func(t *testing.T) {
 		ptr := ensure.OptionalPointer[string](validStr)
 
-		if err := ptr.Validate(nilStr); err != nil {
+		if err := ptr.ValidateStrict(nilStr); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})
@@ -101,7 +176,7 @@ func TestOptionalPointer(t *testing.T) {
 			"Str": ensure.Pointer[string](ensure.String()),
 		})
 
-		if err := reqPtr.Validate(nilStruct); err == nil {
+		if err := reqPtr.ValidateStrict(nilStruct); err == nil {
 			t.Errorf(`expected error but got none`)
 		}
 	})
@@ -112,7 +187,7 @@ func TestOptionalPointer(t *testing.T) {
 			"Str": ensure.OptionalPointer[string](ensure.String()),
 		})
 
-		if err := optPtr.Validate(nilStruct); err != nil {
+		if err := optPtr.ValidateStrict(nilStruct); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})
@@ -132,7 +207,7 @@ func TestPointer_ArrayOfPointers(t *testing.T) {
 
 	// This should not cause an error
 	t.Run("array of pointers", func(t *testing.T) {
-		if err := validArr.Validate(strPtrs); err != nil {
+		if err := validArr.ValidateStrict(strPtrs); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})
@@ -150,7 +225,7 @@ func TestPointer_Nested(t *testing.T) {
 			ensure.Pointer(ensure.String()),
 		)
 
-		if err := ptr.Validate(ppStr); err != nil {
+		if err := ptr.ValidateStrict(ppStr); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})

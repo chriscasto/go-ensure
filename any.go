@@ -1,7 +1,6 @@
 package ensure
 
 import (
-	"fmt"
 	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
@@ -9,26 +8,15 @@ import (
 const defaultAnyValidatorError = "none of the required validators passed"
 
 type AnyValidator[T any] struct {
-	validators []with.Validator
+	validators []with.TypedValidator[T]
 	t          string
 	err        string
 }
 
-func Any[T any](validators ...with.Validator) *AnyValidator[T] {
+func Any[T any](validators ...with.TypedValidator[T]) *AnyValidator[T] {
 	var zero T
 
 	typeStr := reflect.ValueOf(zero).Type().String()
-
-	// Check to make sure that each validator implements the right type
-	for _, validator := range validators {
-		if typeStr != validator.Type() {
-			panic(fmt.Sprintf(
-				"all validators must be the same type; expected %s, got %s",
-				typeStr,
-				validator.Type(),
-			))
-		}
-	}
 
 	return &AnyValidator[T]{
 		validators: validators,
@@ -46,19 +34,9 @@ func (av *AnyValidator[T]) Type() string {
 	return av.t
 }
 
-func (av *AnyValidator[T]) ValidateStrict(t T) error {
+func (av *AnyValidator[T]) ValidateStrict(i T) error {
 	for _, validator := range av.validators {
-		strict, ok := validator.(with.StrictValidator[T])
-		var err error
-
-		// First try to use strict validation
-		if ok {
-			err = strict.ValidateStrict(t)
-		} else {
-			err = validator.Validate(t)
-		}
-
-		if err == nil {
+		if err := validator.ValidateStrict(i); err == nil {
 			// If any pass without error, consider it a success
 			return nil
 		}

@@ -7,12 +7,12 @@ import (
 )
 
 type PointerValidator[T any] struct {
-	parent   with.StrictValidator[T]
+	parent   with.TypedValidator[T]
 	optional bool
 	t        string
 }
 
-func newPtrValidator[T any](parent with.StrictValidator[T], optional bool) *PointerValidator[T] {
+func newPtrValidator[T any](parent with.TypedValidator[T], optional bool) *PointerValidator[T] {
 	return &PointerValidator[T]{
 		parent:   parent,
 		optional: optional,
@@ -20,11 +20,11 @@ func newPtrValidator[T any](parent with.StrictValidator[T], optional bool) *Poin
 	}
 }
 
-func Pointer[T any](parent with.StrictValidator[T]) *PointerValidator[T] {
+func Pointer[T any](parent with.TypedValidator[T]) *PointerValidator[T] {
 	return newPtrValidator[T](parent, false)
 }
 
-func OptionalPointer[T any](parent with.StrictValidator[T]) *PointerValidator[T] {
+func OptionalPointer[T any](parent with.TypedValidator[T]) *PointerValidator[T] {
 	return newPtrValidator[T](parent, true)
 }
 
@@ -50,5 +50,12 @@ func (v *PointerValidator[T]) Validate(i any) error {
 }
 
 func (v *PointerValidator[T]) ValidateStrict(i *T) error {
+	if i == nil {
+		if !v.optional {
+			return NewValidationError("required value cannot be missing")
+		}
+		return nil
+	}
+
 	return v.parent.ValidateStrict(*i)
 }

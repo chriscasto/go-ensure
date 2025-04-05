@@ -8,8 +8,9 @@ type Validator interface {
 	Type() string
 }
 
-type StrictValidator[T any] interface {
-	Validator
+// TypedValidator represents a validator that can validate against a specified type
+type TypedValidator[T any] interface {
+	Validator // Include everything from the Validator interface
 
 	// ValidateStrict validates a known type without relying on reflection
 	ValidateStrict(T) error
