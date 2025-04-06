@@ -33,19 +33,19 @@ func (bv *BooleanValidator) IsFalse() *BooleanValidator {
 	return bv
 }
 
-// Validate accepts an arbitrary input type and validates it if it's a boolean
-func (bv *BooleanValidator) Validate(i interface{}) error {
+// ValidateUntyped accepts an arbitrary input type and validates it if it's a boolean
+func (bv *BooleanValidator) ValidateUntyped(i interface{}) error {
 	b, ok := i.(bool)
 
 	if !ok {
 		return NewTypeError("boolean expected")
 	}
 
-	return bv.ValidateStrict(b)
+	return bv.Validate(b)
 }
 
-// ValidateStrict applies all checks against a boolean value and returns an error if any fail
-func (bv *BooleanValidator) ValidateStrict(b bool) error {
+// Validate applies all checks against a boolean value and returns an error if any fail
+func (bv *BooleanValidator) Validate(b bool) error {
 	// There are really only two possibilities, so we can just check those
 	// directly rather than using an array of functions
 

@@ -14,14 +14,14 @@ type validMethod struct {
 	ref         *reflect.Method
 	displayName string
 	hasValRcvr  bool
-	validator   with.Validator
+	validator   with.UntypedValidator
 }
 
 // validField contains information about a field that needs to be accessed during validation
 type validField struct {
 	name        string
 	displayName string
-	validator   with.Validator
+	validator   with.UntypedValidator
 }
 
 // StructValidator contains information and logic used to validate a struct of type T
@@ -239,7 +239,7 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 	// Validate fields
 	for _, field := range sv.fields {
 		fieldVal := sRef.FieldByName(field.name)
-		if err := field.validator.Validate(fieldVal.Interface()); err != nil {
+		if err := field.validator.ValidateUntyped(fieldVal.Interface()); err != nil {
 			return NewValidationError(fmt.Sprintf("%s: %s", field.displayName, err.Error()))
 		}
 	}
@@ -258,7 +258,7 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 		result := method.ref.Func.Call([]reflect.Value{receiver})
 		retVal := result[0].Interface()
 
-		if err := method.validator.Validate(retVal); err != nil {
+		if err := method.validator.ValidateUntyped(retVal); err != nil {
 			return NewValidationError(fmt.Sprintf("%s: %s", method.displayName, err.Error()))
 		}
 	}
@@ -266,8 +266,8 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 	return nil
 }
 
-// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (sv *StructValidator[T]) Validate(value any) error {
+// ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
+func (sv *StructValidator[T]) ValidateUntyped(value any) error {
 	sRef := reflect.ValueOf(value)
 	sRefType := sRef.Type()
 
@@ -278,8 +278,8 @@ func (sv *StructValidator[T]) Validate(value any) error {
 	return sv.validateStruct(sRef, value.(T))
 }
 
-// ValidateStrict applies all checks against a struct of the expected type and returns an error if any fail
-func (sv *StructValidator[T]) ValidateStrict(s T) error {
+// Validate applies all checks against a struct of the expected type and returns an error if any fail
+func (sv *StructValidator[T]) Validate(s T) error {
 	sRef := reflect.ValueOf(s)
 	return sv.validateStruct(sRef, s)
 }

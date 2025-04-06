@@ -12,7 +12,7 @@ func ptrTo(v any) *any {
 
 func TestPointer_Type(t *testing.T) {
 	testCases := map[string]struct {
-		v            with.Validator
+		v            with.UntypedValidator
 		expectedType string
 	}{
 		"string": {
@@ -48,7 +48,7 @@ func TestPointer_Type(t *testing.T) {
 
 func TestPointer_Validate(t *testing.T) {
 	testCases := map[string]struct {
-		v        with.Validator
+		v        with.UntypedValidator
 		value    any
 		willPass bool
 	}{
@@ -131,11 +131,11 @@ func TestPointer_Validate(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := tc.v.Validate(tc.value)
+			err := tc.v.ValidateUntyped(tc.value)
 			if err != nil && tc.willPass {
-				t.Errorf(`Pointer().Validate(%v); expected no error, got "%s"`, tc.value, err)
+				t.Errorf(`Pointer().ValidateUntyped(%v); expected no error, got "%s"`, tc.value, err)
 			} else if err == nil && !tc.willPass {
-				t.Errorf(`Pointer().Validate(%v); expected error but got none`, tc.value)
+				t.Errorf(`Pointer().ValidateUntyped(%v); expected error but got none`, tc.value)
 			}
 		})
 	}
@@ -149,7 +149,7 @@ func TestOptionalPointer(t *testing.T) {
 	t.Run("required pointer", func(t *testing.T) {
 		ptr := ensure.Pointer[string](validStr)
 
-		if err := ptr.ValidateStrict(nilStr); err == nil {
+		if err := ptr.Validate(nilStr); err == nil {
 			t.Errorf(`expected error but got none`)
 		}
 	})
@@ -158,7 +158,7 @@ func TestOptionalPointer(t *testing.T) {
 	t.Run("optional pointer", func(t *testing.T) {
 		ptr := ensure.OptionalPointer[string](validStr)
 
-		if err := ptr.ValidateStrict(nilStr); err != nil {
+		if err := ptr.Validate(nilStr); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})
@@ -176,7 +176,7 @@ func TestOptionalPointer(t *testing.T) {
 			"Str": ensure.Pointer[string](ensure.String()),
 		})
 
-		if err := reqPtr.ValidateStrict(nilStruct); err == nil {
+		if err := reqPtr.Validate(nilStruct); err == nil {
 			t.Errorf(`expected error but got none`)
 		}
 	})
@@ -187,7 +187,7 @@ func TestOptionalPointer(t *testing.T) {
 			"Str": ensure.OptionalPointer[string](ensure.String()),
 		})
 
-		if err := optPtr.ValidateStrict(nilStruct); err != nil {
+		if err := optPtr.Validate(nilStruct); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})
@@ -207,7 +207,7 @@ func TestPointer_ArrayOfPointers(t *testing.T) {
 
 	// This should not cause an error
 	t.Run("array of pointers", func(t *testing.T) {
-		if err := validArr.ValidateStrict(strPtrs); err != nil {
+		if err := validArr.Validate(strPtrs); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})
@@ -221,11 +221,11 @@ func TestPointer_Nested(t *testing.T) {
 	// This should not cause an error
 	t.Run("pointer of pointer", func(t *testing.T) {
 		// Pointer of a pointer
-		ptr := ensure.Pointer(
-			ensure.Pointer(ensure.String()),
+		ptr := ensure.Pointer[*string](
+			ensure.Pointer[string](ensure.String()),
 		)
 
-		if err := ptr.ValidateStrict(ppStr); err != nil {
+		if err := ptr.Validate(ppStr); err != nil {
 			t.Errorf(`expected no error but got "%s"`, err.Error())
 		}
 	})

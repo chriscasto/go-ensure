@@ -1,23 +1,25 @@
 package with
 
-// Validator represents an object that can evaluate a passed value against a set of checks
-type Validator interface {
-	// Validate runs any checks against the passed value
-	Validate(any) error
-	// Type returns the type of value this Validator is able to validate
+// UntypedValidator can accept an arbitrary value for validation
+type UntypedValidator interface {
+	// Type returns the type of value this UntypedValidator is able to validate
 	Type() string
+
+	// ValidateUntyped attempts to validate a value of unknown type
+	ValidateUntyped(any) error
 }
 
-// TypedValidator represents a validator that can validate against a specified type
-type TypedValidator[T any] interface {
-	Validator // Include everything from the Validator interface
+// Validator can validate against a specified type
+type Validator[T any] interface {
+	// Validator also implements UntypedValidator
+	UntypedValidator
 
-	// ValidateStrict validates a known type without relying on reflection
-	ValidateStrict(T) error
+	// Validate runs any checks against the passed value
+	Validate(T) error
 }
 
 // Validators is a helper type for defining field and method validators for structs
-type Validators map[string]Validator
+type Validators map[string]UntypedValidator
 
 // DisplayNames provides a mapping from struct field name to human-understandable name
 // Example: "FirstName" => "First Name", "Dob" => "Date of Birth"

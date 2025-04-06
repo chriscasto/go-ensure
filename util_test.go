@@ -48,10 +48,10 @@ type validatorTestCase struct {
 
 type validatorTestCases map[string]*validatorTestCase
 
-func (tcs *validatorTestCases) run(t *testing.T, v with.Validator) {
+func (tcs *validatorTestCases) run(t *testing.T, v with.UntypedValidator) {
 	for name, tc := range *tcs {
 		t.Run(name, func(t *testing.T) {
-			err := v.Validate(tc.input)
+			err := v.ValidateUntyped(tc.input)
 			if err != nil && tc.willPass {
 				t.Errorf(`Validator[%s].Validate(%v) as {%s}; expected no error, got "%s"`, v.Type(), tc.input, name, err)
 			} else if err == nil && !tc.willPass {
@@ -63,7 +63,7 @@ func (tcs *validatorTestCases) run(t *testing.T, v with.Validator) {
 
 // getDefaultValidatorTestCases generates a set of test cases to confirm that
 // validators only accept values of the correct type
-func getDefaultValidatorTestCases(v with.Validator) validatorTestCases {
+func getDefaultValidatorTestCases(v with.UntypedValidator) validatorTestCases {
 	testCases := validatorTestCases{
 		"bool":   {true, false},
 		"[]bool": {[]bool{true, false}, false},
@@ -93,7 +93,7 @@ func getDefaultValidatorTestCases(v with.Validator) validatorTestCases {
 	return testCases
 }
 
-func runDefaultValidatorTestCases(t *testing.T, v with.Validator) {
+func runDefaultValidatorTestCases(t *testing.T, v with.UntypedValidator) {
 	testCases := getDefaultValidatorTestCases(v)
 	testCases.run(t, v)
 }

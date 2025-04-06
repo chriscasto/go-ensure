@@ -7,12 +7,12 @@ import (
 )
 
 type PointerValidator[T any] struct {
-	parent   with.TypedValidator[T]
+	parent   with.Validator[T]
 	optional bool
 	t        string
 }
 
-func newPtrValidator[T any](parent with.TypedValidator[T], optional bool) *PointerValidator[T] {
+func newPtrValidator[T any](parent with.Validator[T], optional bool) *PointerValidator[T] {
 	return &PointerValidator[T]{
 		parent:   parent,
 		optional: optional,
@@ -20,11 +20,11 @@ func newPtrValidator[T any](parent with.TypedValidator[T], optional bool) *Point
 	}
 }
 
-func Pointer[T any](parent with.TypedValidator[T]) *PointerValidator[T] {
+func Pointer[T any](parent with.Validator[T]) *PointerValidator[T] {
 	return newPtrValidator[T](parent, false)
 }
 
-func OptionalPointer[T any](parent with.TypedValidator[T]) *PointerValidator[T] {
+func OptionalPointer[T any](parent with.Validator[T]) *PointerValidator[T] {
 	return newPtrValidator[T](parent, true)
 }
 
@@ -32,7 +32,7 @@ func (v *PointerValidator[T]) Type() string {
 	return v.t
 }
 
-func (v *PointerValidator[T]) Validate(i any) error {
+func (v *PointerValidator[T]) ValidateUntyped(i any) error {
 	refVal := reflect.ValueOf(i)
 
 	if refVal.Kind() != reflect.Ptr {
@@ -46,10 +46,10 @@ func (v *PointerValidator[T]) Validate(i any) error {
 		return nil
 	}
 
-	return v.parent.Validate(refVal.Elem().Interface())
+	return v.parent.Validate(refVal.Elem().Interface().(T))
 }
 
-func (v *PointerValidator[T]) ValidateStrict(i *T) error {
+func (v *PointerValidator[T]) Validate(i *T) error {
 	if i == nil {
 		if !v.optional {
 			return NewValidationError("required value cannot be missing")
@@ -57,5 +57,5 @@ func (v *PointerValidator[T]) ValidateStrict(i *T) error {
 		return nil
 	}
 
-	return v.parent.ValidateStrict(*i)
+	return v.parent.Validate(*i)
 }

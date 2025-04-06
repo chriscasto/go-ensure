@@ -16,7 +16,7 @@ type strTestCases map[string]strTestCase
 func (tcs strTestCases) run(t *testing.T, sv *ensure.StringValidator, method string) {
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			err := sv.ValidateStrict(tc.value)
+			err := sv.Validate(tc.value)
 			if err != nil && tc.willPass {
 				t.Errorf(`String().%s.Validate("%s"); expected no error, got "%s"`, method, tc.value, err)
 			} else if err == nil && !tc.willPass {

@@ -9,7 +9,7 @@ import (
 // TestAnyValidator_Type checks to make sure the AnyValidator returns the correct type
 func TestAnyValidator_Type(t *testing.T) {
 	testCases := map[string]struct {
-		validator with.Validator
+		validator with.UntypedValidator
 		t         string
 	}{
 		"string": {
@@ -59,6 +59,35 @@ func TestAnyValidator_WithError(t *testing.T) {
 	}
 }
 
+func TestAnyValidator_ValidateUntyped(t *testing.T) {
+	testCases := map[string]struct {
+		value    string
+		willPass bool
+	}{
+		"match first":  {"foo", true},
+		"match second": {"123", true},
+		"match third":  {"validation", true},
+		"match none":   {":(", false},
+	}
+
+	anyValid := ensure.Any[string](
+		ensure.String().Equals("foo"),
+		ensure.String().Matches(ensure.Numbers),
+		ensure.String().IsLongerThan(5),
+	)
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := anyValid.ValidateUntyped(tc.value)
+			if err != nil && tc.willPass {
+				t.Errorf(`expected no error, got "%s"`, err)
+			} else if err == nil && !tc.willPass {
+				t.Errorf(`expected error but got none`)
+			}
+		})
+	}
+}
+
 func TestAnyValidator_Validate(t *testing.T) {
 	testCases := map[string]struct {
 		value    string
@@ -79,35 +108,6 @@ func TestAnyValidator_Validate(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			err := anyValid.Validate(tc.value)
-			if err != nil && tc.willPass {
-				t.Errorf(`expected no error, got "%s"`, err)
-			} else if err == nil && !tc.willPass {
-				t.Errorf(`expected error but got none`)
-			}
-		})
-	}
-}
-
-func TestAnyValidator_ValidateStrict(t *testing.T) {
-	testCases := map[string]struct {
-		value    string
-		willPass bool
-	}{
-		"match first":  {"foo", true},
-		"match second": {"123", true},
-		"match third":  {"validation", true},
-		"match none":   {":(", false},
-	}
-
-	anyValid := ensure.Any[string](
-		ensure.String().Equals("foo"),
-		ensure.String().Matches(ensure.Numbers),
-		ensure.String().IsLongerThan(5),
-	)
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			err := anyValid.ValidateStrict(tc.value)
 			if err != nil && tc.willPass {
 				t.Errorf(`expected no error, got "%s"`, err)
 			} else if err == nil && !tc.willPass {

@@ -17,8 +17,8 @@ type MapValidator[K comparable, V any] struct {
 	valueTypeStr   string
 	checks         []mapCheckFunc[K, V]
 	lenValidator   *NumberValidator[int]
-	keyValidator   with.Validator
-	valueValidator with.Validator
+	keyValidator   with.Validator[K]
+	valueValidator with.Validator[V]
 }
 
 // Map constructs a MapValidator instance with keys of type K and values of type V and returns a pointer to it
@@ -45,16 +45,16 @@ func (mv *MapValidator[K, V]) HasLengthWhere(nv *NumberValidator[int]) *MapValid
 	return mv
 }
 
-// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (mv *MapValidator[K, V]) Validate(value any) error {
+// ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
+func (mv *MapValidator[K, V]) ValidateUntyped(value any) error {
 	if err := testType(value, mv.typeStr); err != nil {
 		return err
 	}
-	return mv.ValidateStrict(value.(map[K]V))
+	return mv.Validate(value.(map[K]V))
 }
 
-// ValidateStrict applies all checks against a map and returns an error if any fail
-func (mv *MapValidator[K, V]) ValidateStrict(mp map[K]V) error {
+// Validate applies all checks against a map and returns an error if any fail
+func (mv *MapValidator[K, V]) Validate(mp map[K]V) error {
 	if mv.lenValidator != nil {
 		if err := mv.lenValidator.Validate(len(mp)); err != nil {
 			return err
@@ -85,29 +85,13 @@ func (mv *MapValidator[K, V]) ValidateStrict(mp map[K]V) error {
 }
 
 // EachKey assigns a Validator to be used for validating map keys
-func (mv *MapValidator[K, V]) EachKey(kv with.Validator) *MapValidator[K, V] {
-	if mv.keyTypeStr != kv.Type() {
-		panic(fmt.Sprintf(
-			`map validator has keys with type \"%s\", got key validator with type \"%s\"`,
-			mv.keyTypeStr,
-			kv.Type(),
-		))
-	}
-
+func (mv *MapValidator[K, V]) EachKey(kv with.Validator[K]) *MapValidator[K, V] {
 	mv.keyValidator = kv
 	return mv
 }
 
 // EachValue assigns a Validator to be used for validating map values
-func (mv *MapValidator[K, V]) EachValue(vv with.Validator) *MapValidator[K, V] {
-	if mv.valueTypeStr != vv.Type() {
-		panic(fmt.Sprintf(
-			`map validator has values with type \"%s\", got value validator with type \"%s\"`,
-			mv.valueTypeStr,
-			vv.Type(),
-		))
-	}
-
+func (mv *MapValidator[K, V]) EachValue(vv with.Validator[V]) *MapValidator[K, V] {
 	mv.valueValidator = vv
 	return mv
 }

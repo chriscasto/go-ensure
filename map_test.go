@@ -16,7 +16,7 @@ type mapTestCases[K comparable, V any] map[string]mapTestCase[K, V]
 func (tcs mapTestCases[K, V]) run(t *testing.T, mv *ensure.MapValidator[K, V], method string) {
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			err := mv.ValidateStrict(tc.vals)
+			err := mv.Validate(tc.vals)
 			if err != nil && tc.willPass {
 				t.Errorf(`Map().%s.Validate(%v); expected no error, got "%s"`, method, tc.vals, err)
 			} else if err == nil && !tc.willPass {
@@ -125,20 +125,20 @@ func TestMapValidator_HasMoreThan(t *testing.T) {
 }
 
 func TestMapValidator_EachKey(t *testing.T) {
-	t.Run("panic if validator type doesn't match key type", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic")
-			}
-		}()
-
-		bad := ensure.Map[string, int]().EachKey(ensure.Number[int]())
-
-		if err := bad.Validate(""); err != nil {
-			t.Errorf("validation occured and generated an error: %s", err.Error())
-		}
-
-	})
+	//t.Run("panic if validator type doesn't match key type", func(t *testing.T) {
+	//	defer func() {
+	//		if r := recover(); r == nil {
+	//			t.Errorf("The code did not panic")
+	//		}
+	//	}()
+	//
+	//	bad := ensure.Map[string, int]().EachKey(ensure.Number[int]())
+	//
+	//	if err := bad.Validate(""); err != nil {
+	//		t.Errorf("validation occured and generated an error: %s", err.Error())
+	//	}
+	//
+	//})
 
 	testCases := mapTestCases[string, int]{
 		"one good": {
@@ -171,19 +171,19 @@ func TestMapValidator_EachKey(t *testing.T) {
 }
 
 func TestMapValidator_EachValue(t *testing.T) {
-	t.Run("panic if validator type doesn't match value type", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic")
-			}
-		}()
-
-		bad := ensure.Map[string, int]().EachValue(ensure.String())
-
-		if err := bad.Validate(""); err != nil {
-			t.Errorf("validation occured and generated an error: %s", err.Error())
-		}
-	})
+	//t.Run("panic if validator type doesn't match value type", func(t *testing.T) {
+	//	defer func() {
+	//		if r := recover(); r == nil {
+	//			t.Errorf("The code did not panic")
+	//		}
+	//	}()
+	//
+	//	bad := ensure.Map[string, int]().EachValue(ensure.String())
+	//
+	//	if err := bad.Validate(""); err != nil {
+	//		t.Errorf("validation occured and generated an error: %s", err.Error())
+	//	}
+	//})
 
 	testCases := mapTestCases[string, int]{
 		"one good": {

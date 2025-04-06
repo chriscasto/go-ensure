@@ -8,12 +8,12 @@ import (
 const defaultAnyValidatorError = "none of the required validators passed"
 
 type AnyValidator[T any] struct {
-	validators []with.TypedValidator[T]
+	validators []with.Validator[T]
 	t          string
 	err        string
 }
 
-func Any[T any](validators ...with.TypedValidator[T]) *AnyValidator[T] {
+func Any[T any](validators ...with.Validator[T]) *AnyValidator[T] {
 	var zero T
 
 	typeStr := reflect.ValueOf(zero).Type().String()
@@ -34,9 +34,9 @@ func (av *AnyValidator[T]) Type() string {
 	return av.t
 }
 
-func (av *AnyValidator[T]) ValidateStrict(i T) error {
+func (av *AnyValidator[T]) Validate(i T) error {
 	for _, validator := range av.validators {
-		if err := validator.ValidateStrict(i); err == nil {
+		if err := validator.Validate(i); err == nil {
 			// If any pass without error, consider it a success
 			return nil
 		}
@@ -46,9 +46,9 @@ func (av *AnyValidator[T]) ValidateStrict(i T) error {
 	return NewValidationError(av.err)
 }
 
-func (av *AnyValidator[T]) Validate(i any) error {
+func (av *AnyValidator[T]) ValidateUntyped(i any) error {
 	for _, validator := range av.validators {
-		if err := validator.Validate(i); err == nil {
+		if err := validator.ValidateUntyped(i); err == nil {
 			// If any pass without error, consider it a success
 			return nil
 		}
