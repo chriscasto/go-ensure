@@ -11,7 +11,7 @@ type UntypedValidator interface {
 
 // Validator can validate against a specified type
 type Validator[T any] interface {
-	// Validator also implements UntypedValidator
+	// UntypedValidator methods are included
 	UntypedValidator
 
 	// Validate runs any checks against the passed value

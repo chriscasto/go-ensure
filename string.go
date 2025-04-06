@@ -289,7 +289,7 @@ func (v *StringValidator) HasLength(l int) *StringValidator {
 func (v *StringValidator) Matches(pattern string) *StringValidator {
 	r, err := regexp.Compile(pattern)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("could not compile regex: %s", err))
 	}
 
 	return v.Is(func(str string) error {
