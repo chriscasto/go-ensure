@@ -61,6 +61,12 @@ func (tcs structTestCases[T]) run(t *testing.T, av *ensure.StructValidator[T], m
 	}
 }
 
+// TestStructValidator_IsValidator checks to make sure the StructValidator implements the Validator interfaces
+func TestStructValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Struct[testStruct]()
+	var _ with.Validator[testStruct] = ensure.Struct[testStruct]()
+}
+
 func TestStructValidator_Construct(t *testing.T) {
 	t.Run("not struct", func(t *testing.T) {
 		defer func() {

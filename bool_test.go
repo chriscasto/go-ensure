@@ -6,9 +6,8 @@ import (
 	"testing"
 )
 
-// TestBoolValidator_IsValidator checks to make sure the BoolValidator meets the Validator interface
+// TestBoolValidator_IsValidator checks to make sure the BooleanValidator implements the Validator interfaces
 func TestBoolValidator_IsValidator(t *testing.T) {
-	// These should fail if BooleanValidator no longer meets the requirements for the Validator interfaces
 	var _ with.UntypedValidator = ensure.Bool()
 	var _ with.Validator[bool] = ensure.Bool()
 }

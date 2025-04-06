@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 )
 
@@ -63,6 +64,12 @@ func makeIsEvenTestCases[T ensure.NumberType](expectEven bool) isEvenTestCases[T
 			"two":  {2, expectEven},
 		},
 	}
+}
+
+// TestNumberValidator_IsValidator checks to make sure the NumberValidator implements the Validator interfaces
+func TestNumberValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Number[int]()
+	var _ with.Validator[int] = ensure.Number[int]()
 }
 
 func TestNumberValidator_Type(t *testing.T) {

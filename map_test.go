@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 )
 
@@ -34,6 +35,12 @@ func testMapType[K comparable, V any](t *testing.T, name string, expect string) 
 			t.Errorf("Map.Type() = %s; want %s", vType, expect)
 		}
 	})
+}
+
+// TestMapValidator_IsValidator checks to make sure the MapValidator implements the Validator interfaces
+func TestMapValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Map[string, string]()
+	var _ with.Validator[map[string]string] = ensure.Map[string, string]()
 }
 
 func TestMapValidator_Type(t *testing.T) {
@@ -125,21 +132,6 @@ func TestMapValidator_HasMoreThan(t *testing.T) {
 }
 
 func TestMapValidator_EachKey(t *testing.T) {
-	//t.Run("panic if validator type doesn't match key type", func(t *testing.T) {
-	//	defer func() {
-	//		if r := recover(); r == nil {
-	//			t.Errorf("The code did not panic")
-	//		}
-	//	}()
-	//
-	//	bad := ensure.Map[string, int]().EachKey(ensure.Number[int]())
-	//
-	//	if err := bad.Validate(""); err != nil {
-	//		t.Errorf("validation occured and generated an error: %s", err.Error())
-	//	}
-	//
-	//})
-
 	testCases := mapTestCases[string, int]{
 		"one good": {
 			vals: map[string]int{
@@ -171,20 +163,6 @@ func TestMapValidator_EachKey(t *testing.T) {
 }
 
 func TestMapValidator_EachValue(t *testing.T) {
-	//t.Run("panic if validator type doesn't match value type", func(t *testing.T) {
-	//	defer func() {
-	//		if r := recover(); r == nil {
-	//			t.Errorf("The code did not panic")
-	//		}
-	//	}()
-	//
-	//	bad := ensure.Map[string, int]().EachValue(ensure.String())
-	//
-	//	if err := bad.Validate(""); err != nil {
-	//		t.Errorf("validation occured and generated an error: %s", err.Error())
-	//	}
-	//})
-
 	testCases := mapTestCases[string, int]{
 		"one good": {
 			vals: map[string]int{

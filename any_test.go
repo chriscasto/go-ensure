@@ -6,6 +6,12 @@ import (
 	"testing"
 )
 
+// TestAnyValidator_IsValidator checks to make sure the AnyValidator implements the Validator interfaces
+func TestAnyValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Any[string]()
+	var _ with.Validator[string] = ensure.Any[string]()
+}
+
 // TestAnyValidator_Type checks to make sure the AnyValidator returns the correct type
 func TestAnyValidator_Type(t *testing.T) {
 	testCases := map[string]struct {

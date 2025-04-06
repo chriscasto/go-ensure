@@ -10,6 +10,12 @@ func ptrTo(v any) *any {
 	return &v
 }
 
+// TestPointerValidator_IsValidator checks to make sure the PointerValidator implements the Validator interfaces
+func TestPointerValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Pointer[string](ensure.String())
+	var _ with.Validator[*string] = ensure.Pointer[string](ensure.String())
+}
+
 func TestPointer_Type(t *testing.T) {
 	testCases := map[string]struct {
 		v            with.UntypedValidator
