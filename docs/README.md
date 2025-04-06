@@ -4,42 +4,28 @@ You can read more about the options for validating different value types below.
 There are some code snippets for each type, but if you want fully runnable examples,
 check out the [_examples](../_examples) directory.
 
-| Type   | Basic Usage                                                             | Validator Type              | Documentation           |
-|--------|-------------------------------------------------------------------------|-----------------------------|-------------------------|
-| String | `ensure.String().IsNotEmpty().StartsWith('abc')`                        | `ensure.StringValidator`    | [Strings](./strings.md) |
-| Number | `ensure.Number[int]().IsGreaterThan(0)`                                 | `ensure.NumberValidator[T]` | [Numbers](./numbers.md) |
-| Array  | `ensure.Array[string]().Each( ensure.String().Matches("^\d+$") )`       | `ensure.ArrayValidator[T]`  | [Arrays](./arrays.md)   |
-| Map    | `ensure.Map[string,int]().EachKey( ensure.String().HasLength(3) )`      | `ensure.MapValidator[K,V]`  | [Maps](./maps.md)       |
-| Struct | `ensure.Struct[MyStruct]( with.Fields{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
-| Bool   | `ensure.Bool().IsTrue()`                                                 | `ensure.BooleanValidator`   | [Bools](./bools.md)     |
+| Type   | Basic Usage                                                                 | Validator Type              | Documentation           |
+|--------|-----------------------------------------------------------------------------|-----------------------------|-------------------------|
+| String | `ensure.String().IsNotEmpty().StartsWith('abc')`                            | `ensure.StringValidator`    | [Strings](./strings.md) |
+| Number | `ensure.Number[int]().IsGreaterThan(0)`                                     | `ensure.NumberValidator[T]` | [Numbers](./numbers.md) |
+| Array  | `ensure.Array[string]().Each( ensure.String().Matches("^\d+$") )`           | `ensure.ArrayValidator[T]`  | [Arrays](./arrays.md)   |
+| Map    | `ensure.Map[string,int]().EachKey( ensure.String().HasLength(3) )`          | `ensure.MapValidator[K,V]`  | [Maps](./maps.md)       |
+| Struct | `ensure.Struct[MyStruct]( with.Validators{ "Foo": ensure.Number[int]() } )` | `ensure.StructValidator[T]` | [Structs](./structs.md) |
+| Bool   | `ensure.Bool().IsTrue()`                                                    | `ensure.BooleanValidator`   | [Bools](./bools.md)     |
 
 
-## The `Validator` interface
+## Validator interfaces
 
-Each of the validators listed above implements the `Validator` interface, which
-defines two methods: `Type()` and `Validate(val)`.  The `Type()` method returns the
-type of value expected by the validator (eg "string", "int64", etc), and the
-`Validate(val)` method evaluates all the defined checks against the value passed
-to it.  The value passed to the `Validate()` method can be of any type, which is
-helpful in cases where you don't know the type of the validator or the value (or
-both). Each validator will do the necessary checks to make sure that the type of
-the value passed to it is the same as the type returned by `Type()`, and will 
-return a `TypeError` in the event of a mismatch.
-
-In the cases where you know the types for both the validator and the value to
-validate, it is more efficient to let the compiler do all the necessary type
-checks for you.  In addition to the `Validate()` method, each validator also has
-a separate, typed method for validating values of the appropriate type.  It is 
-recommended to use this method where possible.
-
-| Type   | Validator                   | Typed Validation Method  |
-|--------|-----------------------------|--------------------------|
-| String | `ensure.StringValidator`    | `ValidateString(string)` |
-| Number | `ensure.NumberValidator[T]` | `ValidateNumber(T)`      |
-| Array  | `ensure.ArrayValidator[T]`  | `ValidateArray([]T)`     |
-| Map    | `ensure.MapValidator[K,V]`  | `ValidateMap(map[K]V)`   |
-| Struct | `ensure.StructValidator[T]` | `ValidateStruct(T)`      |
-
+There are two interfaces that define specific validation functionality: `Validator[T]`
+and `UntypedValidator`.  Both require a `Type` method, which returns a string
+with the type of value expected by the validator (eg "string", "int64", etc.).  
+Where they differ is that `Validator[T]` has a method `Validate(T)` that validates
+a strongly typed value and `UntypedValidator` has `ValidateUntyped(any)`, which 
+can validate values where you don't know the type of the validator or the value 
+(or both).  Nearly all validation should be handled through the `Validate` method,
+which enables compile-time type checking and is both safer and more performant,
+but the `ValidateUntyped` method is there when you need it (such as when reflection
+is involved).  All validators in this library implement both interfaces.
 
 ## Construction Errors
 
@@ -59,10 +45,11 @@ that is incomplete or otherwise working differently than intended.  If the
 validation cannot pass its own sanity checks, the app should be considered too 
 unsafe to run.
 
-Most initialization errors can be caught by the compiler (such as mixing types
-like `Number[int]().IsLessThan(10.0)` or attempting to call an invalid method
-like `String().IsGreaterThan()`), but there are some cases where correctness has
-to be checked during validator composition.  For example:
+Most initialization errors can be caught by the compiler, such as mixing types
+(`Number[int]().IsLessThan(10.0)`), passing the wrong validator type to 
+another validator (`Any[int](String())`), or attempting to call 
+an invalid method (`String().IsGreaterThan()`), but there are some cases where
+correctness has to be checked during validator composition.  For example:
 
 ```go
 type MyStruct {
@@ -70,7 +57,7 @@ type MyStruct {
     Bar string
 }
 
-validStruct := ensure.Struct[MyStruct](with.Fields{
+validStruct := ensure.Struct[MyStruct]().HasFields(with.Validators{
     // This will panic because the declared type doesn't match the actual field type
     "Foo": ensure.Number[int](),
     
@@ -93,9 +80,9 @@ structs or arrays of pointers, it can be easier to just indicate that
 a pointer is expected.
 
 There are two functions you can use to indicate that a passed value will be a
-pointer: `Pointer()` and `OptionalPointer()`.  The only difference between the
-two is that `Pointer()` will return an error if the pointer is nil, whereas
-`OptionalPointer()` will return gracefully without attempting further validation.
+pointer: `Pointer[T]()` and `OptionalPointer[T]()`.  The only difference between the
+two is that `Pointer[T]()` will return an error if the pointer is nil, whereas
+`OptionalPointer[T]()` will return gracefully without attempting further validation.
 
 ```go
 type Person struct {
@@ -115,7 +102,7 @@ validPet := ensure.Struct[Pet]().HasFields(with.Validators{
 	"Type": ensure.String(),
 	
 	// Not every pet will need a license, so only validate if it exists
-	"License": ensure.OptionalPointer(
+	"License": ensure.OptionalPointer[License](
 		ensure.Struct[License]()
 	)
 })
@@ -126,7 +113,7 @@ validPerson := ensure.Struct[Person]().HasFields(with.Validators{
 	
 	// We may not have any pets, but if we do each one should be valid
 	"Pets": ensure.Array[*Pet]().Each(
-		ensure.Pointer(validPet)
+		ensure.Pointer[Pet](validPet)
 	),
 })
 ```
@@ -138,9 +125,15 @@ str := "foo"
 pStr := &str
 ppStr := &pStr
 
-validStr := ensure.Pointer(
-    ensure.Pointer(ensure.String()),
+validStr := ensure.Pointer[*string](
+	ensure.Pointer[string](
+		ensure.String()
+	),
 )
+
+if err := validStr.Validate(ppStr); err != nil {
+	// ...
+}
 ```
 
 ## The `Any` validator
@@ -148,35 +141,24 @@ validStr := ensure.Pointer(
 Validation rules added to a validator are evaluated in order via logical "AND".
 
 ```go
-// ensure string starts with "foo" AND ends with "bar"
+// ensure string starts with "foo" *AND* ends with "bar"
 ensure.String().StartsWith("foo").EndsWith("bar")
 ```
 
 There may be some occasions where you want to consider multiple validation options
 for the same value.  For example, in the case where you want to validate a hostname,
 valid options could be an IPv4 address, an IPv6 address, a fully-qualified domain
-name, or maybe even just the word "localhost".  We can use the `Any()` validator
+name, or maybe even just the word "localhost".  We can use the `Any[T]()` validator
 to evaluate each of these in turn and consider the value valid if any of them 
 evaluates without error.
 
 ```go
-validHost := ensure.Any(
+validHost := ensure.Any[string](
 	ensure.String().Equals("localhost"),
 	ensure.String().Matches(ensure.Ipv4),
-	ensure.String().Matches(ensure.Ipv6),
 	// ...
 )
 ```
-
-It should go without saying that all validators must be of the same type.  Mixing
-types will result in a panic.
-
-Validators are evaluated in order, so putting the validation method that completes
-the quickest first may be the most efficient option, assuming equal probability 
-of values. In the more likely event of an unequal distribution of values, it may
-make sense to start with the most common and order the rest accordingly.  In 
-most cases it is unlikely to make any real impact on performance, so don't sweat
-it too much if it isn't immediately obvious what order to use.
 
 ## Lengths
 
@@ -207,7 +189,7 @@ ensure.Array[int]().IsNotEmpty()
 
 to this:
 ```go
-ensure.Array[int]().HasLengthWhere(ensure.Length().DoesNotEqual(0))
+ensure.Array[int]().HasLengthWhere(ensure.Length().IsGreaterThan(0))
 ```
 
 
