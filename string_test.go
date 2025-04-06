@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 )
 
@@ -16,7 +17,7 @@ type strTestCases map[string]strTestCase
 func (tcs strTestCases) run(t *testing.T, sv *ensure.StringValidator, method string) {
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			err := sv.ValidateString(tc.value)
+			err := sv.Validate(tc.value)
 			if err != nil && tc.willPass {
 				t.Errorf(`String().%s.Validate("%s"); expected no error, got "%s"`, method, tc.value, err)
 			} else if err == nil && !tc.willPass {
@@ -24,6 +25,12 @@ func (tcs strTestCases) run(t *testing.T, sv *ensure.StringValidator, method str
 			}
 		})
 	}
+}
+
+// TestStringValidator_IsValidator checks to make sure the StringValidator implements the Validator interfaces
+func TestStringValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.String()
+	var _ with.Validator[string] = ensure.String()
 }
 
 func TestStringValidator_Type(t *testing.T) {

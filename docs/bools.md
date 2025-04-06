@@ -6,7 +6,7 @@ where it may be helpful to be able to test these values. In the case where you
 want conditional validation, you might have something like this:
 
 ```go
-validConfig := ensure.Any(
+validConfig := ensure.Any[Config](
     // Validation succeeds if component is disabled regardless of what the rest looks like
     // If we aren't using it, we don't need to bother validating it
     ensure.Struct[Config]().HasFields(with.Validators{

@@ -6,33 +6,38 @@ import (
 	"reflect"
 )
 
-type PointerValidator struct {
-	parent   with.Validator
+type PointerValidator[T any] struct {
+	parent   with.Validator[T]
 	optional bool
 	t        string
 }
 
-func newPtrValidator(parent with.Validator, optional bool) *PointerValidator {
-	return &PointerValidator{
+// newPtrValidator instantiates a new PointerValidator
+func newPtrValidator[T any](parent with.Validator[T], optional bool) *PointerValidator[T] {
+	return &PointerValidator[T]{
 		parent:   parent,
 		optional: optional,
 		t:        fmt.Sprintf("*%s", parent.Type()),
 	}
 }
 
-func Pointer(parent with.Validator) *PointerValidator {
-	return newPtrValidator(parent, false)
+// Pointer returns a PointerValidator that returns an error on a nil pointer
+func Pointer[T any](parent with.Validator[T]) *PointerValidator[T] {
+	return newPtrValidator[T](parent, false)
 }
 
-func OptionalPointer(parent with.Validator) *PointerValidator {
-	return newPtrValidator(parent, true)
+// OptionalPointer returns a PointerValidator that doesn't return an error on a nil pointer
+func OptionalPointer[T any](parent with.Validator[T]) *PointerValidator[T] {
+	return newPtrValidator[T](parent, true)
 }
 
-func (v *PointerValidator) Type() string {
+// Type returns a string with indicating a pointer to the parent validator type
+func (v *PointerValidator[T]) Type() string {
 	return v.t
 }
 
-func (v *PointerValidator) Validate(i any) error {
+// ValidateUntyped accepts an arbitrary input type and validates it if it's a pointer to the expected type
+func (v *PointerValidator[T]) ValidateUntyped(i any) error {
 	refVal := reflect.ValueOf(i)
 
 	if refVal.Kind() != reflect.Ptr {
@@ -46,5 +51,17 @@ func (v *PointerValidator) Validate(i any) error {
 		return nil
 	}
 
-	return v.parent.Validate(refVal.Elem().Interface())
+	return v.parent.Validate(refVal.Elem().Interface().(T))
+}
+
+// Validate applies all checks against a boolean value and returns an error if any fail
+func (v *PointerValidator[T]) Validate(i *T) error {
+	if i == nil {
+		if !v.optional {
+			return NewValidationError("required value cannot be missing")
+		}
+		return nil
+	}
+
+	return v.parent.Validate(*i)
 }

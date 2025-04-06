@@ -327,17 +327,17 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 	})
 }
 
-// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *NumberValidator[T]) Validate(value any) error {
+// ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
+func (v *NumberValidator[T]) ValidateUntyped(value any) error {
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
 
-	return v.ValidateNumber(value.(T))
+	return v.Validate(value.(T))
 }
 
-// ValidateNumber applies all checks against a number of the expected type and returns an error if any fail
-func (v *NumberValidator[T]) ValidateNumber(n T) error {
+// Validate applies all checks against a number of the expected type and returns an error if any fail
+func (v *NumberValidator[T]) Validate(n T) error {
 	for _, fn := range v.checks {
 		if err := fn(n); err != nil {
 			return err

@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 )
 
@@ -17,7 +18,7 @@ func (tcs numTestCases[T]) run(t *testing.T, sv *ensure.NumberValidator[T], meth
 	vType := sv.Type()
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			err := sv.ValidateNumber(tc.value)
+			err := sv.Validate(tc.value)
 			if err != nil && tc.willPass {
 				t.Errorf(`Number[%s]().%s.Validate(%v); expected no error, got "%s"`, vType, method, tc.value, err)
 			} else if err == nil && !tc.willPass {
@@ -63,6 +64,12 @@ func makeIsEvenTestCases[T ensure.NumberType](expectEven bool) isEvenTestCases[T
 			"two":  {2, expectEven},
 		},
 	}
+}
+
+// TestNumberValidator_IsValidator checks to make sure the NumberValidator implements the Validator interfaces
+func TestNumberValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Number[int]()
+	var _ with.Validator[int] = ensure.Number[int]()
 }
 
 func TestNumberValidator_Type(t *testing.T) {

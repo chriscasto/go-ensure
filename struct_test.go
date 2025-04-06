@@ -61,6 +61,12 @@ func (tcs structTestCases[T]) run(t *testing.T, av *ensure.StructValidator[T], m
 	}
 }
 
+// TestStructValidator_IsValidator checks to make sure the StructValidator implements the Validator interfaces
+func TestStructValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Struct[testStruct]()
+	var _ with.Validator[testStruct] = ensure.Struct[testStruct]()
+}
+
 func TestStructValidator_Construct(t *testing.T) {
 	t.Run("not struct", func(t *testing.T) {
 		defer func() {
@@ -228,7 +234,7 @@ func TestStructValidator_HasFields(t *testing.T) {
 	for name, tc := range evalTestCases {
 		t.Run(name, func(t *testing.T) {
 			v := ensure.Struct[testStruct]().HasFields(tc.f)
-			err := v.ValidateStruct(tc.s)
+			err := v.Validate(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
 			} else if err == nil && tc.expectErr {
@@ -403,7 +409,7 @@ func TestStructValidator_HasGetters(t *testing.T) {
 	for name, tc := range evalTestCases {
 		t.Run(name, func(t *testing.T) {
 			v := ensure.Struct[testStruct]().HasGetters(tc.validators)
-			err := v.ValidateStruct(tc.s)
+			err := v.Validate(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
 			} else if err == nil && tc.expectErr {
@@ -522,7 +528,7 @@ func TestStructValidator_ValidateStruct(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			v := ensure.Struct[testStruct]().HasFields(tc.f)
-			err := v.ValidateStruct(tc.s)
+			err := v.Validate(tc.s)
 			if err != nil && !tc.expectErr {
 				t.Errorf("Struct().Validate(); expected no error, got %s", err)
 			} else if err == nil && tc.expectErr {
@@ -549,7 +555,7 @@ func TestStructValidator_HasFields_DisplayNames(t *testing.T) {
 			},
 		)
 
-		if err := bad.Validate(""); err != nil {
+		if err := bad.Validate(testStruct{}); err != nil {
 			t.Errorf("validation occured and generated an error: %s", err.Error())
 		}
 	})
@@ -619,7 +625,7 @@ func TestStructValidator_HasGetters_DisplayNames(t *testing.T) {
 			},
 		)
 
-		if err := bad.Validate(""); err != nil {
+		if err := bad.Validate(testStruct{}); err != nil {
 			t.Errorf("validation occured and generated an error: %s", err.Error())
 		}
 	})

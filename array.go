@@ -115,7 +115,7 @@ func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 }
 
 // Each applies the provided validator to each element in an array and returns an error if any fail
-func (v *ArrayValidator[T]) Each(ev with.Validator) *ArrayValidator[T] {
+func (v *ArrayValidator[T]) Each(ev with.Validator[T]) *ArrayValidator[T] {
 	return v.Is(func(arr []T) error {
 		for _, e := range arr {
 			if err := ev.Validate(e); err != nil {
@@ -127,16 +127,16 @@ func (v *ArrayValidator[T]) Each(ev with.Validator) *ArrayValidator[T] {
 	})
 }
 
-// Validate accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *ArrayValidator[T]) Validate(value any) error {
+// ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
+func (v *ArrayValidator[T]) ValidateUntyped(value any) error {
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
-	return v.ValidateArray(value.([]T))
+	return v.Validate(value.([]T))
 }
 
-// ValidateArray applies all checks against an array and returns an error if any fail
-func (v *ArrayValidator[T]) ValidateArray(arr []T) error {
+// Validate applies all checks against an array and returns an error if any fail
+func (v *ArrayValidator[T]) Validate(arr []T) error {
 	if v.lenValidator != nil {
 		if err := v.lenValidator.Validate(len(arr)); err != nil {
 			return err

@@ -6,62 +6,44 @@ import (
 	"testing"
 )
 
-// TestAnyValidator_Construct checks to make sure construction fails with a panic
-// when invalid inputs are provided
-func TestAnyValidator_Construct(t *testing.T) {
-	t.Run("panic if mismatched types", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic")
-			}
-		}()
-
-		bad := ensure.Any(
-			ensure.String(),
-			ensure.Number[int](),
-		)
-
-		if err := bad.Validate(""); err != nil {
-			t.Errorf("validation occured and generated an error: %s", err.Error())
-		}
-
-	})
+// TestAnyValidator_IsValidator checks to make sure the AnyValidator implements the Validator interfaces
+func TestAnyValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Any[string]()
+	var _ with.Validator[string] = ensure.Any[string]()
 }
 
 // TestAnyValidator_Type checks to make sure the AnyValidator returns the correct type
 func TestAnyValidator_Type(t *testing.T) {
 	testCases := map[string]struct {
-		validator with.Validator
+		validator with.UntypedValidator
 		t         string
 	}{
 		"string": {
-			ensure.String(),
+			ensure.Any[string](),
 			"string",
 		},
 		"int": {
-			ensure.Number[int](),
+			ensure.Any[int](),
 			"int",
 		},
 		"struct": {
-			ensure.Struct[testStruct](),
+			ensure.Any[testStruct](),
 			"ensure_test.testStruct",
 		},
 		"array of int": {
-			ensure.Array[int](),
+			ensure.Any[[]int](),
 			"[]int",
 		},
 		"string pointer": {
-			ensure.Pointer(ensure.String()),
+			ensure.Any[*string](),
 			"*string",
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			anyValid := ensure.Any(tc.validator)
-
-			if anyValid.Type() != tc.t {
-				t.Errorf(`unexpected type: expected "%s", got "%s"`, tc.t, anyValid.Type())
+			if tc.validator.Type() != tc.t {
+				t.Errorf(`unexpected type: expected "%s", got "%s"`, tc.t, tc.validator.Type())
 			}
 		})
 	}
@@ -72,7 +54,7 @@ func TestAnyValidator_Type(t *testing.T) {
 func TestAnyValidator_WithError(t *testing.T) {
 	errMsg := "an error occurred"
 
-	anyValid := ensure.Any(
+	anyValid := ensure.Any[string](
 		ensure.String().Equals("123"),
 	).WithError(errMsg)
 
@@ -80,6 +62,35 @@ func TestAnyValidator_WithError(t *testing.T) {
 		if err.Error() != errMsg {
 			t.Errorf(`unexpected error: expected "%s", got "%s"`, errMsg, err)
 		}
+	}
+}
+
+func TestAnyValidator_ValidateUntyped(t *testing.T) {
+	testCases := map[string]struct {
+		value    string
+		willPass bool
+	}{
+		"match first":  {"foo", true},
+		"match second": {"123", true},
+		"match third":  {"validation", true},
+		"match none":   {":(", false},
+	}
+
+	anyValid := ensure.Any[string](
+		ensure.String().Equals("foo"),
+		ensure.String().Matches(ensure.Numbers),
+		ensure.String().IsLongerThan(5),
+	)
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := anyValid.ValidateUntyped(tc.value)
+			if err != nil && tc.willPass {
+				t.Errorf(`expected no error, got "%s"`, err)
+			} else if err == nil && !tc.willPass {
+				t.Errorf(`expected error but got none`)
+			}
+		})
 	}
 }
 
@@ -94,7 +105,7 @@ func TestAnyValidator_Validate(t *testing.T) {
 		"match none":   {":(", false},
 	}
 
-	anyValid := ensure.Any(
+	anyValid := ensure.Any[string](
 		ensure.String().Equals("foo"),
 		ensure.String().Matches(ensure.Numbers),
 		ensure.String().IsLongerThan(5),

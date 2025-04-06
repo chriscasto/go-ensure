@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure"
+	"github.com/chriscasto/go-ensure/with"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ type arrayTestCases[T any] map[string]arrayTestCase[T]
 func (tcs arrayTestCases[T]) run(t *testing.T, av *ensure.ArrayValidator[T], method string) {
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			err := av.ValidateArray(tc.vals)
+			err := av.Validate(tc.vals)
 			if err != nil && tc.willPass {
 				t.Errorf(`Array().%s.Validate(%v); expected no error, got "%s"`, method, tc.vals, err)
 			} else if err == nil && !tc.willPass {
@@ -39,6 +40,12 @@ func (tcs arrayTestCases[T]) run(t *testing.T, av *ensure.ArrayValidator[T], met
 			}
 		})
 	}
+}
+
+// TestArrayValidator_IsValidator checks to make sure the ArrayValidator implements the Validator interfaces
+func TestArrayValidator_IsValidator(t *testing.T) {
+	var _ with.UntypedValidator = ensure.Array[string]()
+	var _ with.Validator[[]string] = ensure.Array[string]()
 }
 
 func TestArrayValidator_Type(t *testing.T) {

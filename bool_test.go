@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-// TestBoolValidator_IsValidator checks to make sure the BoolValidator meets the Validator interface
+// TestBoolValidator_IsValidator checks to make sure the BooleanValidator implements the Validator interfaces
 func TestBoolValidator_IsValidator(t *testing.T) {
-	// This should fail if BooleanValidator no longer meets the requirements for the Validator interface
-	var _ with.Validator = ensure.Bool()
+	var _ with.UntypedValidator = ensure.Bool()
+	var _ with.Validator[bool] = ensure.Bool()
 }
 
 // TestBoolValidator_Type checks to make sure the BoolValidator returns the correct type
@@ -25,11 +25,11 @@ func TestBoolValidator_Type(t *testing.T) {
 func TestBoolValidator_IsTrue(t *testing.T) {
 	bv := ensure.Bool().IsTrue()
 
-	if err := bv.ValidateBool(true); err != nil {
+	if err := bv.Validate(true); err != nil {
 		t.Errorf(`expected no error, got "%s"`, err)
 	}
 
-	if err := bv.ValidateBool(false); err == nil {
+	if err := bv.Validate(false); err == nil {
 		t.Errorf(`expected error but got none`)
 	}
 }
@@ -38,11 +38,11 @@ func TestBoolValidator_IsTrue(t *testing.T) {
 func TestBoolValidator_IsFalse(t *testing.T) {
 	bv := ensure.Bool().IsFalse()
 
-	if err := bv.ValidateBool(false); err != nil {
+	if err := bv.Validate(false); err != nil {
 		t.Errorf(`expected no error, got "%s"`, err)
 	}
 
-	if err := bv.ValidateBool(true); err == nil {
+	if err := bv.Validate(true); err == nil {
 		t.Errorf(`expected error but got none`)
 	}
 }
