@@ -16,7 +16,7 @@ func (ts *testStruct) GetBaz() []float64 {
 	return ts.baz
 }
 
-func validateStruct(msg string, v with.Validator, s testStruct) {
+func validateStruct(msg string, v with.Validator[testStruct], s testStruct) {
 	fmt.Printf("%s\n", msg)
 	if err := v.Validate(s); err != nil {
 		fmt.Printf("->  Error: %v\n", err)

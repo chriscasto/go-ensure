@@ -13,7 +13,7 @@ func main() {
 	// Some simple checks demonstrating basic usage
 
 	fmt.Println("Is true true?")
-	if err := isTrue.ValidateBool(true); err != nil {
+	if err := isTrue.Validate(true); err != nil {
 		fmt.Println("  > You should never see this because validation should never fail")
 		fmt.Println(fmt.Sprintf("  > %s", err))
 	} else {
@@ -21,14 +21,14 @@ func main() {
 	}
 
 	fmt.Println("Is false true?")
-	if err := isTrue.ValidateBool(false); err != nil {
+	if err := isTrue.Validate(false); err != nil {
 		fmt.Println(fmt.Sprintf("  > %s", err))
 	} else {
 		fmt.Println("  > You should never see this because validation should always fail")
 	}
 
 	fmt.Println("Is false false?")
-	if err := isFalse.ValidateBool(false); err != nil {
+	if err := isFalse.Validate(false); err != nil {
 		fmt.Println("  > You should never see this because validation should never fail")
 		fmt.Println(fmt.Sprintf("  > %s", err))
 	} else {
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	fmt.Println("Is false true?")
-	if err := isFalse.ValidateBool(true); err != nil {
+	if err := isFalse.Validate(true); err != nil {
 		fmt.Println(fmt.Sprintf("  > %s", err))
 	} else {
 		fmt.Println("  > You should never see this because validation should always fail")
@@ -61,7 +61,7 @@ func main() {
 		"Name": ensure.String().IsNotEmpty(),
 	})
 
-	validIfEnabled := ensure.Any(
+	validIfEnabled := ensure.Any[Component](
 		componentDisabled, // this will cause validation to succeed and return immediately if Enabled == false
 		componentValid,    // this performs the actual validation only if the first check fails
 	).WithError("Component is not valid")
