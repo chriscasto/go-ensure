@@ -3,6 +3,7 @@ package ensure
 import (
 	"errors"
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"golang.org/x/exp/constraints"
 	"math"
 	"reflect"
@@ -328,16 +329,16 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *NumberValidator[T]) ValidateUntyped(value any) error {
+func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
 
-	return v.Validate(value.(T))
+	return v.Validate(value.(T), options...)
 }
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
-func (v *NumberValidator[T]) Validate(n T) error {
+func (v *NumberValidator[T]) Validate(n T, _ ...*with.ValidationOptions) error {
 	for _, fn := range v.checks {
 		if err := fn(n); err != nil {
 			return err

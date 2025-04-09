@@ -2,6 +2,7 @@ package ensure
 
 import (
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
 
@@ -28,4 +29,13 @@ func testType(value any, expect string) *TypeError {
 	}
 
 	return nil
+}
+
+func getOptions(options []*with.ValidationOptions) *with.ValidationOptions {
+	if len(options) > 0 {
+		return options[0]
+	}
+
+	// default options
+	return with.Options()
 }

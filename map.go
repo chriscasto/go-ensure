@@ -46,15 +46,15 @@ func (mv *MapValidator[K, V]) HasLengthWhere(nv *NumberValidator[int]) *MapValid
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (mv *MapValidator[K, V]) ValidateUntyped(value any) error {
+func (mv *MapValidator[K, V]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	if err := testType(value, mv.typeStr); err != nil {
 		return err
 	}
-	return mv.Validate(value.(map[K]V))
+	return mv.Validate(value.(map[K]V), options...)
 }
 
 // Validate applies all checks against a map and returns an error if any fail
-func (mv *MapValidator[K, V]) Validate(mp map[K]V) error {
+func (mv *MapValidator[K, V]) Validate(mp map[K]V, _ ...*with.ValidationOptions) error {
 	if mv.lenValidator != nil {
 		if err := mv.lenValidator.Validate(len(mp)); err != nil {
 			return err

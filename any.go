@@ -38,7 +38,7 @@ func (av *AnyValidator[T]) Type() string {
 }
 
 // Validate applies all validators against a value of the expected type and returns an error if all fail
-func (av *AnyValidator[T]) Validate(i T) error {
+func (av *AnyValidator[T]) Validate(i T, _ ...*with.ValidationOptions) error {
 	for _, validator := range av.validators {
 		if err := validator.Validate(i); err == nil {
 			// If any pass without error, consider it a success
@@ -51,7 +51,7 @@ func (av *AnyValidator[T]) Validate(i T) error {
 }
 
 // ValidateUntyped applies all validators against a value of an unknown type and returns an error if all fail
-func (av *AnyValidator[T]) ValidateUntyped(i any) error {
+func (av *AnyValidator[T]) ValidateUntyped(i any, _ ...*with.ValidationOptions) error {
 	for _, validator := range av.validators {
 		if err := validator.ValidateUntyped(i); err == nil {
 			// If any pass without error, consider it a success

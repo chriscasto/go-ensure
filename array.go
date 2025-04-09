@@ -128,15 +128,15 @@ func (v *ArrayValidator[T]) Each(ev with.Validator[T]) *ArrayValidator[T] {
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *ArrayValidator[T]) ValidateUntyped(value any) error {
+func (v *ArrayValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
-	return v.Validate(value.([]T))
+	return v.Validate(value.([]T), options...)
 }
 
 // Validate applies all checks against an array and returns an error if any fail
-func (v *ArrayValidator[T]) Validate(arr []T) error {
+func (v *ArrayValidator[T]) Validate(arr []T, _ ...*with.ValidationOptions) error {
 	if v.lenValidator != nil {
 		if err := v.lenValidator.Validate(len(arr)); err != nil {
 			return err

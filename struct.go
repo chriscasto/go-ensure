@@ -229,7 +229,7 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 }
 
 // validateStruct is a helper method that does the actual validation used by Validate and ValidateStrict
-func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
+func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T, _ ...*with.ValidationOptions) error {
 	for _, check := range sv.checks {
 		if err := check(s); err != nil {
 			return err
@@ -267,7 +267,7 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (sv *StructValidator[T]) ValidateUntyped(value any) error {
+func (sv *StructValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	sRef := reflect.ValueOf(value)
 	sRefType := sRef.Type()
 
@@ -275,11 +275,11 @@ func (sv *StructValidator[T]) ValidateUntyped(value any) error {
 		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
 	}
 
-	return sv.validateStruct(sRef, value.(T))
+	return sv.validateStruct(sRef, value.(T), options...)
 }
 
 // Validate applies all checks against a struct of the expected type and returns an error if any fail
-func (sv *StructValidator[T]) Validate(s T) error {
+func (sv *StructValidator[T]) Validate(s T, options ...*with.ValidationOptions) error {
 	sRef := reflect.ValueOf(s)
-	return sv.validateStruct(sRef, s)
+	return sv.validateStruct(sRef, s, options...)
 }

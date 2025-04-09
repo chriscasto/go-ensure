@@ -37,7 +37,7 @@ func (v *PointerValidator[T]) Type() string {
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a pointer to the expected type
-func (v *PointerValidator[T]) ValidateUntyped(i any) error {
+func (v *PointerValidator[T]) ValidateUntyped(i any, options ...*with.ValidationOptions) error {
 	refVal := reflect.ValueOf(i)
 
 	if refVal.Kind() != reflect.Ptr {
@@ -51,11 +51,11 @@ func (v *PointerValidator[T]) ValidateUntyped(i any) error {
 		return nil
 	}
 
-	return v.parent.Validate(refVal.Elem().Interface().(T))
+	return v.parent.Validate(refVal.Elem().Interface().(T), options...)
 }
 
 // Validate applies all checks against a boolean value and returns an error if any fail
-func (v *PointerValidator[T]) Validate(i *T) error {
+func (v *PointerValidator[T]) Validate(i *T, options ...*with.ValidationOptions) error {
 	if i == nil {
 		if !v.optional {
 			return NewValidationError("required value cannot be missing")
@@ -63,5 +63,5 @@ func (v *PointerValidator[T]) Validate(i *T) error {
 		return nil
 	}
 
-	return v.parent.Validate(*i)
+	return v.parent.Validate(*i, options...)
 }

@@ -1,5 +1,7 @@
 package ensure
 
+import "github.com/chriscasto/go-ensure/with"
+
 const boolType = "bool"
 
 // BooleanValidator contains information and logic used to validate a boolean value
@@ -34,7 +36,7 @@ func (bv *BooleanValidator) IsFalse() *BooleanValidator {
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a boolean
-func (bv *BooleanValidator) ValidateUntyped(i interface{}) error {
+func (bv *BooleanValidator) ValidateUntyped(i interface{}, _ ...*with.ValidationOptions) error {
 	b, ok := i.(bool)
 
 	if !ok {
@@ -45,7 +47,7 @@ func (bv *BooleanValidator) ValidateUntyped(i interface{}) error {
 }
 
 // Validate applies all checks against a boolean value and returns an error if any fail
-func (bv *BooleanValidator) Validate(b bool) error {
+func (bv *BooleanValidator) Validate(b bool, _ ...*with.ValidationOptions) error {
 	// There are really only two possibilities, so we can just check those
 	// directly rather than using an array of functions
 
