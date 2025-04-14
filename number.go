@@ -338,11 +338,22 @@ func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.Validat
 }
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
-func (v *NumberValidator[T]) Validate(n T, _ ...*with.ValidationOptions) error {
+func (v *NumberValidator[T]) Validate(n T, options ...*with.ValidationOptions) error {
+	vErrs := newValidationErrors()
+	vOpts := getValidationOptions(options)
+
 	for _, fn := range v.checks {
 		if err := fn(n); err != nil {
-			return err
+			vErrs.Append(err)
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
+	}
+
+	if vErrs.HasErrors() {
+		return vErrs
 	}
 
 	return nil

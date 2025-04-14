@@ -31,7 +31,7 @@ func testType(value any, expect string) *TypeError {
 	return nil
 }
 
-func getOptions(options []*with.ValidationOptions) *with.ValidationOptions {
+func getValidationOptions(options []*with.ValidationOptions) *with.ValidationOptions {
 	if len(options) > 0 {
 		return options[0]
 	}

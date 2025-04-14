@@ -437,3 +437,34 @@ func TestStringValidator_IsNotOneOf(t *testing.T) {
 		fmt.Sprintf(`IsNotOneOf(%v)`, forbidden),
 	)
 }
+
+func TestStringValidator_MultiError(t *testing.T) {
+	strTestCases := multiErrTestCases[string]{
+		"passes all":   {"one", 0},   // fails none
+		"passes none":  {"1", 3},     // fails all
+		"wrong length": {"phone", 1}, // fails length
+		"wrong case":   {"ONE", 1},   // fails contains
+		"with numbers": {"1one1", 2}, // fails length, pattern
+		"empty":        {"", 3},      // fails all
+	}
+
+	// Check to make sure we get all expected errors
+	strTestCases.run(t,
+		ensure.String().HasLength(3).Contains("one").Matches(`(?i)^[a-z]+$`),
+	)
+
+	strLenTestCases := multiErrTestCases[string]{
+		"passes all":   {"12345", 0},  // fails none
+		"length two":   {"12", 2},     // fails odd, equals 5
+		"length three": {"123", 1},    // fails equals 5
+		"length six":   {"123456", 3}, // fails odd, less than 6, equals 5
+		"empty":        {"", 3},       // fails odd, greater than 1, equals 5
+	}
+
+	// We also need to make sure all the length methods are evaluated
+	strLenTestCases.run(t,
+		ensure.String().HasLengthWhere(
+			ensure.Length().IsOdd().IsGreaterThan(1).IsLessThan(6).Equals(5),
+		),
+	)
+}

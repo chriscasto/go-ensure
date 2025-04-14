@@ -419,6 +419,22 @@ func TestNumberValidator_IsNotOneOf(t *testing.T) {
 	)
 }
 
+func TestNumberValidator_MultiError(t *testing.T) {
+	intTestCases := multiErrTestCases[int]{
+		"zero":  {0, 3}, // fails odd, greater than 1, equals 5
+		"one":   {1, 2}, // fails greater than 1, equals 5
+		"two":   {2, 2}, // fails odd, equals 5
+		"three": {3, 1}, // fails equals 5
+		"five":  {5, 0}, // fails none
+		"six":   {6, 3}, // fails odd, less than 6, equals 5
+	}
+
+	// We also need to make sure all the length methods are evaluated
+	intTestCases.run(t,
+		ensure.Number[int]().IsOdd().IsGreaterThan(1).IsLessThan(6).Equals(5),
+	)
+}
+
 func TestNumberValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.Number[int]())

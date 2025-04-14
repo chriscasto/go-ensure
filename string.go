@@ -68,17 +68,32 @@ func (v *StringValidator) ValidateUntyped(value any, options ...*with.Validation
 }
 
 // Validate applies all checks against a string value and returns an error if any fail
-func (v *StringValidator) Validate(str string, _ ...*with.ValidationOptions) error {
+func (v *StringValidator) Validate(str string, options ...*with.ValidationOptions) error {
+	vErrs := newValidationErrors()
+	vOpts := getValidationOptions(options)
+
 	if v.lenValidator != nil {
-		if err := v.lenValidator.Validate(len(str)); err != nil {
-			return err
+		if err := v.lenValidator.Validate(len(str), vOpts); err != nil {
+			vErrs.Append(err)
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
 	}
 
 	for _, fn := range v.checks {
 		if err := fn(str); err != nil {
-			return NewValidationError(err.Error())
+			vErrs.Append(err)
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
+	}
+
+	if vErrs.HasErrors() {
+		return vErrs
 	}
 
 	return nil
