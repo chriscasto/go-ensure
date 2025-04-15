@@ -1,6 +1,7 @@
 package ensure
 
 import (
+	"errors"
 	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
@@ -38,16 +39,28 @@ func (av *AnyValidator[T]) Type() string {
 }
 
 // Validate applies all validators against a value of the expected type and returns an error if all fail
-func (av *AnyValidator[T]) Validate(i T, _ ...*with.ValidationOptions) error {
+func (av *AnyValidator[T]) Validate(i T, options ...*with.ValidationOptions) error {
+	vErrs := newValidationErrors()
+	vOpts := getValidationOptions(options)
+
 	for _, validator := range av.validators {
-		if err := validator.Validate(i); err == nil {
+		if err := validator.Validate(i, vOpts); err == nil {
 			// If any pass without error, consider it a success
 			return nil
+		} else {
+			if vOpts.CollectAllErrors() {
+				vErrs.Append(err)
+			}
 		}
 	}
 
-	// If we haven't encountered a success, return an error
-	return NewValidationError(av.err)
+	// If we haven't encountered a success, we should have at least one error
+	// Check to make sure, and add the default if not
+	if !vErrs.HasErrors() {
+		vErrs.Append(errors.New(av.err))
+	}
+
+	return vErrs
 }
 
 // ValidateUntyped applies all validators against a value of an unknown type and returns an error if all fail

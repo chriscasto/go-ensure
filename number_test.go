@@ -429,7 +429,6 @@ func TestNumberValidator_MultiError(t *testing.T) {
 		"six":   {6, 3}, // fails odd, less than 6, equals 5
 	}
 
-	// We also need to make sure all the length methods are evaluated
 	intTestCases.run(t,
 		ensure.Number[int]().IsOdd().IsGreaterThan(1).IsLessThan(6).Equals(5),
 	)
