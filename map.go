@@ -54,31 +54,54 @@ func (mv *MapValidator[K, V]) ValidateUntyped(value any, options ...*with.Valida
 }
 
 // Validate applies all checks against a map and returns an error if any fail
-func (mv *MapValidator[K, V]) Validate(mp map[K]V, _ ...*with.ValidationOptions) error {
+func (mv *MapValidator[K, V]) Validate(mp map[K]V, options ...*with.ValidationOptions) error {
+	vErrs := newValidationErrors()
+	vOpts := getValidationOptions(options)
+
 	if mv.lenValidator != nil {
-		if err := mv.lenValidator.Validate(len(mp)); err != nil {
-			return err
+		if err := mv.lenValidator.Validate(len(mp), vOpts); err != nil {
+			vErrs.Append(err)
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
 	}
 
 	for _, fn := range mv.checks {
 		if err := fn(mp); err != nil {
-			return NewValidationError(err.Error())
+			vErrs.Append(err)
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
 	}
 
 	for key, val := range mp {
 		if mv.keyValidator != nil {
-			if err := mv.keyValidator.Validate(key); err != nil {
-				return err
+			if err := mv.keyValidator.Validate(key, vOpts); err != nil {
+				vErrs.Append(err)
+
+				if !vOpts.CollectAllErrors() {
+					return vErrs
+				}
 			}
 		}
 
 		if mv.valueValidator != nil {
-			if err := mv.valueValidator.Validate(val); err != nil {
-				return err
+			if err := mv.valueValidator.Validate(val, vOpts); err != nil {
+				vErrs.Append(err)
+
+				if !vOpts.CollectAllErrors() {
+					return vErrs
+				}
 			}
 		}
+	}
+
+	if vErrs.HasErrors() {
+		return vErrs
 	}
 
 	return nil
