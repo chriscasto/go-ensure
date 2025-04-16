@@ -229,18 +229,29 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 }
 
 // validateStruct is a helper method that does the actual validation used by Validate and ValidateStrict
-func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T, _ ...*with.ValidationOptions) error {
+func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T, options ...*with.ValidationOptions) error {
+	vErrs := newValidationErrors()
+	vOpts := getValidationOptions(options)
+
 	for _, check := range sv.checks {
 		if err := check(s); err != nil {
-			return err
+			vErrs.Append(err)
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
 	}
 
 	// Validate fields
 	for _, field := range sv.fields {
 		fieldVal := sRef.FieldByName(field.name)
-		if err := field.validator.ValidateUntyped(fieldVal.Interface()); err != nil {
-			return NewValidationError(fmt.Sprintf("%s: %s", field.displayName, err.Error()))
+		if err := field.validator.ValidateUntyped(fieldVal.Interface(), vOpts); err != nil {
+			vErrs.Append(fmt.Errorf("%s: %s", field.displayName, err.Error()))
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
 	}
 
@@ -258,9 +269,17 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T, _ ...*with
 		result := method.ref.Func.Call([]reflect.Value{receiver})
 		retVal := result[0].Interface()
 
-		if err := method.validator.ValidateUntyped(retVal); err != nil {
-			return NewValidationError(fmt.Sprintf("%s: %s", method.displayName, err.Error()))
+		if err := method.validator.ValidateUntyped(retVal, vOpts); err != nil {
+			vErrs.Append(fmt.Errorf("%s: %s", method.displayName, err.Error()))
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
+	}
+
+	if vErrs.HasErrors() {
+		return vErrs
 	}
 
 	return nil

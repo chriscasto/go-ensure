@@ -717,6 +717,32 @@ func TestStructValidator_Is(t *testing.T) {
 	)
 }
 
+func TestStructValidator_MultiError(t *testing.T) {
+	type exampleMap = map[string]int
+
+	mapTestCases := multiErrTestCases[testStruct]{
+		"empty": {testStruct{}, 1},                     // fails contains "o"
+		"one":   {testStruct{Int: 1, Str: "one"}, 2},   // fails even, is
+		"two":   {testStruct{Int: 2, Str: "two"}, 1},   // fails is
+		"three": {testStruct{Int: 3, Str: "three"}, 3}, // fails even, is, contains "o"
+		"four":  {testStruct{Int: 4, Str: "four"}, 0},  // fails none
+	}
+
+	mapTestCases.run(t,
+		ensure.Struct[testStruct]().HasFields(with.Validators{
+			"Int": ensure.Number[int]().IsEven(),
+		}).HasGetters(with.Validators{
+			"GetStr": ensure.String().Contains("o"),
+		}).Is(func(strct testStruct) error {
+			if strct.Int != len(strct.Str) {
+				return fmt.Errorf("length of Str must match Int")
+			}
+
+			return nil
+		}),
+	)
+}
+
 func TestStructValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.Struct[testStruct]())
