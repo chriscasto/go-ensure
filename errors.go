@@ -21,8 +21,8 @@ func NewTypeError(err string) *TypeError {
 }
 
 // ValidationError is used to indicate a failure while conducting validation
-// checks.  These are generally safe to return to the user so they can correct
-// their input(s)
+// checks.  These are intended to be safe to return to the user so they can
+// correct their input(s)
 type ValidationError struct {
 	err string
 }
@@ -36,11 +36,14 @@ func NewValidationError(err string) *ValidationError {
 	return &ValidationError{err}
 }
 
+// ValidationErrors is a collection of multiple TypeError and ValidationError structs
+// It provides a transparent mechanism for returning multiple errors from a validation tree
 type ValidationErrors struct {
 	tErrs []*TypeError
 	vErrs []*ValidationError
 }
 
+// newValidationErrors creates and returns a new ValidationErrors struct
 func newValidationErrors() *ValidationErrors {
 	return &ValidationErrors{
 		tErrs: make([]*TypeError, 0),
@@ -48,6 +51,7 @@ func newValidationErrors() *ValidationErrors {
 	}
 }
 
+// ErrorAsValidationErrors is a helper function for checking if an error is an instance of ValidationErrors
 func ErrorAsValidationErrors(err error) *ValidationErrors {
 	vErrs := &ValidationErrors{}
 
@@ -58,6 +62,9 @@ func ErrorAsValidationErrors(err error) *ValidationErrors {
 	return nil
 }
 
+// Append adds an error to the internal list of validation errors
+// TypeError is kept separate from ValidationError
+// If it's a ValidationErrors error, it gets merged into this one
 func (v *ValidationErrors) Append(err error) {
 
 	// The most common case is that it's another set of validation errors from upstream
@@ -80,6 +87,7 @@ func (v *ValidationErrors) Append(err error) {
 	v.vErrs = append(v.vErrs, &ValidationError{err: err.Error()})
 }
 
+// Extend adds all the errors collected in one ValidationErrors instance into another
 func (v *ValidationErrors) Extend(errs *ValidationErrors) {
 	// Add type errors from other struct
 	for _, err := range errs.tErrs {
@@ -92,26 +100,32 @@ func (v *ValidationErrors) Extend(errs *ValidationErrors) {
 	}
 }
 
+// HasErrors returns true if there are any errors
 func (v *ValidationErrors) HasErrors() bool {
 	return v.HasTypeErrors() || v.HasValidationErrors()
 }
 
+// HasTypeErrors returns true if there are any TypeErrors
 func (v *ValidationErrors) HasTypeErrors() bool {
 	return len(v.tErrs) > 0
 }
 
+// GetTypeErrors returns all collected TypeErrors
 func (v *ValidationErrors) GetTypeErrors() []*TypeError {
 	return v.tErrs
 }
 
+// HasValidationErrors returns true if there are any ValidationErrors
 func (v *ValidationErrors) HasValidationErrors() bool {
 	return len(v.vErrs) > 0
 }
 
+// GetValidationErrors returns all collected ValidationErrors
 func (v *ValidationErrors) GetValidationErrors() []*ValidationError {
 	return v.vErrs
 }
 
+// Error is the implementation of the "error" interface
 func (v *ValidationErrors) Error() string {
 	// Return the first validation error by default
 	if len(v.vErrs) > 0 {
