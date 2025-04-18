@@ -60,7 +60,7 @@ func ErrorAsValidationErrors(err error) *ValidationErrors {
 
 func (v *ValidationErrors) Append(err error) {
 
-	// The most common case is that it's a another set of validation errors from upstream
+	// The most common case is that it's another set of validation errors from upstream
 	ve := &ValidationErrors{}
 
 	if errors.As(err, &ve) {
