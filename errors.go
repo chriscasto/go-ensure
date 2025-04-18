@@ -129,22 +129,3 @@ func (v *ValidationErrors) Error() string {
 	// We shouldn't get here, but just in case
 	return "there were no validation errors"
 }
-
-func test() {
-
-	ve := newValidationErrors()
-	out := []error{}
-
-	if ve.HasTypeErrors() {
-		for _, err := range ve.GetTypeErrors() {
-			fmt.Println(err.Error())
-		}
-
-	}
-
-	if ve.HasValidationErrors() {
-		for _, err := range ve.GetValidationErrors() {
-			out = append(out, err)
-		}
-	}
-}

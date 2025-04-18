@@ -51,6 +51,8 @@ func (bv *BooleanValidator) Validate(b bool, _ ...*with.ValidationOptions) error
 	// There are really only two possibilities, so we can just check those
 	// directly rather than using an array of functions
 
+	// It also doesn't make sense to return multiple errors, since there is no valid scenario for that
+
 	if bv.expectTrue && b != true {
 		return NewValidationError("expected true but got false")
 	}
