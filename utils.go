@@ -39,3 +39,43 @@ func getValidationOptions(options []*with.ValidationOptions) *with.ValidationOpt
 	// default options
 	return with.Options()
 }
+
+type validationChecks[T any] struct {
+	c []func(T) error
+}
+
+func newValidationChecks[T any]() *validationChecks[T] {
+	return &validationChecks[T]{}
+}
+
+func (vc *validationChecks[T]) Append(check func(T) error) {
+	vc.c = append(vc.c, check)
+}
+
+func (vc *validationChecks[T]) Evaluate(target T, abortOnErr bool) error {
+	// The code could be simplified by putting the abortOnErr check in the loop,
+	// but since check evaluation is abstracted away anyway and the loop logic
+	// is simple, I'm fine with a little over-optimization
+
+	if abortOnErr {
+		for _, fn := range vc.c {
+			if err := fn(target); err != nil {
+				return err
+			}
+		}
+	} else {
+		vErrs := newValidationErrors()
+
+		for _, fn := range vc.c {
+			if err := fn(target); err != nil {
+				vErrs.Append(err)
+			}
+		}
+
+		if vErrs.HasErrors() {
+			return vErrs
+		}
+	}
+
+	return nil
+}
