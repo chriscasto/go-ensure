@@ -15,9 +15,6 @@ type NumberType interface {
 	constraints.Integer | constraints.Float
 }
 
-// numCheckFunc is the type of function used for validating number types
-type numCheckFunc[T NumberType] func(T) error
-
 // isIntEven returns true if an int value can be considered even
 func isIntEven(typeStr string, i any) bool {
 	// we only use the last bit, so we don't need a wide int
@@ -105,7 +102,7 @@ func isOdd(typeStr string, i any) bool {
 type NumberValidator[T NumberType] struct {
 	typeStr     string
 	isFloat     bool
-	checks      *validationChecks[T]
+	checks      *valChecks[T]
 	placeholder string
 }
 
@@ -339,7 +336,14 @@ func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.Validat
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
 func (v *NumberValidator[T]) Validate(n T, options ...*with.ValidationOptions) error {
-	return v.checks.Evaluate(n, !getValidationOptions(options).CollectAllErrors())
+	if getValidationOptions(options).CollectAllErrors() {
+		if err := v.checks.EvaluateAll(n); err != nil {
+			if err.HasErrors() {
+				return err
+			}
+		}
+	}
+	return v.checks.Evaluate(n)
 }
 
 // Is adds the provided function as a check against any values to be validated

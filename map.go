@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/chriscasto/go-ensure/with"
+	"maps"
 	"reflect"
 )
 
@@ -15,7 +16,7 @@ type MapValidator[K comparable, V any] struct {
 	typeStr        string
 	keyTypeStr     string
 	valueTypeStr   string
-	checks         []mapCheckFunc[K, V]
+	checks         *valChecks[map[K]V]
 	lenValidator   *NumberValidator[int]
 	keyValidator   with.Validator[K]
 	valueValidator with.Validator[V]
@@ -31,6 +32,7 @@ func Map[K comparable, V any]() *MapValidator[K, V] {
 		typeStr:      reflect.TypeOf(mapZero).String(),
 		keyTypeStr:   reflect.TypeOf(keyZero).String(),
 		valueTypeStr: reflect.TypeOf(valZero).String(),
+		checks:       newValidationChecks[map[K]V](),
 	}
 }
 
@@ -55,53 +57,74 @@ func (mv *MapValidator[K, V]) ValidateUntyped(value any, options ...*with.Valida
 
 // Validate applies all checks against a map and returns an error if any fail
 func (mv *MapValidator[K, V]) Validate(mp map[K]V, options ...*with.ValidationOptions) error {
-	vErrs := newValidationErrors()
 	vOpts := getValidationOptions(options)
+	abortOnErr := !vOpts.CollectAllErrors()
 
+	var lenCheck func(map[K]V) error
+	// key and val checks have to be done separately to preserve all errors when requested
+	var keyCheck func(map[K]V) error
+	var valCheck func(map[K]V) error
+
+	// if there is a length validator, add another check to validate length with current opts
 	if mv.lenValidator != nil {
-		if err := mv.lenValidator.Validate(len(mp), vOpts); err != nil {
-			vErrs.Append(err)
-
-			if !vOpts.CollectAllErrors() {
-				return vErrs
+		lenCheck = func(mapVal map[K]V) error {
+			if err := mv.lenValidator.Validate(len(mapVal), vOpts); err != nil {
+				return err
 			}
+			return nil
 		}
 	}
 
-	for _, fn := range mv.checks {
-		if err := fn(mp); err != nil {
-			vErrs.Append(err)
-
-			if !vOpts.CollectAllErrors() {
-				return vErrs
-			}
-		}
-	}
-
-	for key, val := range mp {
-		if mv.keyValidator != nil {
-			if err := mv.keyValidator.Validate(key, vOpts); err != nil {
-				vErrs.Append(err)
-
-				if !vOpts.CollectAllErrors() {
-					return vErrs
+	// if we have a key validator, add a check for each item in the map
+	if mv.keyValidator != nil {
+		keyCheck = func(mapVal map[K]V) error {
+			itemSeqChecks := newSeqChecks[K](func(key K) error {
+				if err := mv.keyValidator.Validate(key, vOpts); err != nil {
+					return err
 				}
-			}
-		}
 
-		if mv.valueValidator != nil {
-			if err := mv.valueValidator.Validate(val, vOpts); err != nil {
-				vErrs.Append(err)
+				return nil
+			})
 
-				if !vOpts.CollectAllErrors() {
-					return vErrs
-				}
+			seq := maps.Keys(mapVal)
+
+			if abortOnErr {
+				return itemSeqChecks.Evaluate(seq)
 			}
+
+			return itemSeqChecks.EvaluateAll(seq)
 		}
 	}
 
-	if vErrs.HasErrors() {
-		return vErrs
+	// if we have a value validator, add a check for each item in the map
+	if mv.valueValidator != nil {
+		valCheck = func(mapVal map[K]V) error {
+			itemSeqChecks := newSeqChecks[V](func(val V) error {
+				if err := mv.valueValidator.Validate(val, vOpts); err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			seq := maps.Values(mapVal)
+
+			if abortOnErr {
+				return itemSeqChecks.Evaluate(seq)
+			}
+
+			return itemSeqChecks.EvaluateAll(seq)
+		}
+	}
+
+	if vOpts.CollectAllErrors() {
+		if err := mv.checks.EvaluateAll(mp, lenCheck, keyCheck, valCheck); err != nil {
+			if err.HasErrors() {
+				return err
+			}
+		}
+	} else {
+		return mv.checks.Evaluate(mp, lenCheck, keyCheck, valCheck)
 	}
 
 	return nil
@@ -186,7 +209,7 @@ func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (mv *MapValidator[K, V]) Is(fn mapCheckFunc[K, V]) *MapValidator[K, V] {
-	mv.checks = append(mv.checks, fn)
+func (mv *MapValidator[K, V]) Is(fn func(map[K]V) error) *MapValidator[K, V] {
+	mv.checks.Append(fn)
 	return mv
 }

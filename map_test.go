@@ -200,8 +200,8 @@ func TestMapValidator_MultiError(t *testing.T) {
 		"empty": {exampleMap{}, 1},                               // fails not empty
 		"one":   {exampleMap{"one": 1}, 0},                       // fails none
 		"two":   {exampleMap{"one": 1, "two": 2}, 1},             // fails odd
-		"three": {exampleMap{"one": 1, "two": 2, "three": 3}, 3}, // fails fewer than 3, length 3, odd
-		"four":  {exampleMap{"four": 4}, 2},                      // fails length 3, odd
+		"three": {exampleMap{"one": 1, "two": 2, "three": 3}, 3}, // fails fewer than 3, str length 3, odd
+		"four":  {exampleMap{"four": 4}, 2},                      // fails str length 3, odd
 	}
 
 	mapTestCases.run(t,

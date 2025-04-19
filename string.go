@@ -32,17 +32,15 @@ const (
 	Sha512 = `^[0-9a-f]{128}$`
 )
 
-type strCheckFunc func(string) error
-
 // StringValidator contains information and logic used to validate a string
 type StringValidator struct {
 	lenValidator *NumberValidator[int]
-	checks       []strCheckFunc
+	checks       *valChecks[string] //[]strCheckFunc
 }
 
 // String returns an initialized StringValidator
 func String() *StringValidator {
-	return &StringValidator{}
+	return &StringValidator{checks: newValidationChecks[string]()}
 }
 
 // Type returns the string "string"
@@ -69,31 +67,28 @@ func (v *StringValidator) ValidateUntyped(value any, options ...*with.Validation
 
 // Validate applies all checks against a string value and returns an error if any fail
 func (v *StringValidator) Validate(str string, options ...*with.ValidationOptions) error {
-	vErrs := newValidationErrors()
 	vOpts := getValidationOptions(options)
 
+	var lenCheck func(string) error
+
+	// if there is a length validator, add another check to validate length with current opts
 	if v.lenValidator != nil {
-		if err := v.lenValidator.Validate(len(str), vOpts); err != nil {
-			vErrs.Append(err)
-
-			if !vOpts.CollectAllErrors() {
-				return vErrs
+		lenCheck = func(strVal string) error {
+			if err := v.lenValidator.Validate(len(strVal), vOpts); err != nil {
+				return err
 			}
+			return nil
 		}
 	}
 
-	for _, fn := range v.checks {
-		if err := fn(str); err != nil {
-			vErrs.Append(err)
-
-			if !vOpts.CollectAllErrors() {
-				return vErrs
+	if vOpts.CollectAllErrors() {
+		if err := v.checks.EvaluateAll(str, lenCheck); err != nil {
+			if err.HasErrors() {
+				return err
 			}
 		}
-	}
-
-	if vErrs.HasErrors() {
-		return vErrs
+	} else {
+		return v.checks.Evaluate(str, lenCheck)
 	}
 
 	return nil
@@ -317,7 +312,7 @@ func (v *StringValidator) Matches(pattern string) *StringValidator {
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *StringValidator) Is(fn strCheckFunc) *StringValidator {
-	v.checks = append(v.checks, fn)
+func (v *StringValidator) Is(fn func(string) error) *StringValidator {
+	v.checks.Append(fn)
 	return v
 }

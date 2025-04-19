@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"github.com/chriscasto/go-ensure/with"
 	"reflect"
+	"slices"
 )
-
-// arrCheckFunc defines a function that can be used to validate an array
-type arrCheckFunc[T any] func([]T) error
 
 // ArrayValidator contains information and logic used to validate an array of type T
 type ArrayValidator[T any] struct {
-	typeStr      string
-	lenValidator *NumberValidator[int]
-	checks       []arrCheckFunc[T]
+	typeStr       string
+	lenValidator  *NumberValidator[int]
+	itemValidator with.Validator[T]
+	//itemChecks    *seqChecks[T]
+	checks *valChecks[[]T]
 }
 
 // Array constructs an ArrayValidator instance of type T and returns a pointer to it
@@ -25,6 +25,7 @@ func Array[T any]() *ArrayValidator[T] {
 
 	return &ArrayValidator[T]{
 		typeStr: typeStr,
+		checks:  newValidationChecks[[]T](),
 	}
 }
 
@@ -114,17 +115,10 @@ func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
 	})
 }
 
-// Each applies the provided validator to each element in an array and returns an error if any fail
+// Each assigns a Validator to be used for validating array values
 func (v *ArrayValidator[T]) Each(ev with.Validator[T]) *ArrayValidator[T] {
-	return v.Is(func(arr []T) error {
-		for _, e := range arr {
-			if err := ev.Validate(e); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
+	v.itemValidator = ev
+	return v
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
@@ -136,24 +130,60 @@ func (v *ArrayValidator[T]) ValidateUntyped(value any, options ...*with.Validati
 }
 
 // Validate applies all checks against an array and returns an error if any fail
-func (v *ArrayValidator[T]) Validate(arr []T, _ ...*with.ValidationOptions) error {
+func (v *ArrayValidator[T]) Validate(arr []T, options ...*with.ValidationOptions) error {
+	vOpts := getValidationOptions(options)
+	abortOnErr := !vOpts.CollectAllErrors()
+
+	var lenCheck func([]T) error
+
+	// if there is a length validator, add another check to validate length with current opts
 	if v.lenValidator != nil {
-		if err := v.lenValidator.Validate(len(arr)); err != nil {
-			return err
+		lenCheck = func(arrVal []T) error {
+			if err := v.lenValidator.Validate(len(arrVal), vOpts); err != nil {
+				return err
+			}
+			return nil
 		}
 	}
 
-	for _, fn := range v.checks {
-		if err := fn(arr); err != nil {
-			return err
+	var eachCheck func([]T) error
+
+	// if we have an item validator, add a check for each item in the array
+	if v.itemValidator != nil {
+		eachCheck = func(arrVal []T) error {
+			itemSeqChecks := newSeqChecks[T](func(val T) error {
+				if err := v.itemValidator.Validate(val, vOpts); err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			seq := slices.Values(arrVal)
+
+			if abortOnErr {
+				return itemSeqChecks.Evaluate(seq)
+			}
+
+			return itemSeqChecks.EvaluateAll(seq)
 		}
+	}
+
+	if vOpts.CollectAllErrors() {
+		if err := v.checks.EvaluateAll(arr, lenCheck, eachCheck); err != nil {
+			if err.HasErrors() {
+				return err
+			}
+		}
+	} else {
+		return v.checks.Evaluate(arr, lenCheck, eachCheck)
 	}
 
 	return nil
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *ArrayValidator[T]) Is(fn arrCheckFunc[T]) *ArrayValidator[T] {
-	v.checks = append(v.checks, fn)
+func (v *ArrayValidator[T]) Is(fn func([]T) error) *ArrayValidator[T] {
+	v.checks.Append(fn)
 	return v
 }
