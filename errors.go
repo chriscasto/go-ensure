@@ -66,6 +66,10 @@ func ErrorAsValidationErrors(err error) *ValidationErrors {
 // TypeError is kept separate from ValidationError
 // If it's a ValidationErrors error, it gets merged into this one
 func (v *ValidationErrors) Append(err error) {
+	// ignore empty errors
+	if err == nil {
+		return
+	}
 
 	// The most common case is that it's another set of validation errors from upstream
 	ve := &ValidationErrors{}
@@ -89,7 +93,12 @@ func (v *ValidationErrors) Append(err error) {
 
 // Extend adds all the errors collected in one ValidationErrors instance into another
 func (v *ValidationErrors) Extend(errs *ValidationErrors) {
-	// Add type errors from other struct
+	// ignore if nil
+	if errs == nil {
+		return
+	}
+
+	// Add type errors from other struct, if any
 	for _, err := range errs.tErrs {
 		v.tErrs = append(v.tErrs, err)
 	}
