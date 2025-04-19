@@ -8,9 +8,6 @@ import (
 	"reflect"
 )
 
-// mapCheckFunc defines a function that can be used to validate a map
-type mapCheckFunc[K comparable, V any] func(map[K]V) error
-
 // MapValidator contains information and logic used to validate a map with keys of type K and values of type V
 type MapValidator[K comparable, V any] struct {
 	typeStr        string
