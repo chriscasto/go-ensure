@@ -105,7 +105,7 @@ func isOdd(typeStr string, i any) bool {
 type NumberValidator[T NumberType] struct {
 	typeStr     string
 	isFloat     bool
-	checks      []numCheckFunc[T]
+	checks      *validationChecks[T]
 	placeholder string
 }
 
@@ -134,6 +134,7 @@ func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 		typeStr:     reflect.TypeOf(zero).String(),
 		placeholder: ph,
 		isFloat:     isFloat,
+		checks:      newValidationChecks[T](),
 	}
 }
 
@@ -333,34 +334,16 @@ func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.Validat
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
-
 	return v.Validate(value.(T), options...)
 }
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
 func (v *NumberValidator[T]) Validate(n T, options ...*with.ValidationOptions) error {
-	vErrs := newValidationErrors()
-	vOpts := getValidationOptions(options)
-
-	for _, fn := range v.checks {
-		if err := fn(n); err != nil {
-			vErrs.Append(err)
-
-			if !vOpts.CollectAllErrors() {
-				return vErrs
-			}
-		}
-	}
-
-	if vErrs.HasErrors() {
-		return vErrs
-	}
-
-	return nil
+	return v.checks.Evaluate(n, !getValidationOptions(options).CollectAllErrors())
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *NumberValidator[T]) Is(fn numCheckFunc[T]) *NumberValidator[T] {
-	v.checks = append(v.checks, fn)
+func (v *NumberValidator[T]) Is(fn func(T) error) *NumberValidator[T] {
+	v.checks.Append(fn)
 	return v
 }
