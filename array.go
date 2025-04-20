@@ -82,17 +82,11 @@ func (v *ArrayValidator[T]) Each(ev with.Validator[T]) *ArrayValidator[T] {
 			if err := ev.Validate(val, opts); err != nil {
 				return err
 			}
-
 			return nil
 		})
 
 		seq := slices.Values(arrVal)
-
-		if !opts.CollectAllErrors() {
-			return itemSeqChecks.Evaluate(seq, opts)
-		}
-
-		return itemSeqChecks.EvaluateAll(seq, opts)
+		return itemSeqChecks.Evaluate(seq, opts)
 	})
 	return v
 }
@@ -107,19 +101,7 @@ func (v *ArrayValidator[T]) ValidateUntyped(value any, options ...*with.Validati
 
 // Validate applies all lenValChecks against an array and returns an error if any fail
 func (v *ArrayValidator[T]) Validate(arr []T, options ...*with.ValidationOptions) error {
-	vOpts := getValidationOptions(options)
-
-	if vOpts.CollectAllErrors() {
-		if err := v.checks.EvaluateAll(arr, vOpts); err != nil {
-			if err.HasErrors() {
-				return err
-			}
-		}
-	} else {
-		return v.checks.Evaluate(arr, vOpts)
-	}
-
-	return nil
+	return v.checks.Evaluate(arr, getValidationOptions(options))
 }
 
 // Is adds the provided function as a check against any values to be validated

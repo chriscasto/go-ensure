@@ -60,25 +60,25 @@ func (sc *seqChecks[T]) Append(check func(T, *with.ValidationOptions) error) {
 
 // Evaluate runs every checkFunc against a value and returns the first error
 func (sc *seqChecks[T]) Evaluate(seq iter.Seq[T], opts *with.ValidationOptions) error {
-	for v := range seq {
-		if err := sc.c.Evaluate(v, opts); err != nil {
-			return err
+	if opts.CollectAllErrors() {
+		vErrs := newValidationErrors()
+
+		for v := range seq {
+			if err := sc.c.Evaluate(v, opts); err != nil {
+				vErrs.Append(err)
+			}
+		}
+
+		if vErrs.HasErrors() {
+			return vErrs
+		}
+	} else {
+		for v := range seq {
+			if err := sc.c.Evaluate(v, opts); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
-}
-
-// EvaluateAll runs every checkFunc against each value in a sequence and collects
-// all errors returned in a ValidationErrors struct
-func (sc *seqChecks[T]) EvaluateAll(seq iter.Seq[T], opts *with.ValidationOptions) *ValidationErrors {
-	vErrs := newValidationErrors()
-
-	for v := range seq {
-		if err := sc.c.EvaluateAll(v, opts); err != nil {
-			vErrs.Append(err)
-		}
-	}
-
-	return vErrs
 }

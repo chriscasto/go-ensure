@@ -56,19 +56,7 @@ func (mv *MapValidator[K, V]) ValidateUntyped(value any, options ...*with.Valida
 
 // Validate applies all checks against a map and returns an error if any fail
 func (mv *MapValidator[K, V]) Validate(mp map[K]V, options ...*with.ValidationOptions) error {
-	vOpts := getValidationOptions(options)
-
-	if vOpts.CollectAllErrors() {
-		if err := mv.checks.EvaluateAll(mp, vOpts); err != nil {
-			if err.HasErrors() {
-				return err
-			}
-		}
-	} else {
-		return mv.checks.Evaluate(mp, vOpts)
-	}
-
-	return nil
+	return mv.checks.Evaluate(mp, getValidationOptions(options))
 }
 
 // EachKey assigns a Validator to be used for validating map keys
@@ -78,17 +66,11 @@ func (mv *MapValidator[K, V]) EachKey(kv with.Validator[K]) *MapValidator[K, V] 
 			if err := kv.Validate(val, opts); err != nil {
 				return err
 			}
-
 			return nil
 		})
 
 		seq := maps.Keys(mapVal)
-
-		if !opts.CollectAllErrors() {
-			return itemSeqChecks.Evaluate(seq, opts)
-		}
-
-		return itemSeqChecks.EvaluateAll(seq, opts)
+		return itemSeqChecks.Evaluate(seq, opts)
 	})
 	return mv
 }
@@ -100,17 +82,11 @@ func (mv *MapValidator[K, V]) EachValue(vv with.Validator[V]) *MapValidator[K, V
 			if err := vv.Validate(val, opts); err != nil {
 				return err
 			}
-
 			return nil
 		})
 
 		seq := maps.Values(mapVal)
-
-		if !opts.CollectAllErrors() {
-			return itemSeqChecks.Evaluate(seq, opts)
-		}
-
-		return itemSeqChecks.EvaluateAll(seq, opts)
+		return itemSeqChecks.Evaluate(seq, opts)
 	})
 	return mv
 }

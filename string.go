@@ -72,19 +72,7 @@ func (v *StringValidator) ValidateUntyped(value any, options ...*with.Validation
 
 // Validate applies all checks against a string value and returns an error if any fail
 func (v *StringValidator) Validate(str string, options ...*with.ValidationOptions) error {
-	vOpts := getValidationOptions(options)
-
-	if vOpts.CollectAllErrors() {
-		if err := v.checks.EvaluateAll(str, vOpts); err != nil {
-			if err.HasErrors() {
-				return err
-			}
-		}
-	} else {
-		return v.checks.Evaluate(str, vOpts)
-	}
-
-	return nil
+	return v.checks.Evaluate(str, getValidationOptions(options))
 }
 
 // Equals adds a validation check that returns an error if the target string

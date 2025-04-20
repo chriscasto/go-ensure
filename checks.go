@@ -41,32 +41,31 @@ func (vc *valChecks[T]) Count() int {
 	return len(vc.c)
 }
 
-// Evaluate runs every checkFunc against a value and returns the first error
+// Evaluate runs every checkFunc against a value and returns any errors
 func (vc *valChecks[T]) Evaluate(target T, opts *with.ValidationOptions) error {
-	// handle stored lenValChecks first
-	for _, fn := range vc.c {
-		if err := fn(target, opts); err != nil {
-			return err
+	if opts.CollectAllErrors() {
+		vErrs := newValidationErrors()
+
+		for _, fn := range vc.c {
+			if err := fn(target, opts); err != nil {
+				vErrs.Append(err)
+			}
+		}
+
+		if vErrs.HasErrors() {
+			return vErrs
+		}
+
+		return nil
+	} else {
+		for _, fn := range vc.c {
+			if err := fn(target, opts); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
-}
-
-// EvaluateAll runs every checkFunc against a value and collects all errors returned in a ValidationErrors struct
-func (vc *valChecks[T]) EvaluateAll(target T, opts *with.ValidationOptions) *ValidationErrors {
-	vErrs := newValidationErrors()
-
-	// handle stored lenValChecks first
-	for _, fn := range vc.c {
-		if err := fn(target, opts); err != nil {
-			vErrs.Append(err)
-		}
-	}
-
-	// always return vErrs, even if none are added
-	// nil lenValChecks against interfaces in Go are stupidly error-prone, so need this to avoid segfaults
-	return vErrs
 }
 
 // lenChecks is a wrapper around valChecks that adds a set of checks around the length of a value
@@ -88,10 +87,6 @@ func (lc *lenChecks[K, V, T]) addLenCheck(lenCheck func(int, *with.ValidationOpt
 	// if this is the first length check we're adding, also add a val check to the main list to eval the len checks
 	if lc.lenChecks.Count() == 0 {
 		lc.parent.Append(func(val T, opts *with.ValidationOptions) error {
-			if opts.CollectAllErrors() {
-				return lc.lenChecks.EvaluateAll(len(val), opts)
-			}
-
 			return lc.lenChecks.Evaluate(len(val), opts)
 		})
 	}

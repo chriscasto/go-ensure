@@ -336,16 +336,7 @@ func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.Validat
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
 func (v *NumberValidator[T]) Validate(n T, options ...*with.ValidationOptions) error {
-	vOpts := getValidationOptions(options)
-
-	if getValidationOptions(options).CollectAllErrors() {
-		if err := v.checks.EvaluateAll(n, vOpts); err != nil {
-			if err.HasErrors() {
-				return err
-			}
-		}
-	}
-	return v.checks.Evaluate(n, vOpts)
+	return v.checks.Evaluate(n, getValidationOptions(options))
 }
 
 // Is adds the provided function as a check against any values to be validated
