@@ -1,10 +1,13 @@
 package ensure
 
 import (
+	"errors"
 	"fmt"
 	"github.com/chriscasto/go-ensure/with"
 	"reflect"
 )
+
+var RequiredPointerMissingErr = errors.New("required value cannot be missing")
 
 type PointerValidator[T any] struct {
 	parent   with.Validator[T]
@@ -46,7 +49,7 @@ func (v *PointerValidator[T]) ValidateUntyped(i any, options ...*with.Validation
 
 	if refVal.IsNil() {
 		if !v.optional {
-			return NewValidationError("required value cannot be missing")
+			return RequiredPointerMissingErr
 		}
 		return nil
 	}
@@ -58,7 +61,7 @@ func (v *PointerValidator[T]) ValidateUntyped(i any, options ...*with.Validation
 func (v *PointerValidator[T]) Validate(i *T, options ...*with.ValidationOptions) error {
 	if i == nil {
 		if !v.optional {
-			return NewValidationError("required value cannot be missing")
+			return RequiredPointerMissingErr
 		}
 		return nil
 	}
