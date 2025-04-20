@@ -34,13 +34,18 @@ const (
 
 // StringValidator contains information and logic used to validate a string
 type StringValidator struct {
-	lenValidator *NumberValidator[int]
-	checks       *valChecks[string] //[]strCheckFunc
+	lChecks *lenChecks[string, string, string]
+	checks  *valChecks[string]
 }
 
 // String returns an initialized StringValidator
 func String() *StringValidator {
-	return &StringValidator{checks: newValidationChecks[string]()}
+	vChecks := newValChecks[string]()
+
+	return &StringValidator{
+		lChecks: newLenChecks[string, string, string](vChecks),
+		checks:  vChecks,
+	}
 }
 
 // Type returns the string "string"
@@ -50,7 +55,7 @@ func (v *StringValidator) Type() string {
 
 // HasLengthWhere adds a NumberValidator for validating the length of the string
 func (v *StringValidator) HasLengthWhere(nv *NumberValidator[int]) *StringValidator {
-	v.lenValidator = nv
+	v.lChecks.AddHasLengthWhere(nv)
 	return v
 }
 
@@ -69,26 +74,14 @@ func (v *StringValidator) ValidateUntyped(value any, options ...*with.Validation
 func (v *StringValidator) Validate(str string, options ...*with.ValidationOptions) error {
 	vOpts := getValidationOptions(options)
 
-	var lenCheck func(string) error
-
-	// if there is a length validator, add another check to validate length with current opts
-	if v.lenValidator != nil {
-		lenCheck = func(strVal string) error {
-			if err := v.lenValidator.Validate(len(strVal), vOpts); err != nil {
-				return err
-			}
-			return nil
-		}
-	}
-
 	if vOpts.CollectAllErrors() {
-		if err := v.checks.EvaluateAll(str, lenCheck); err != nil {
+		if err := v.checks.EvaluateAll(str, vOpts); err != nil {
 			if err.HasErrors() {
 				return err
 			}
 		}
 	} else {
-		return v.checks.Evaluate(str, lenCheck)
+		return v.checks.Evaluate(str, vOpts)
 	}
 
 	return nil
@@ -201,23 +194,15 @@ func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
 // IsEmpty adds a validation check that returns an error if the target string is not empty
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
 func (v *StringValidator) IsEmpty() *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) != 0 {
-			return errors.New(`string must be empty`)
-		}
-		return nil
-	})
+	v.lChecks.AddIsEmpty()
+	return v
 }
 
 // IsNotEmpty adds a validation check that returns an error if the target string is empty
 // This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (v *StringValidator) IsNotEmpty() *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) == 0 {
-			return errors.New(`string must not be empty`)
-		}
-		return nil
-	})
+	v.lChecks.AddIsNotEmpty()
+	return v
 }
 
 // IsOneOf adds a validation check that returns an error if the target string
@@ -259,40 +244,22 @@ func (v *StringValidator) IsNotOneOf(values []string) *StringValidator {
 // IsLongerThan adds a validation check that returns an error if the target
 // string length is less than or equal to the specified value
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) <= l {
-			return errors.New(
-				fmt.Sprintf(`string length must be greater than %d`, l),
-			)
-		}
-		return nil
-	})
+	v.lChecks.AddIsLongerThan(l)
+	return v
 }
 
 // IsShorterThan adds a validation check that returns an error if the target
 // string length is greater than or equal to the specified value
 func (v *StringValidator) IsShorterThan(l int) *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) >= l {
-			return errors.New(
-				fmt.Sprintf(`string length must be less than %d`, l),
-			)
-		}
-		return nil
-	})
+	v.lChecks.AddIsShorterThan(l)
+	return v
 }
 
 // HasLength adds a check that returns an error if the length of the string does not equal the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (v *StringValidator) HasLength(l int) *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) != l {
-			return errors.New(
-				fmt.Sprintf(`string must have a length of exactly %d`, l),
-			)
-		}
-		return nil
-	})
+	v.lChecks.AddHasLength(l)
+	return v
 }
 
 // Matches adds a validation check that returns an error if the target
@@ -313,6 +280,8 @@ func (v *StringValidator) Matches(pattern string) *StringValidator {
 
 // Is adds the provided function as a check against any values to be validated
 func (v *StringValidator) Is(fn func(string) error) *StringValidator {
-	v.checks.Append(fn)
+	v.checks.Append(func(val string, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return v
 }

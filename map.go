@@ -1,8 +1,6 @@
 package ensure
 
 import (
-	"errors"
-	"fmt"
 	"github.com/chriscasto/go-ensure/with"
 	"maps"
 	"reflect"
@@ -13,6 +11,7 @@ type MapValidator[K comparable, V any] struct {
 	typeStr        string
 	keyTypeStr     string
 	valueTypeStr   string
+	lChecks        *lenChecks[K, V, map[K]V]
 	checks         *valChecks[map[K]V]
 	lenValidator   *NumberValidator[int]
 	keyValidator   with.Validator[K]
@@ -25,11 +24,14 @@ func Map[K comparable, V any]() *MapValidator[K, V] {
 	var keyZero K
 	var valZero V
 
+	vChecks := newValChecks[map[K]V]()
+
 	return &MapValidator[K, V]{
 		typeStr:      reflect.TypeOf(mapZero).String(),
 		keyTypeStr:   reflect.TypeOf(keyZero).String(),
 		valueTypeStr: reflect.TypeOf(valZero).String(),
-		checks:       newValidationChecks[map[K]V](),
+		lChecks:      newLenChecks[K, V, map[K]V](vChecks),
+		checks:       vChecks,
 	}
 }
 
@@ -40,7 +42,7 @@ func (mv *MapValidator[K, V]) Type() string {
 
 // HasLengthWhere adds a NumberValidator for validating the length of the string
 func (mv *MapValidator[K, V]) HasLengthWhere(nv *NumberValidator[int]) *MapValidator[K, V] {
-	mv.lenValidator = nv
+	mv.lChecks.AddHasLengthWhere(nv)
 	return mv
 }
 
@@ -55,73 +57,15 @@ func (mv *MapValidator[K, V]) ValidateUntyped(value any, options ...*with.Valida
 // Validate applies all checks against a map and returns an error if any fail
 func (mv *MapValidator[K, V]) Validate(mp map[K]V, options ...*with.ValidationOptions) error {
 	vOpts := getValidationOptions(options)
-	abortOnErr := !vOpts.CollectAllErrors()
-
-	var lenCheck func(map[K]V) error
-	// key and val checks have to be done separately to preserve all errors when requested
-	var keyCheck func(map[K]V) error
-	var valCheck func(map[K]V) error
-
-	// if there is a length validator, add another check to validate length with current opts
-	if mv.lenValidator != nil {
-		lenCheck = func(mapVal map[K]V) error {
-			if err := mv.lenValidator.Validate(len(mapVal), vOpts); err != nil {
-				return err
-			}
-			return nil
-		}
-	}
-
-	// if we have a key validator, add a check for each item in the map
-	if mv.keyValidator != nil {
-		keyCheck = func(mapVal map[K]V) error {
-			itemSeqChecks := newSeqChecks[K](func(key K) error {
-				if err := mv.keyValidator.Validate(key, vOpts); err != nil {
-					return err
-				}
-
-				return nil
-			})
-
-			seq := maps.Keys(mapVal)
-
-			if abortOnErr {
-				return itemSeqChecks.Evaluate(seq)
-			}
-
-			return itemSeqChecks.EvaluateAll(seq)
-		}
-	}
-
-	// if we have a value validator, add a check for each item in the map
-	if mv.valueValidator != nil {
-		valCheck = func(mapVal map[K]V) error {
-			itemSeqChecks := newSeqChecks[V](func(val V) error {
-				if err := mv.valueValidator.Validate(val, vOpts); err != nil {
-					return err
-				}
-
-				return nil
-			})
-
-			seq := maps.Values(mapVal)
-
-			if abortOnErr {
-				return itemSeqChecks.Evaluate(seq)
-			}
-
-			return itemSeqChecks.EvaluateAll(seq)
-		}
-	}
 
 	if vOpts.CollectAllErrors() {
-		if err := mv.checks.EvaluateAll(mp, lenCheck, keyCheck, valCheck); err != nil {
+		if err := mv.checks.EvaluateAll(mp, vOpts); err != nil {
 			if err.HasErrors() {
 				return err
 			}
 		}
 	} else {
-		return mv.checks.Evaluate(mp, lenCheck, keyCheck, valCheck)
+		return mv.checks.Evaluate(mp, vOpts)
 	}
 
 	return nil
@@ -129,84 +73,87 @@ func (mv *MapValidator[K, V]) Validate(mp map[K]V, options ...*with.ValidationOp
 
 // EachKey assigns a Validator to be used for validating map keys
 func (mv *MapValidator[K, V]) EachKey(kv with.Validator[K]) *MapValidator[K, V] {
-	mv.keyValidator = kv
+	mv.checks.Append(func(mapVal map[K]V, opts *with.ValidationOptions) error {
+		itemSeqChecks := newSeqChecks[K](func(val K, opts *with.ValidationOptions) error {
+			if err := kv.Validate(val, opts); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		seq := maps.Keys(mapVal)
+
+		if !opts.CollectAllErrors() {
+			return itemSeqChecks.Evaluate(seq, opts)
+		}
+
+		return itemSeqChecks.EvaluateAll(seq, opts)
+	})
 	return mv
 }
 
 // EachValue assigns a Validator to be used for validating map values
 func (mv *MapValidator[K, V]) EachValue(vv with.Validator[V]) *MapValidator[K, V] {
-	mv.valueValidator = vv
+	mv.checks.Append(func(mapVal map[K]V, opts *with.ValidationOptions) error {
+		itemSeqChecks := newSeqChecks[V](func(val V, opts *with.ValidationOptions) error {
+			if err := vv.Validate(val, opts); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		seq := maps.Values(mapVal)
+
+		if !opts.CollectAllErrors() {
+			return itemSeqChecks.Evaluate(seq, opts)
+		}
+
+		return itemSeqChecks.EvaluateAll(seq, opts)
+	})
 	return mv
 }
 
 // IsEmpty adds a check that returns an error if the length of the map is not 0
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
 func (mv *MapValidator[K, V]) IsEmpty() *MapValidator[K, V] {
-	return mv.Is(func(mapVal map[K]V) error {
-		if len(mapVal) != 0 {
-			return errors.New(`map must be empty`)
-		}
-
-		return nil
-	})
+	mv.lChecks.AddIsEmpty()
+	return mv
 }
 
 // IsNotEmpty adds a check that returns an error if the length of the map is 0
 // This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (mv *MapValidator[K, V]) IsNotEmpty() *MapValidator[K, V] {
-	return mv.Is(func(mapVal map[K]V) error {
-		if len(mapVal) == 0 {
-			return errors.New(`map must not be empty`)
-		}
-
-		return nil
-	})
+	mv.lChecks.AddIsNotEmpty()
+	return mv
 }
 
 // HasCount adds a check that returns an error if the length of the map is not the passed value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (mv *MapValidator[K, V]) HasCount(l int) *MapValidator[K, V] {
-	return mv.Is(func(mapVal map[K]V) error {
-		if len(mapVal) != l {
-			return errors.New(
-				fmt.Sprintf(`map length must equal %d; got %d`, l, len(mapVal)),
-			)
-		}
-
-		return nil
-	})
+	mv.lChecks.AddHasLength(l)
+	return mv
 }
 
 // HasMoreThan adds a check that returns an error if the length of the map is less than the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().IsGreaterThan(l))
 func (mv *MapValidator[K, V]) HasMoreThan(l int) *MapValidator[K, V] {
-	return mv.Is(func(mapVal map[K]V) error {
-		if len(mapVal) <= l {
-			return errors.New(
-				fmt.Sprintf(`map must have a length longer than %d; got %d`, l, len(mapVal)),
-			)
-		}
-
-		return nil
-	})
+	mv.lChecks.AddIsLongerThan(l)
+	return mv
 }
 
 // HasFewerThan adds a check that returns an error if the length of the map is more than the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().IsLessThan(l))
 func (mv *MapValidator[K, V]) HasFewerThan(l int) *MapValidator[K, V] {
-	return mv.Is(func(mapVal map[K]V) error {
-		if len(mapVal) >= l {
-			return errors.New(
-				fmt.Sprintf(`map must have a length less than %d; got %d`, l, len(mapVal)),
-			)
-		}
-
-		return nil
-	})
+	mv.lChecks.AddIsShorterThan(l)
+	return mv
 }
 
 // Is adds the provided function as a check against any values to be validated
 func (mv *MapValidator[K, V]) Is(fn func(map[K]V) error) *MapValidator[K, V] {
-	mv.checks.Append(fn)
+	mv.checks.Append(func(val map[K]V, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return mv
 }

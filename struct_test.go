@@ -718,8 +718,6 @@ func TestStructValidator_Is(t *testing.T) {
 }
 
 func TestStructValidator_MultiError(t *testing.T) {
-	type exampleMap = map[string]int
-
 	mapTestCases := multiErrTestCases[testStruct]{
 		"empty": {testStruct{}, 1},                     // fails contains "o"
 		"one":   {testStruct{Int: 1, Str: "one"}, 2},   // fails even, is

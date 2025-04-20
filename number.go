@@ -131,7 +131,7 @@ func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 		typeStr:     reflect.TypeOf(zero).String(),
 		placeholder: ph,
 		isFloat:     isFloat,
-		checks:      newValidationChecks[T](),
+		checks:      newValChecks[T](),
 	}
 }
 
@@ -336,18 +336,22 @@ func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.Validat
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
 func (v *NumberValidator[T]) Validate(n T, options ...*with.ValidationOptions) error {
+	vOpts := getValidationOptions(options)
+
 	if getValidationOptions(options).CollectAllErrors() {
-		if err := v.checks.EvaluateAll(n); err != nil {
+		if err := v.checks.EvaluateAll(n, vOpts); err != nil {
 			if err.HasErrors() {
 				return err
 			}
 		}
 	}
-	return v.checks.Evaluate(n)
+	return v.checks.Evaluate(n, vOpts)
 }
 
 // Is adds the provided function as a check against any values to be validated
 func (v *NumberValidator[T]) Is(fn func(T) error) *NumberValidator[T] {
-	v.checks.Append(fn)
+	v.checks.Append(func(val T, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return v
 }
