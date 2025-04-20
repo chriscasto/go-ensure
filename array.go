@@ -99,7 +99,7 @@ func (v *ArrayValidator[T]) ValidateUntyped(value any, options ...*with.Validati
 	return v.Validate(value.([]T), options...)
 }
 
-// Validate applies all lenValChecks against an array and returns an error if any fail
+// Validate applies all checks against an array and returns an error if any fail
 func (v *ArrayValidator[T]) Validate(arr []T, options ...*with.ValidationOptions) error {
 	return v.checks.Evaluate(arr, getValidationOptions(options))
 }
