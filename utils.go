@@ -53,11 +53,6 @@ func newSeqChecks[T any](initChecks ...checkFunc[T]) *seqChecks[T] {
 	}
 }
 
-// Append adds another checkFunc to a seqChecks collection
-func (sc *seqChecks[T]) Append(check func(T, *with.ValidationOptions) error) {
-	sc.c.Append(check)
-}
-
 // Evaluate runs every checkFunc against a value and returns the first error
 func (sc *seqChecks[T]) Evaluate(seq iter.Seq[T], opts *with.ValidationOptions) error {
 	if opts.CollectAllErrors() {
