@@ -150,6 +150,34 @@ func TestArrayValidator_Each(t *testing.T) {
 	)
 }
 
+func TestArrayValidator_Is(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":      {[]int{}, true},
+		"one":        {[]int{1}, true},
+		"seq":        {[]int{1, 2}, false},
+		"twos":       {[]int{2, 4}, true},
+		"just two":   {[]int{2}, false},
+		"threes":     {[]int{3, 6, 9}, true},
+		"two threes": {[]int{3, 6}, false},
+	}
+
+	testCases.run(
+		t,
+		ensure.Array[int]().Is(func(ints []int) error {
+			l := len(ints)
+
+			for i, n := range ints {
+				if (i+1)*l != n {
+					return fmt.Errorf("value (%d) must be an increasing increment of array length (%d)", n, l)
+				}
+			}
+
+			return nil
+		}),
+		"Is()",
+	)
+}
+
 func TestArrayValidator_MultiError(t *testing.T) {
 	type exampleArr = []int
 
