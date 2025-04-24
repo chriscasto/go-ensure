@@ -193,6 +193,43 @@ func TestMapValidator_EachValue(t *testing.T) {
 	testCases.run(t, validMap, "EachValue()")
 }
 
+func TestMapValidator_Is(t *testing.T) {
+	testCases := mapTestCases[string, int]{
+		"one good": {
+			vals: map[string]int{
+				"abcd": 4,
+			},
+			willPass: true,
+		},
+		"all good": {
+			vals: map[string]int{
+				"abc":  3,
+				"wxyz": 4,
+			},
+			willPass: true,
+		},
+		"one bad": {
+			vals: map[string]int{
+				"abc": 4,
+				"a":   1,
+			},
+			willPass: false,
+		},
+	}
+
+	validMap := ensure.Map[string, int]().Is(func(m map[string]int) error {
+		for k, v := range m {
+			if len(k) != v {
+				return fmt.Errorf("key length (%d) must equal value (%d)", len(k), v)
+			}
+		}
+
+		return nil
+	})
+
+	testCases.run(t, validMap, "Is()")
+}
+
 func TestMapValidator_MultiError(t *testing.T) {
 	type exampleMap = map[string]int
 
