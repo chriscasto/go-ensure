@@ -72,7 +72,46 @@ func TestValidationErrors_Errors(t *testing.T) {
 	})
 }
 
+func TestValidationErrors_Append(t *testing.T) {
+	// most Append method statements are covered in the Extend tests below
+	vErr1 := ensure.NewValidationErrors()
+	vErr1.Append(nil)
+
+	if vErr1.HasErrors() {
+		t.Errorf(`expected no errors; got some`)
+	}
+
+	vErr2 := ensure.NewValidationErrors()
+	vErr2.Append(errors.New("normal err 1"))
+
+	if !vErr2.HasValidationErrors() {
+		t.Errorf(`expected validation errors; got none`)
+	}
+
+	if vErr2.HasTypeErrors() {
+		t.Errorf(`expected no type errors; got some`)
+	}
+
+	vErr3 := ensure.NewValidationErrors()
+	vErr3.Append(ensure.NewTypeError("type err 1"))
+
+	if vErr3.HasValidationErrors() {
+		t.Errorf(`expected no validation errors; got some`)
+	}
+
+	if !vErr3.HasTypeErrors() {
+		t.Errorf(`expected type errors; got none`)
+	}
+}
+
 func TestValidationErrors_Extend(t *testing.T) {
+	nilErr := ensure.NewValidationErrors()
+	nilErr.Extend(nil)
+
+	if nilErr.HasErrors() {
+		t.Errorf(`expected no errors`)
+	}
+
 	vErr1 := ensure.NewValidationErrors()
 	vErr1.Append(errors.New("normal err 1"))
 	vErr1.Append(errors.New("normal err 2"))
