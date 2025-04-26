@@ -6,9 +6,6 @@ import (
 	"reflect"
 )
 
-// structCheckFunc defines a function that can be used to validate some aspect of a struct
-type structCheckFunc[T any] func(T) error
-
 // validMethod contains information about a method that needs to be called during validation
 type validMethod struct {
 	ref         *reflect.Method
@@ -27,7 +24,7 @@ type validField struct {
 // StructValidator contains information and logic used to validate a struct of type T
 type StructValidator[T any] struct {
 	refVal  reflect.Value
-	checks  []structCheckFunc[T]
+	checks  *valChecks[T]
 	fields  []*validField
 	getters []*validMethod
 }
@@ -40,13 +37,14 @@ func Struct[T any]() *StructValidator[T] {
 	ref := reflect.ValueOf(zero)
 
 	if ref.Kind() != reflect.Struct {
-		panic("StructValidator type must be a struct")
+		panic("StructValidator expects a struct type")
 	}
 
 	return &StructValidator[T]{
 		refVal:  ref,
 		fields:  []*validField{},
 		getters: []*validMethod{},
+		checks:  newValChecks[T](),
 	}
 }
 
@@ -56,8 +54,10 @@ func (sv *StructValidator[T]) Type() string {
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (sv *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
-	sv.checks = append(sv.checks, fn)
+func (sv *StructValidator[T]) Is(fn func(T) error) *StructValidator[T] {
+	sv.checks.Append(func(val T, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return sv
 }
 
@@ -233,13 +233,11 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T, options ..
 	vErrs := newValidationErrors()
 	vOpts := getValidationOptions(options)
 
-	for _, check := range sv.checks {
-		if err := check(s); err != nil {
+	if err := sv.checks.Evaluate(s, vOpts); err != nil {
+		if vOpts.CollectAllErrors() {
 			vErrs.Append(err)
-
-			if !vOpts.CollectAllErrors() {
-				return vErrs
-			}
+		} else {
+			return err
 		}
 	}
 
