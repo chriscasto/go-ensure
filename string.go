@@ -34,17 +34,13 @@ const (
 
 // StringValidator contains information and logic used to validate a string
 type StringValidator struct {
-	lChecks *lenChecks[string, string, string]
-	checks  *valChecks[string]
+	checks *lenChecks[string, string, string]
 }
 
 // String returns an initialized StringValidator
 func String() *StringValidator {
-	vChecks := newValChecks[string]()
-
 	return &StringValidator{
-		lChecks: newLenChecks[string, string, string](vChecks),
-		checks:  vChecks,
+		checks: newLenChecks[string, string, string](),
 	}
 }
 
@@ -55,7 +51,7 @@ func (v *StringValidator) Type() string {
 
 // HasLengthWhere adds a NumberValidator for validating the length of the string
 func (v *StringValidator) HasLengthWhere(nv *NumberValidator[int]) *StringValidator {
-	v.lChecks.AddHasLengthWhere(nv)
+	v.checks.AddHasLengthWhere(nv)
 	return v
 }
 
@@ -182,14 +178,14 @@ func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
 // IsEmpty adds a validation check that returns an error if the target string is not empty
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
 func (v *StringValidator) IsEmpty() *StringValidator {
-	v.lChecks.AddIsEmpty()
+	v.checks.AddIsEmpty()
 	return v
 }
 
 // IsNotEmpty adds a validation check that returns an error if the target string is empty
 // This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (v *StringValidator) IsNotEmpty() *StringValidator {
-	v.lChecks.AddIsNotEmpty()
+	v.checks.AddIsNotEmpty()
 	return v
 }
 
@@ -232,21 +228,21 @@ func (v *StringValidator) IsNotOneOf(values []string) *StringValidator {
 // IsLongerThan adds a validation check that returns an error if the target
 // string length is less than or equal to the specified value
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
-	v.lChecks.AddIsLongerThan(l)
+	v.checks.AddIsLongerThan(l)
 	return v
 }
 
 // IsShorterThan adds a validation check that returns an error if the target
 // string length is greater than or equal to the specified value
 func (v *StringValidator) IsShorterThan(l int) *StringValidator {
-	v.lChecks.AddIsShorterThan(l)
+	v.checks.AddIsShorterThan(l)
 	return v
 }
 
 // HasLength adds a check that returns an error if the length of the string does not equal the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (v *StringValidator) HasLength(l int) *StringValidator {
-	v.lChecks.AddHasLength(l)
+	v.checks.AddHasLength(l)
 	return v
 }
 

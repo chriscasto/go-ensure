@@ -3,7 +3,6 @@ package ensure
 import (
 	"fmt"
 	"github.com/chriscasto/go-ensure/with"
-	"iter"
 	"reflect"
 )
 
@@ -39,41 +38,4 @@ func getValidationOptions(options []*with.ValidationOptions) *with.ValidationOpt
 
 	// default options
 	return with.Options()
-}
-
-// seqChecks is a collection of checkFunc functions to be valuated against a sequence
-type seqChecks[T any] struct {
-	c *valChecks[T]
-}
-
-// newSeqChecks creates a new seqChecks collection with an optional initial set of checkFunc functions
-func newSeqChecks[T any](initChecks ...checkFunc[T]) *seqChecks[T] {
-	return &seqChecks[T]{
-		c: newValChecks[T](initChecks...),
-	}
-}
-
-// Evaluate runs every checkFunc against a value and returns the first error
-func (sc *seqChecks[T]) Evaluate(seq iter.Seq[T], opts *with.ValidationOptions) error {
-	if opts.CollectAllErrors() {
-		vErrs := newValidationErrors()
-
-		for v := range seq {
-			if err := sc.c.Evaluate(v, opts); err != nil {
-				vErrs.Append(err)
-			}
-		}
-
-		if vErrs.HasErrors() {
-			return vErrs
-		}
-	} else {
-		for v := range seq {
-			if err := sc.c.Evaluate(v, opts); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
