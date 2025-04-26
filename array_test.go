@@ -150,6 +150,53 @@ func TestArrayValidator_Each(t *testing.T) {
 	)
 }
 
+func TestArrayValidator_Is(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":      {[]int{}, true},
+		"one":        {[]int{1}, true},
+		"seq":        {[]int{1, 2}, false},
+		"twos":       {[]int{2, 4}, true},
+		"just two":   {[]int{2}, false},
+		"threes":     {[]int{3, 6, 9}, true},
+		"two threes": {[]int{3, 6}, false},
+	}
+
+	testCases.run(
+		t,
+		ensure.Array[int]().Is(func(ints []int) error {
+			l := len(ints)
+
+			for i, n := range ints {
+				if (i+1)*l != n {
+					return fmt.Errorf("value (%d) must be an increasing increment of array length (%d)", n, l)
+				}
+			}
+
+			return nil
+		}),
+		"Is()",
+	)
+}
+
+func TestArrayValidator_MultiError(t *testing.T) {
+	type exampleArr = []int
+
+	arrTestCases := multiErrTestCases[exampleArr]{
+		"empty": {exampleArr{}, 1},        // fails not empty
+		"one":   {exampleArr{1}, 0},       // fails none
+		"two":   {exampleArr{1, 2}, 1},    // fails odd
+		"three": {exampleArr{1, 2, 3}, 2}, // fails fewer than 3, odd
+	}
+
+	arrTestCases.run(t,
+		ensure.Array[int]().IsNotEmpty().HasLengthWhere(
+			ensure.Length().IsLessThan(3),
+		).Each(
+			ensure.Number[int]().IsOdd(),
+		),
+	)
+}
+
 func TestArrayValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.Array[bool]())

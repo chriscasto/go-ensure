@@ -3,6 +3,7 @@ package ensure
 import (
 	"errors"
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"golang.org/x/exp/constraints"
 	"math"
 	"reflect"
@@ -13,9 +14,6 @@ import (
 type NumberType interface {
 	constraints.Integer | constraints.Float
 }
-
-// numCheckFunc is the type of function used for validating number types
-type numCheckFunc[T NumberType] func(T) error
 
 // isIntEven returns true if an int value can be considered even
 func isIntEven(typeStr string, i any) bool {
@@ -104,7 +102,7 @@ func isOdd(typeStr string, i any) bool {
 type NumberValidator[T NumberType] struct {
 	typeStr     string
 	isFloat     bool
-	checks      []numCheckFunc[T]
+	checks      *valChecks[T]
 	placeholder string
 }
 
@@ -133,6 +131,7 @@ func Number[T constraints.Integer | constraints.Float]() *NumberValidator[T] {
 		typeStr:     reflect.TypeOf(zero).String(),
 		placeholder: ph,
 		isFloat:     isFloat,
+		checks:      newValChecks[T](),
 	}
 }
 
@@ -328,27 +327,22 @@ func (v *NumberValidator[T]) IsNotOneOf(values []T) *NumberValidator[T] {
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *NumberValidator[T]) ValidateUntyped(value any) error {
+func (v *NumberValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	if err := testType(value, v.typeStr); err != nil {
 		return err
 	}
-
-	return v.Validate(value.(T))
+	return v.Validate(value.(T), options...)
 }
 
 // Validate applies all checks against a number of the expected type and returns an error if any fail
-func (v *NumberValidator[T]) Validate(n T) error {
-	for _, fn := range v.checks {
-		if err := fn(n); err != nil {
-			return err
-		}
-	}
-
-	return nil
+func (v *NumberValidator[T]) Validate(n T, options ...*with.ValidationOptions) error {
+	return v.checks.Evaluate(n, getValidationOptions(options))
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *NumberValidator[T]) Is(fn numCheckFunc[T]) *NumberValidator[T] {
-	v.checks = append(v.checks, fn)
+func (v *NumberValidator[T]) Is(fn func(T) error) *NumberValidator[T] {
+	v.checks.Append(func(val T, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return v
 }

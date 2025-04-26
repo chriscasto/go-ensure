@@ -6,7 +6,7 @@ type UntypedValidator interface {
 	Type() string
 
 	// ValidateUntyped attempts to validate a value of unknown type
-	ValidateUntyped(any) error
+	ValidateUntyped(any, ...*ValidationOptions) error
 }
 
 // Validator can validate against a specified type
@@ -15,7 +15,7 @@ type Validator[T any] interface {
 	UntypedValidator
 
 	// Validate runs any checks against the passed value
-	Validate(T) error
+	Validate(T, ...*ValidationOptions) error
 }
 
 // Validators is a helper type for defining field and method validators for structs

@@ -6,9 +6,6 @@ import (
 	"reflect"
 )
 
-// structCheckFunc defines a function that can be used to validate some aspect of a struct
-type structCheckFunc[T any] func(T) error
-
 // validMethod contains information about a method that needs to be called during validation
 type validMethod struct {
 	ref         *reflect.Method
@@ -27,7 +24,7 @@ type validField struct {
 // StructValidator contains information and logic used to validate a struct of type T
 type StructValidator[T any] struct {
 	refVal  reflect.Value
-	checks  []structCheckFunc[T]
+	checks  *valChecks[T]
 	fields  []*validField
 	getters []*validMethod
 }
@@ -40,13 +37,14 @@ func Struct[T any]() *StructValidator[T] {
 	ref := reflect.ValueOf(zero)
 
 	if ref.Kind() != reflect.Struct {
-		panic("StructValidator type must be a struct")
+		panic("StructValidator expects a struct type")
 	}
 
 	return &StructValidator[T]{
 		refVal:  ref,
 		fields:  []*validField{},
 		getters: []*validMethod{},
+		checks:  newValChecks[T](),
 	}
 }
 
@@ -56,8 +54,10 @@ func (sv *StructValidator[T]) Type() string {
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (sv *StructValidator[T]) Is(fn structCheckFunc[T]) *StructValidator[T] {
-	sv.checks = append(sv.checks, fn)
+func (sv *StructValidator[T]) Is(fn func(T) error) *StructValidator[T] {
+	sv.checks.Append(func(val T, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return sv
 }
 
@@ -229,9 +229,14 @@ func (sv *StructValidator[T]) HasGetters(validators with.Validators, displayName
 }
 
 // validateStruct is a helper method that does the actual validation used by Validate and ValidateStrict
-func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
-	for _, check := range sv.checks {
-		if err := check(s); err != nil {
+func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T, options ...*with.ValidationOptions) error {
+	vErrs := newValidationErrors()
+	vOpts := getValidationOptions(options)
+
+	if err := sv.checks.Evaluate(s, vOpts); err != nil {
+		if vOpts.CollectAllErrors() {
+			vErrs.Append(err)
+		} else {
 			return err
 		}
 	}
@@ -239,8 +244,12 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 	// Validate fields
 	for _, field := range sv.fields {
 		fieldVal := sRef.FieldByName(field.name)
-		if err := field.validator.ValidateUntyped(fieldVal.Interface()); err != nil {
-			return NewValidationError(fmt.Sprintf("%s: %s", field.displayName, err.Error()))
+		if err := field.validator.ValidateUntyped(fieldVal.Interface(), vOpts); err != nil {
+			vErrs.Append(fmt.Errorf("%s: %s", field.displayName, err.Error()))
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
 	}
 
@@ -258,16 +267,24 @@ func (sv *StructValidator[T]) validateStruct(sRef reflect.Value, s T) error {
 		result := method.ref.Func.Call([]reflect.Value{receiver})
 		retVal := result[0].Interface()
 
-		if err := method.validator.ValidateUntyped(retVal); err != nil {
-			return NewValidationError(fmt.Sprintf("%s: %s", method.displayName, err.Error()))
+		if err := method.validator.ValidateUntyped(retVal, vOpts); err != nil {
+			vErrs.Append(fmt.Errorf("%s: %s", method.displayName, err.Error()))
+
+			if !vOpts.CollectAllErrors() {
+				return vErrs
+			}
 		}
+	}
+
+	if vErrs.HasErrors() {
+		return vErrs
 	}
 
 	return nil
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (sv *StructValidator[T]) ValidateUntyped(value any) error {
+func (sv *StructValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	sRef := reflect.ValueOf(value)
 	sRefType := sRef.Type()
 
@@ -275,11 +292,11 @@ func (sv *StructValidator[T]) ValidateUntyped(value any) error {
 		return newTypeErrorFromTypes(sv.refVal.Type().String(), sRefType.String())
 	}
 
-	return sv.validateStruct(sRef, value.(T))
+	return sv.validateStruct(sRef, value.(T), options...)
 }
 
 // Validate applies all checks against a struct of the expected type and returns an error if any fail
-func (sv *StructValidator[T]) Validate(s T) error {
+func (sv *StructValidator[T]) Validate(s T, options ...*with.ValidationOptions) error {
 	sRef := reflect.ValueOf(s)
-	return sv.validateStruct(sRef, s)
+	return sv.validateStruct(sRef, s, options...)
 }

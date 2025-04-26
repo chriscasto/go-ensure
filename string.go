@@ -3,6 +3,7 @@ package ensure
 import (
 	"errors"
 	"fmt"
+	"github.com/chriscasto/go-ensure/with"
 	"regexp"
 	"strings"
 )
@@ -31,17 +32,16 @@ const (
 	Sha512 = `^[0-9a-f]{128}$`
 )
 
-type strCheckFunc func(string) error
-
 // StringValidator contains information and logic used to validate a string
 type StringValidator struct {
-	lenValidator *NumberValidator[int]
-	checks       []strCheckFunc
+	checks *lenChecks[string, string, string]
 }
 
 // String returns an initialized StringValidator
 func String() *StringValidator {
-	return &StringValidator{}
+	return &StringValidator{
+		checks: newLenChecks[string, string, string](),
+	}
 }
 
 // Type returns the string "string"
@@ -51,36 +51,24 @@ func (v *StringValidator) Type() string {
 
 // HasLengthWhere adds a NumberValidator for validating the length of the string
 func (v *StringValidator) HasLengthWhere(nv *NumberValidator[int]) *StringValidator {
-	v.lenValidator = nv
+	v.checks.AddHasLengthWhere(nv)
 	return v
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *StringValidator) ValidateUntyped(value any) error {
+func (v *StringValidator) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
 	str, ok := value.(string)
 
 	if !ok {
 		return NewTypeError("string expected")
 	}
 
-	return v.Validate(str)
+	return v.Validate(str, options...)
 }
 
 // Validate applies all checks against a string value and returns an error if any fail
-func (v *StringValidator) Validate(str string) error {
-	if v.lenValidator != nil {
-		if err := v.lenValidator.Validate(len(str)); err != nil {
-			return err
-		}
-	}
-
-	for _, fn := range v.checks {
-		if err := fn(str); err != nil {
-			return NewValidationError(err.Error())
-		}
-	}
-
-	return nil
+func (v *StringValidator) Validate(str string, options ...*with.ValidationOptions) error {
+	return v.checks.Evaluate(str, getValidationOptions(options))
 }
 
 // Equals adds a validation check that returns an error if the target string
@@ -190,23 +178,15 @@ func (v *StringValidator) DoesNotContain(substr string) *StringValidator {
 // IsEmpty adds a validation check that returns an error if the target string is not empty
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
 func (v *StringValidator) IsEmpty() *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) != 0 {
-			return errors.New(`string must be empty`)
-		}
-		return nil
-	})
+	v.checks.AddIsEmpty()
+	return v
 }
 
 // IsNotEmpty adds a validation check that returns an error if the target string is empty
 // This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
 func (v *StringValidator) IsNotEmpty() *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) == 0 {
-			return errors.New(`string must not be empty`)
-		}
-		return nil
-	})
+	v.checks.AddIsNotEmpty()
+	return v
 }
 
 // IsOneOf adds a validation check that returns an error if the target string
@@ -248,40 +228,22 @@ func (v *StringValidator) IsNotOneOf(values []string) *StringValidator {
 // IsLongerThan adds a validation check that returns an error if the target
 // string length is less than or equal to the specified value
 func (v *StringValidator) IsLongerThan(l int) *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) <= l {
-			return errors.New(
-				fmt.Sprintf(`string length must be greater than %d`, l),
-			)
-		}
-		return nil
-	})
+	v.checks.AddIsLongerThan(l)
+	return v
 }
 
 // IsShorterThan adds a validation check that returns an error if the target
 // string length is greater than or equal to the specified value
 func (v *StringValidator) IsShorterThan(l int) *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) >= l {
-			return errors.New(
-				fmt.Sprintf(`string length must be less than %d`, l),
-			)
-		}
-		return nil
-	})
+	v.checks.AddIsShorterThan(l)
+	return v
 }
 
 // HasLength adds a check that returns an error if the length of the string does not equal the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
 func (v *StringValidator) HasLength(l int) *StringValidator {
-	return v.Is(func(str string) error {
-		if len(str) != l {
-			return errors.New(
-				fmt.Sprintf(`string must have a length of exactly %d`, l),
-			)
-		}
-		return nil
-	})
+	v.checks.AddHasLength(l)
+	return v
 }
 
 // Matches adds a validation check that returns an error if the target
@@ -301,7 +263,9 @@ func (v *StringValidator) Matches(pattern string) *StringValidator {
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *StringValidator) Is(fn strCheckFunc) *StringValidator {
-	v.checks = append(v.checks, fn)
+func (v *StringValidator) Is(fn func(string) error) *StringValidator {
+	v.checks.Append(func(val string, _ *with.ValidationOptions) error {
+		return fn(val)
+	})
 	return v
 }

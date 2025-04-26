@@ -193,6 +193,65 @@ func TestMapValidator_EachValue(t *testing.T) {
 	testCases.run(t, validMap, "EachValue()")
 }
 
+func TestMapValidator_Is(t *testing.T) {
+	testCases := mapTestCases[string, int]{
+		"one good": {
+			vals: map[string]int{
+				"abcd": 4,
+			},
+			willPass: true,
+		},
+		"all good": {
+			vals: map[string]int{
+				"abc":  3,
+				"wxyz": 4,
+			},
+			willPass: true,
+		},
+		"one bad": {
+			vals: map[string]int{
+				"abc": 4,
+				"a":   1,
+			},
+			willPass: false,
+		},
+	}
+
+	validMap := ensure.Map[string, int]().Is(func(m map[string]int) error {
+		for k, v := range m {
+			if len(k) != v {
+				return fmt.Errorf("key length (%d) must equal value (%d)", len(k), v)
+			}
+		}
+
+		return nil
+	})
+
+	testCases.run(t, validMap, "Is()")
+}
+
+func TestMapValidator_MultiError(t *testing.T) {
+	type exampleMap = map[string]int
+
+	mapTestCases := multiErrTestCases[exampleMap]{
+		"empty": {exampleMap{}, 1},                               // fails not empty
+		"one":   {exampleMap{"one": 1}, 0},                       // fails none
+		"two":   {exampleMap{"one": 1, "two": 2}, 1},             // fails odd
+		"three": {exampleMap{"one": 1, "two": 2, "three": 3}, 3}, // fails fewer than 3, str length 3, odd
+		"four":  {exampleMap{"four": 4}, 2},                      // fails str length 3, odd
+	}
+
+	mapTestCases.run(t,
+		ensure.Map[string, int]().IsNotEmpty().HasLengthWhere(
+			ensure.Length().IsLessThan(3),
+		).EachKey(
+			ensure.String().HasLength(3),
+		).EachValue(
+			ensure.Number[int]().IsOdd(),
+		),
+	)
+}
+
 func TestMapValidator_Validate(t *testing.T) {
 	// see util_test.go
 	runDefaultValidatorTestCases(t, ensure.Map[string, int]())
