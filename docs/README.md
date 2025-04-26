@@ -27,47 +27,24 @@ which enables compile-time type checking and is both safer and more performant,
 but the `ValidateUntyped` method is there when you need it (such as when reflection
 is involved).  All validators in this library implement both interfaces.
 
-## Construction Errors
+## Validation options
 
-Validation objects are intended to be constructed infrequently, typically once 
-at startup, then used many times, basically for the life of the program.  It's 
-generally helpful to consider validators to be statically compiled constants
-rather than variables to be mutated dynamically.  This is not a hard rule, and
-there are certainly some valid use cases for dynamic construction, but be aware
-that validator builder methods will panic if used incorrectly, so be prepared to 
-`recover()` if you decide to instantiate validators dynamically outside of program
-initialization.
-
-We panic rather than return an error because an invalid validator is a risk to
-the security and integrity of your application, and using "soft" errors runs the
-risk of enabling a situation where the application may be running with validation
-that is incomplete or otherwise working differently than intended.  If the 
-validation cannot pass its own sanity checks, the app should be considered too 
-unsafe to run.
-
-Most initialization errors can be caught by the compiler, such as mixing types
-(`Number[int]().IsLessThan(10.0)`), passing the wrong validator type to 
-another validator (`Any[int](String())`), or attempting to call 
-an invalid method (`String().IsGreaterThan()`), but there are some cases where
-correctness has to be checked during validator composition.  For example:
+Most of the time, default validation behavior is sufficient.  Sometimes, however,
+you may want to have more control over how the validations run, especially for
+complex validation trees.  You can pass validation options at validation time
+by adding them to the `Validate()` call.
 
 ```go
-type MyStruct {
-    Foo int64
-    Bar string
-}
-
-validStruct := ensure.Struct[MyStruct]().HasFields(with.Validators{
-    // This will panic because the declared type doesn't match the actual field type
-    "Foo": ensure.Number[int](),
-    
-    // This will panic because the name of the field is wrong
-    "Baz": ensure.String(),
-})
+validator.Validate(value, with.Options(...))
 ```
 
-In all cases, panics are used to indicate unrecoverable conditions that arise 
-solely due to invalid configurations.
+Currently, the only available option is `OptionCollectAllErrors()`.  The default
+behavior is to stop processing validation checks as soon as the first error is 
+encountered and return that immediately.  The `OptionCollectAllErrors()` option 
+changes validation so that it instead collects all validation errors and returns
+them together in a `ValidationErrors` struct.  You can read more about this option
+and the `ValidationErrors` error type in the [errors](./errors.md) documentation.
+
 
 ## Pointers
 
