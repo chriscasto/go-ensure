@@ -119,8 +119,8 @@ func (v *ValidationErrors) HasTypeErrors() bool {
 	return len(v.tErrs) > 0
 }
 
-// GetTypeErrors returns all collected TypeErrors
-func (v *ValidationErrors) GetTypeErrors() []*TypeError {
+// TypeErrors returns all collected TypeErrors
+func (v *ValidationErrors) TypeErrors() []*TypeError {
 	return v.tErrs
 }
 
@@ -129,8 +129,8 @@ func (v *ValidationErrors) HasValidationErrors() bool {
 	return len(v.vErrs) > 0
 }
 
-// GetValidationErrors returns all collected ValidationErrors
-func (v *ValidationErrors) GetValidationErrors() []*ValidationError {
+// ValidationErrors returns all collected ValidationErrors
+func (v *ValidationErrors) ValidationErrors() []*ValidationError {
 	return v.vErrs
 }
 
@@ -145,7 +145,7 @@ func (v *ValidationErrors) Error() string {
 	// We don't want to return the actual type error since this may expose internal information
 	if len(v.tErrs) > 0 {
 		// Print a generic message to avoid leaking validation details to the user in case of improper error handling
-		// If you want the actual message(s), use HasTypeErrors() and GetTypeErrors()
+		// If you want the actual message(s), use HasTypeErrors() and TypeErrors()
 		return fmt.Sprintf("there were %d type errors", len(v.tErrs))
 	}
 

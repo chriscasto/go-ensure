@@ -136,13 +136,13 @@ func TestValidationErrors_Extend(t *testing.T) {
 		t.Errorf(`expected validation errors; got none`)
 	}
 
-	tErrs := vErr1.GetTypeErrors()
+	tErrs := vErr1.TypeErrors()
 
 	if len(tErrs) != 2 {
 		t.Errorf(`expected type errors to have length 2; got "%d"`, len(tErrs))
 	}
 
-	vErrs := vErr1.GetValidationErrors()
+	vErrs := vErr1.ValidationErrors()
 
 	if len(vErrs) != 4 {
 		t.Errorf(`expected validation errors to have length 4; got "%d"`, len(tErrs))
@@ -155,7 +155,7 @@ func TestValidationErrors_GetTypeErrors(t *testing.T) {
 		msg := "type error"
 		vErrs.Append(ensure.NewTypeError(msg))
 
-		tErrs := vErrs.GetTypeErrors()
+		tErrs := vErrs.TypeErrors()
 
 		if len(tErrs) != 1 {
 			t.Errorf(`expected type errors to have length 1; got "%d"`, len(tErrs))

@@ -127,7 +127,7 @@ func (tcs multiErrTestCases[T]) run(t *testing.T, sv with.Validator[T]) {
 					if vErrs == nil {
 						t.Errorf(`expected validation errors but got unexpected error type`)
 					} else {
-						errList := vErrs.GetValidationErrors()
+						errList := vErrs.ValidationErrors()
 
 						if len(errList) != tc.expectedErrCount {
 							t.Errorf(`expected %d errors but got %d`, tc.expectedErrCount, len(errList))
