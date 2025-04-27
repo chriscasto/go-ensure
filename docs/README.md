@@ -170,14 +170,14 @@ ensure.Array[int]().HasLengthWhere(ensure.Length().IsGreaterThan(0))
 ```
 
 
-## The `Is` method
+## The `Is`/`Has` methods
 
 While every effort has been made to provide a comprehensive set of validations
 for the broadest set of types and values possible, there are some validation
 rules that defy simple boolean logic.  In these cases where combining multiple
-rules still isn't enough to get the desired results, the `Is()` method can be
-used to provide a function with arbitrary logic that will be evaluated the same
-as any other rule.
+rules still isn't enough to get the desired results, the `Is()` method (and its
+alias, `Has()`) can be used to provide a function with arbitrary logic that will
+be evaluated the same as any other rule.
 
 Consider a situation where we want to make sure that an expiration date is not 
 a time in the past and is less than 90 days in the future.  Here's one way you 
