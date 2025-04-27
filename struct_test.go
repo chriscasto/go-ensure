@@ -715,6 +715,14 @@ func TestStructValidator_Is(t *testing.T) {
 		}),
 		"Is()",
 	)
+
+	testCases.run(
+		t,
+		ensure.Struct[Example]().HasFields(with.Validators{
+			"Date": ensure.Struct[time.Time]().Has(notOlderThanSixtyDays),
+		}),
+		"Has()",
+	)
 }
 
 func TestStructValidator_MultiError(t *testing.T) {

@@ -96,3 +96,9 @@ func (v *ArrayValidator[T]) Is(fn func([]T) error) *ArrayValidator[T] {
 	})
 	return v
 }
+
+// Has adds the provided function as a check against any values to be validated
+// Has is an alias for Is
+func (v *ArrayValidator[T]) Has(fn func([]T) error) *ArrayValidator[T] {
+	return v.Is(fn)
+}

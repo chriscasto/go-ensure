@@ -1,6 +1,7 @@
 package ensure_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/chriscasto/go-ensure"
 	"github.com/chriscasto/go-ensure/with"
@@ -435,6 +436,33 @@ func TestStringValidator_IsNotOneOf(t *testing.T) {
 		t,
 		ensure.String().IsNotOneOf(forbidden),
 		fmt.Sprintf(`IsNotOneOf(%v)`, forbidden),
+	)
+}
+
+func TestStringValidator_Has(t *testing.T) {
+	testCases := strTestCases{
+		"just one a": {"a", true},
+		"more":       {"aaaaaaaaaaaaaaaa", true},
+		"abc":        {"abc", false},
+		"all vowels": {"aeiou", true},
+	}
+
+	onlyVowels := func(str string) error {
+		for _, char := range str {
+			switch char {
+			case 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U':
+				continue
+			default:
+				return errors.New("string must only contain vowels")
+			}
+		}
+		return nil
+	}
+
+	testCases.run(
+		t,
+		ensure.String().Has(onlyVowels),
+		`Has()`,
 	)
 }
 

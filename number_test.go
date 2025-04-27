@@ -1,6 +1,7 @@
 package ensure_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/chriscasto/go-ensure"
 	"github.com/chriscasto/go-ensure/with"
@@ -416,6 +417,29 @@ func TestNumberValidator_IsNotOneOf(t *testing.T) {
 		t,
 		ensure.Number[int]().IsNotOneOf(arr),
 		fmt.Sprintf("IsNotOneOf(%v)", arr),
+	)
+}
+
+func TestNumberValidator_Has(t *testing.T) {
+	target := 5
+
+	testCases := numTestCases[int]{
+		"less than":    {target - 1, false},
+		"equal to":     {target, false},
+		"greater than": {target + 1, true},
+	}
+
+	moreThanFive := func(val int) error {
+		if val <= 5 {
+			return errors.New("value must be more than five")
+		}
+		return nil
+	}
+
+	testCases.run(
+		t,
+		ensure.Number[int]().Has(moreThanFive),
+		"Has()",
 	)
 }
 

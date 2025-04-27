@@ -105,3 +105,9 @@ func (mv *MapValidator[K, V]) Is(fn func(map[K]V) error) *MapValidator[K, V] {
 	})
 	return mv
 }
+
+// Has adds the provided function as a check against any values to be validated
+// Has is an alias for Is
+func (mv *MapValidator[K, V]) Has(fn func(map[K]V) error) *MapValidator[K, V] {
+	return mv.Is(fn)
+}

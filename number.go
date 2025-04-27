@@ -346,3 +346,9 @@ func (v *NumberValidator[T]) Is(fn func(T) error) *NumberValidator[T] {
 	})
 	return v
 }
+
+// Has adds the provided function as a check against any values to be validated
+// Has is an alias for Is
+func (v *NumberValidator[T]) Has(fn func(T) error) *NumberValidator[T] {
+	return v.Is(fn)
+}
