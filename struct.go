@@ -61,6 +61,12 @@ func (sv *StructValidator[T]) Is(fn func(T) error) *StructValidator[T] {
 	return sv
 }
 
+// Has adds the provided function as a check against any values to be validated
+// Has is an alias for Is
+func (sv *StructValidator[T]) Has(fn func(T) error) *StructValidator[T] {
+	return sv.Is(fn)
+}
+
 // HasFields accepts a map of named fields and their validators to evaluate against a struct during validation
 // It also accepts an optional map of field names to display names to use when printing error messages
 func (sv *StructValidator[T]) HasFields(validators with.Validators, displayNames ...with.DisplayNames) *StructValidator[T] {

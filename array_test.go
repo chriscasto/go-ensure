@@ -161,20 +161,28 @@ func TestArrayValidator_Is(t *testing.T) {
 		"two threes": {[]int{3, 6}, false},
 	}
 
+	increasingSequence := func(ints []int) error {
+		l := len(ints)
+
+		for i, n := range ints {
+			if (i+1)*l != n {
+				return fmt.Errorf("value (%d) must be an increasing increment of array length (%d)", n, l)
+			}
+		}
+
+		return nil
+	}
+
 	testCases.run(
 		t,
-		ensure.Array[int]().Is(func(ints []int) error {
-			l := len(ints)
-
-			for i, n := range ints {
-				if (i+1)*l != n {
-					return fmt.Errorf("value (%d) must be an increasing increment of array length (%d)", n, l)
-				}
-			}
-
-			return nil
-		}),
+		ensure.Array[int]().Is(increasingSequence),
 		"Is()",
+	)
+
+	testCases.run(
+		t,
+		ensure.Array[int]().Has(increasingSequence),
+		"Has()",
 	)
 }
 

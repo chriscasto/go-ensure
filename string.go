@@ -269,3 +269,9 @@ func (v *StringValidator) Is(fn func(string) error) *StringValidator {
 	})
 	return v
 }
+
+// Has adds the provided function as a check against any values to be validated
+// Has is an alias for Is
+func (v *StringValidator) Has(fn func(string) error) *StringValidator {
+	return v.Is(fn)
+}

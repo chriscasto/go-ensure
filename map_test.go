@@ -217,7 +217,7 @@ func TestMapValidator_Is(t *testing.T) {
 		},
 	}
 
-	validMap := ensure.Map[string, int]().Is(func(m map[string]int) error {
+	equalKeys := func(m map[string]int) error {
 		for k, v := range m {
 			if len(k) != v {
 				return fmt.Errorf("key length (%d) must equal value (%d)", len(k), v)
@@ -225,9 +225,10 @@ func TestMapValidator_Is(t *testing.T) {
 		}
 
 		return nil
-	})
+	}
 
-	testCases.run(t, validMap, "Is()")
+	testCases.run(t, ensure.Map[string, int]().Is(equalKeys), "Is()")
+	testCases.run(t, ensure.Map[string, int]().Has(equalKeys), "Has()")
 }
 
 func TestMapValidator_MultiError(t *testing.T) {
