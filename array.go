@@ -191,3 +191,47 @@ func (cv *ComparableArrayValidator[T]) ContainsNoDuplicates() *ComparableArrayVa
 	})
 	return cv
 }
+
+// ContainsAnyOf causes a validation error if at least one of the provided values is not in the array
+func (cv *ComparableArrayValidator[T]) ContainsAnyOf(items []T) *ComparableArrayValidator[T] {
+	expect := map[T]bool{}
+
+	for _, item := range items {
+		expect[item] = true
+	}
+
+	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+		for _, v := range val {
+			_, ok := expect[v]
+
+			if ok {
+				return nil
+			}
+		}
+
+		return fmt.Errorf(`array must contain one of the expected values`)
+	})
+	return cv
+}
+
+// DoesNotContainAnyOf causes a validation error if at least one of the provided values is in the array
+func (cv *ComparableArrayValidator[T]) DoesNotContainAnyOf(items []T) *ComparableArrayValidator[T] {
+	expect := map[T]bool{}
+
+	for _, item := range items {
+		expect[item] = true
+	}
+
+	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+		for _, v := range val {
+			_, ok := expect[v]
+
+			if ok {
+				return fmt.Errorf(`array must not contain any prohibited values`)
+			}
+		}
+
+		return nil
+	})
+	return cv
+}

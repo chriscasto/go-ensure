@@ -237,6 +237,40 @@ func TestComparableArrayValidator_ContainsOnly(t *testing.T) {
 	)
 }
 
+func TestComparableArrayValidator_ContainsAnyOf(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":    {[]int{}, false},
+		"one":      {[]int{1}, false},
+		"one two":  {[]int{1, 2}, true},
+		"two four": {[]int{2, 4}, true},
+		"just two": {[]int{2}, true},
+		"threes":   {[]int{3, 6, 9}, true},
+	}
+
+	testCases.run(
+		t,
+		ensure.ComparableArray[int]().ContainsAnyOf([]int{2, 3}),
+		"ContainsAnyOf()",
+	)
+}
+
+func TestComparableArrayValidator_DoesNotContainAnyOf(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":    {[]int{}, true},
+		"one":      {[]int{1}, true},
+		"one two":  {[]int{1, 2}, false},
+		"two four": {[]int{2, 4}, false},
+		"just two": {[]int{2}, false},
+		"threes":   {[]int{3, 6, 9}, false},
+	}
+
+	testCases.run(
+		t,
+		ensure.ComparableArray[int]().DoesNotContainAnyOf([]int{2, 3}),
+		"DoesNotContainAnyOf()",
+	)
+}
+
 func TestComparableArrayValidator_ContainsNoDuplicates(t *testing.T) {
 	testCases := arrayTestCases[int]{
 		"empty":       {[]int{}, true},
