@@ -2,7 +2,7 @@ package with
 
 import "errors"
 
-const defaultAnyValidatorError = "none of the required validators passed"
+const DefaultAnyValidatorError = "none of the required validators passed"
 
 // AnyOptions are a set of options that apply to a specific Any validator
 type AnyOptions struct {
@@ -12,7 +12,7 @@ type AnyOptions struct {
 
 func DefaultAnyOptions() *AnyOptions {
 	return &AnyOptions{
-		defaultErr: defaultAnyValidatorError,
+		defaultErr: DefaultAnyValidatorError,
 		passThru:   make(map[int]bool),
 	}
 }
