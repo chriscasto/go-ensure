@@ -12,6 +12,11 @@ type ArrayValidator[T any] struct {
 	checks  *iterChecks[int, T, []T]
 }
 
+// ComparableArrayValidator validates arrays of comparable types
+type ComparableArrayValidator[T comparable] struct {
+	ArrayValidator[T]
+}
+
 // Array constructs an ArrayValidator instance of type T and returns a pointer to it
 func Array[T any]() *ArrayValidator[T] {
 	var zero T
@@ -24,81 +29,123 @@ func Array[T any]() *ArrayValidator[T] {
 	}
 }
 
+// ComparableArray constructs a ComparableArrayValidator instance of type T and returns a pointer to it
+func ComparableArray[T comparable]() *ComparableArrayValidator[T] {
+	var zero T
+
+	typeStr := fmt.Sprintf("[]%s", reflect.TypeOf(zero).String())
+
+	return &ComparableArrayValidator[T]{
+		ArrayValidator[T]{
+			typeStr: typeStr,
+			checks:  newArrIterChecks[T](),
+		},
+	}
+}
+
 // Type returns a string with the type of array this validator expects
-func (v *ArrayValidator[T]) Type() string {
-	return v.typeStr
+func (av *ArrayValidator[T]) Type() string {
+	return av.typeStr
 }
 
 // HasLengthWhere adds a NumberValidator for validating the length of the array
-func (v *ArrayValidator[T]) HasLengthWhere(nv *NumberValidator[int]) *ArrayValidator[T] {
-	v.checks.AddHasLengthWhere(nv)
-	return v
+func (av *ArrayValidator[T]) HasLengthWhere(nv *NumberValidator[int]) *ArrayValidator[T] {
+	av.checks.AddHasLengthWhere(nv)
+	return av
 }
 
 // IsEmpty adds a check that returns an error if the length of the array is not 0
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(0))
-func (v *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
-	v.checks.AddIsEmpty()
-	return v
+func (av *ArrayValidator[T]) IsEmpty() *ArrayValidator[T] {
+	av.checks.AddIsEmpty()
+	return av
 }
 
 // IsNotEmpty adds a check that returns an error if the length of the array is
 // This is a convenience function that is equivalent to HasLengthWhere(Length().DoesNotEqual(0))
-func (v *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
-	v.checks.AddIsNotEmpty()
-	return v
+func (av *ArrayValidator[T]) IsNotEmpty() *ArrayValidator[T] {
+	av.checks.AddIsNotEmpty()
+	return av
 }
 
 // HasCount adds a check that returns an error if the length of the array does not equal the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().Equals(l))
-func (v *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
-	v.checks.AddHasLength(l)
-	return v
+func (av *ArrayValidator[T]) HasCount(l int) *ArrayValidator[T] {
+	av.checks.AddHasLength(l)
+	return av
 }
 
 // HasMoreThan adds a check that returns an error if the length of the array is less than the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().IsGreaterThan(l))
-func (v *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
-	v.checks.AddIsLongerThan(l)
-	return v
+func (av *ArrayValidator[T]) HasMoreThan(l int) *ArrayValidator[T] {
+	av.checks.AddIsLongerThan(l)
+	return av
 }
 
 // HasFewerThan adds a check that returns an error if the length of the array is more than the provided value
 // This is a convenience function that is equivalent to HasLengthWhere(Length().IsLessThan(l))
-func (v *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
-	v.checks.AddIsShorterThan(l)
-	return v
+func (av *ArrayValidator[T]) HasFewerThan(l int) *ArrayValidator[T] {
+	av.checks.AddIsShorterThan(l)
+	return av
 }
 
 // Each assigns a Validator to be used for validating array values
-func (v *ArrayValidator[T]) Each(ev with.Validator[T]) *ArrayValidator[T] {
-	v.checks.AddIterValValidator(ev)
-	return v
+func (av *ArrayValidator[T]) Each(ev with.Validator[T]) *ArrayValidator[T] {
+	av.checks.AddIterValValidator(ev)
+	return av
 }
 
 // ValidateUntyped accepts an arbitrary input type and validates it if it's a match for the expected type
-func (v *ArrayValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
-	if err := testType(value, v.typeStr); err != nil {
+func (av *ArrayValidator[T]) ValidateUntyped(value any, options ...*with.ValidationOptions) error {
+	if err := testType(value, av.typeStr); err != nil {
 		return err
 	}
-	return v.Validate(value.([]T), options...)
+	return av.Validate(value.([]T), options...)
 }
 
 // Validate applies all checks against an array and returns an error if any fail
-func (v *ArrayValidator[T]) Validate(arr []T, options ...*with.ValidationOptions) error {
-	return v.checks.Evaluate(arr, getValidationOptions(options))
+func (av *ArrayValidator[T]) Validate(arr []T, options ...*with.ValidationOptions) error {
+	return av.checks.Evaluate(arr, getValidationOptions(options))
 }
 
 // Is adds the provided function as a check against any values to be validated
-func (v *ArrayValidator[T]) Is(fn func([]T) error) *ArrayValidator[T] {
-	v.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+func (av *ArrayValidator[T]) Is(fn func([]T) error) *ArrayValidator[T] {
+	av.checks.Append(func(val []T, _ *with.ValidationOptions) error {
 		return fn(val)
 	})
-	return v
+	return av
 }
 
 // Has adds the provided function as a check against any values to be validated
 // Has is an alias for Is
-func (v *ArrayValidator[T]) Has(fn func([]T) error) *ArrayValidator[T] {
-	return v.Is(fn)
+func (av *ArrayValidator[T]) Has(fn func([]T) error) *ArrayValidator[T] {
+	return av.Is(fn)
+}
+
+// Contains causes a validation error if the provided value is not in the array
+func (cv *ComparableArrayValidator[T]) Contains(item T) *ComparableArrayValidator[T] {
+	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+		for _, v := range val {
+			if v == item {
+				return nil
+			}
+		}
+
+		return fmt.Errorf(`array must contain value "%v"`, item)
+	})
+	return cv
+}
+
+// DoesNotContain causes a validation error if the provided value is not in the array
+func (cv *ComparableArrayValidator[T]) DoesNotContain(item T) *ComparableArrayValidator[T] {
+	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+		for _, v := range val {
+			if v == item {
+				return fmt.Errorf(`array must not contain value "%v"`, item)
+			}
+		}
+
+		return nil
+	})
+	return cv
 }

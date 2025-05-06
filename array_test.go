@@ -29,7 +29,7 @@ func testArrayType[T any](t *testing.T, name string, expect string) {
 
 type arrayTestCases[T any] map[string]arrayTestCase[T]
 
-func (tcs arrayTestCases[T]) run(t *testing.T, av *ensure.ArrayValidator[T], method string) {
+func (tcs arrayTestCases[T]) run(t *testing.T, av with.Validator[[]T], method string) {
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
 			err := av.Validate(tc.vals)
@@ -183,6 +183,40 @@ func TestArrayValidator_Is(t *testing.T) {
 		t,
 		ensure.Array[int]().Has(increasingSequence),
 		"Has()",
+	)
+}
+
+func TestComparableArrayValidator_Contains(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":    {[]int{}, false},
+		"one":      {[]int{1}, false},
+		"one two":  {[]int{1, 2}, true},
+		"two four": {[]int{2, 4}, true},
+		"just two": {[]int{2}, true},
+		"threes":   {[]int{3, 6, 9}, false},
+	}
+
+	testCases.run(
+		t,
+		ensure.ComparableArray[int]().Contains(2),
+		"Contains()",
+	)
+}
+
+func TestComparableArrayValidator_DoesNotContain(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":    {[]int{}, true},
+		"one":      {[]int{1}, true},
+		"one two":  {[]int{1, 2}, false},
+		"two four": {[]int{2, 4}, false},
+		"just two": {[]int{2}, false},
+		"threes":   {[]int{3, 6, 9}, true},
+	}
+
+	testCases.run(
+		t,
+		ensure.ComparableArray[int]().DoesNotContain(2),
+		"DoesNotContain()",
 	)
 }
 
