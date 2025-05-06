@@ -9,7 +9,7 @@ func TestAnyOptions_DefaultError(t *testing.T) {
 	opts := with.DefaultAnyOptions()
 	orig := opts.DefaultError()
 
-	if orig.Error() != with.DefaultAnyValidatorError {
+	if orig.Error() != with.DefaultAnyValidatorErrorMsg {
 		t.Errorf("expected default any error message, got %s", orig.Error())
 	}
 
