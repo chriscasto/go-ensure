@@ -9,8 +9,30 @@ import (
 
 // TestAnyValidator_IsValidator checks to make sure the AnyValidator implements the Validator interfaces
 func TestAnyValidator_IsValidator(t *testing.T) {
-	var _ with.UntypedValidator = ensure.Any[string]()
-	var _ with.Validator[string] = ensure.Any[string]()
+	var _ with.UntypedValidator = ensure.Any[string](ensure.String())
+	var _ with.Validator[string] = ensure.Any[string](ensure.String())
+}
+
+func TestAnyValidator_Construct(t *testing.T) {
+	t.Run("not struct", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("The code did not panic")
+			}
+		}()
+
+		constructBad := func(str string) error {
+			bad := ensure.Any[string]()
+			if err := bad.Validate(str); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		if err := constructBad("test"); err != nil {
+			t.Errorf("validation occured and generated an error: %s", err.Error())
+		}
+	})
 }
 
 // TestAnyValidator_Type checks to make sure the AnyValidator returns the correct type
@@ -20,23 +42,23 @@ func TestAnyValidator_Type(t *testing.T) {
 		t         string
 	}{
 		"string": {
-			ensure.Any[string](),
+			ensure.Any[string](ensure.String()),
 			"string",
 		},
 		"int": {
-			ensure.Any[int](),
+			ensure.Any[int](ensure.Number[int]()),
 			"int",
 		},
 		"struct": {
-			ensure.Any[testStruct](),
+			ensure.Any[testStruct](ensure.Struct[testStruct]()),
 			"ensure_test.testStruct",
 		},
 		"array of int": {
-			ensure.Any[[]int](),
+			ensure.Any[[]int](ensure.Array[int]()),
 			"[]int",
 		},
 		"string pointer": {
-			ensure.Any[*string](),
+			ensure.Any[*string](ensure.Pointer[string](ensure.String())),
 			"*string",
 		},
 	}
