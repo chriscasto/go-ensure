@@ -149,3 +149,24 @@ func (cv *ComparableArrayValidator[T]) DoesNotContain(item T) *ComparableArrayVa
 	})
 	return cv
 }
+
+// ContainsOnly causes a validation error if the array contains any value not in the provided list
+func (cv *ComparableArrayValidator[T]) ContainsOnly(items []T) *ComparableArrayValidator[T] {
+	allow := map[T]bool{}
+
+	for _, item := range items {
+		allow[item] = true
+	}
+
+	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+		for _, v := range val {
+			_, ok := allow[v]
+			if !ok {
+				return fmt.Errorf(`array must contain only allowed values; value "%v" not allowed`, v)
+			}
+		}
+
+		return nil
+	})
+	return cv
+}

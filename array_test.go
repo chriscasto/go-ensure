@@ -220,6 +220,23 @@ func TestComparableArrayValidator_DoesNotContain(t *testing.T) {
 	)
 }
 
+func TestComparableArrayValidator_ContainsOnly(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":    {[]int{}, true},
+		"one":      {[]int{1}, true},
+		"one two":  {[]int{1, 2}, true},
+		"two four": {[]int{2, 4}, false},
+		"just two": {[]int{2}, true},
+		"threes":   {[]int{3, 6, 9}, false},
+	}
+
+	testCases.run(
+		t,
+		ensure.ComparableArray[int]().ContainsOnly([]int{1, 2}),
+		"ContainsOnly()",
+	)
+}
+
 func TestArrayValidator_MultiError(t *testing.T) {
 	type exampleArr = []int
 
