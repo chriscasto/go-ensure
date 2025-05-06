@@ -15,6 +15,10 @@ type AnyValidator[T any] struct {
 func Any[T any](validators ...with.Validator[T]) *AnyValidator[T] {
 	var zero T
 
+	if len(validators) == 0 {
+		panic("at least one validator must be provided")
+	}
+
 	typeStr := reflect.ValueOf(zero).Type().String()
 
 	return &AnyValidator[T]{
