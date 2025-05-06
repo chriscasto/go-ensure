@@ -3,6 +3,7 @@ package ensure_test
 import (
 	"github.com/chriscasto/go-ensure"
 	"github.com/chriscasto/go-ensure/with"
+	"strings"
 	"testing"
 )
 
@@ -62,6 +63,82 @@ func TestAnyValidator_WithError(t *testing.T) {
 		if err.Error() != errMsg {
 			t.Errorf(`unexpected error: expected "%s", got "%s"`, errMsg, err)
 		}
+	}
+}
+
+func TestAnyValidator_WithOptions_DefaultError(t *testing.T) {
+	errMsg := "an error occurred"
+
+	anyValid := ensure.Any[string](
+		ensure.String().Equals("123"),
+	).WithOptions(with.AnyOptionDefaultError(errMsg))
+
+	if err := anyValid.Validate("abc"); err != nil {
+		if err.Error() != errMsg {
+			t.Errorf(`unexpected error: expected "%s", got "%s"`, errMsg, err)
+		}
+	}
+}
+
+func TestAnyValidator_WithOptions_PassThroughErrorsFrom(t *testing.T) {
+	type anyTestStruct struct {
+		Ignore bool
+		Name   string
+	}
+
+	anyValid := ensure.Any[anyTestStruct](
+		// If "Ignore" is true, consider that to be valid
+		ensure.Struct[anyTestStruct]().HasFields(with.Validators{
+			"Ignore": ensure.Bool().IsTrue(),
+		}),
+		// Otherwise, consider it valid if name is not empty and only contains alpha characters
+		ensure.Struct[anyTestStruct]().HasFields(with.Validators{
+			//"Ignore": ensure.Bool().IsFalse(),
+			"Name": ensure.String().IsNotEmpty().Matches(ensure.Alpha),
+		}),
+	).WithOptions(
+		// If validation fails, use the error(s) from the validator at index 1
+		with.AnyOptionPassThroughErrorsFrom(1),
+	)
+
+	testCases := map[string]struct {
+		val      anyTestStruct
+		willPass bool
+	}{
+		"ignore": {
+			val: anyTestStruct{
+				Ignore: true,
+			},
+			willPass: true,
+		},
+		"valid name": {
+			val: anyTestStruct{
+				Name: "Alice",
+			},
+			willPass: true,
+		},
+		"invalid name": {
+			val: anyTestStruct{
+				Name: "Johnny 5",
+			},
+			willPass: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := anyValid.Validate(tc.val)
+
+			if err != nil {
+				if tc.willPass {
+					t.Errorf(`expected no error, got "%s"`, err.Error())
+				} else if !strings.Contains(err.Error(), "string") {
+					t.Errorf(`expected error containing "string", got "%s"`, err.Error())
+				}
+			} else if err == nil && !tc.willPass {
+				t.Errorf(`expected error, got none`)
+			}
+		})
 	}
 }
 
@@ -136,6 +213,9 @@ func TestAnyValidator_MultiError(t *testing.T) {
 	intTestCases.run(t,
 		ensure.Any[int](
 			ensure.Number[int]().IsOdd().IsGreaterThan(1).IsLessThan(6).Equals(5),
+		).WithOptions(
+			// If validation fails, use the error(s) from the first number validator
+			with.AnyOptionPassThroughErrorsFrom(0),
 		),
 	)
 }
