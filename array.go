@@ -161,9 +161,30 @@ func (cv *ComparableArrayValidator[T]) ContainsOnly(items []T) *ComparableArrayV
 	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
 		for _, v := range val {
 			_, ok := allow[v]
+
 			if !ok {
 				return fmt.Errorf(`array must contain only allowed values; value "%v" not allowed`, v)
 			}
+		}
+
+		return nil
+	})
+	return cv
+}
+
+// ContainsNoDuplicates causes a validation error if the array contains any duplicates
+func (cv *ComparableArrayValidator[T]) ContainsNoDuplicates() *ComparableArrayValidator[T] {
+	cv.checks.Append(func(val []T, _ *with.ValidationOptions) error {
+		found := map[T]bool{}
+
+		for _, v := range val {
+			_, ok := found[v]
+
+			if ok {
+				return fmt.Errorf(`array must not contain duplicate values; value "%v" is repeated`, v)
+			}
+
+			found[v] = true
 		}
 
 		return nil

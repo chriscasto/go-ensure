@@ -237,6 +237,22 @@ func TestComparableArrayValidator_ContainsOnly(t *testing.T) {
 	)
 }
 
+func TestComparableArrayValidator_ContainsNoDuplicates(t *testing.T) {
+	testCases := arrayTestCases[int]{
+		"empty":       {[]int{}, true},
+		"one":         {[]int{1}, true},
+		"one two":     {[]int{1, 2}, true},
+		"repeat one":  {[]int{1, 2, 1}, false},
+		"just threes": {[]int{3, 3, 3, 3}, false},
+	}
+
+	testCases.run(
+		t,
+		ensure.ComparableArray[int]().ContainsNoDuplicates(),
+		"ContainsNoDuplicates()",
+	)
+}
+
 func TestArrayValidator_MultiError(t *testing.T) {
 	type exampleArr = []int
 
