@@ -34,3 +34,38 @@ validator := ensure.Array[string]().Each(
 | HasLengthWhere(v)    | Adds a number validator that evaluates against the length of the array    |
 | Each(v)              | Passes if the provided validator passes for each element in the array     |
 | Is(func ([]T) error) | Passes if the function passed does not produce an error during validation |
+
+# Comparable Arrays
+
+There is a subtype of array validator that can apply additional checks on 
+`comparable` types.  It has all the methods available on the array validator,
+with the addition of some that can only be used on types that support equality
+operations.
+
+```go
+validStr := ensure.ComparableArray[string]().Contains("one")
+
+// no error
+validStr.Validate([]string{
+    "three", 
+    "two",
+    "one",
+    "zero",
+})
+
+// this returns an error
+validStr.Validate([]string{
+    "foo",
+    "bar",
+    "baz",
+})
+```
+
+| Method                    | Description                                                            |
+|---------------------------|------------------------------------------------------------------------|
+| Contains(T)               | Passes if tested array contains the passed value                       |
+| DoesNotContain(T)         | Passes if tested array does not contain the passed value               |
+| ContainsAnyOf(...T)       | Passes if tested array contains any of the passed values               |
+| DoesNotContainAnyOf(...T) | Passes if tested array does not contain any of the passed values       |
+| ContainsNoDuplicates()    | Passes if tested array does not contain any duplicate values           |
+| ContainsOnly(...T)        | Passes if the values in the array are exclusively from the passed list |
