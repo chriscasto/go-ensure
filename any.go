@@ -5,13 +5,10 @@ import (
 	"reflect"
 )
 
-const defaultAnyValidatorError = "none of the required validators passed"
-
 type AnyValidator[T any] struct {
 	validators []with.Validator[T]
 	t          string
-	//err        string
-	opts *with.AnyOptions
+	opts       *with.AnyOptions
 }
 
 // Any instantiates and returns an instance of AnyValidator
@@ -23,8 +20,7 @@ func Any[T any](validators ...with.Validator[T]) *AnyValidator[T] {
 	return &AnyValidator[T]{
 		validators: validators,
 		t:          typeStr,
-		//err:        defaultAnyValidatorError,
-		opts: with.DefaultAnyOptions(),
+		opts:       with.DefaultAnyOptions(),
 	}
 }
 
