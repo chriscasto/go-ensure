@@ -232,7 +232,7 @@ func TestComparableArrayValidator_ContainsOnly(t *testing.T) {
 
 	testCases.run(
 		t,
-		ensure.ComparableArray[int]().ContainsOnly([]int{1, 2}),
+		ensure.ComparableArray[int]().ContainsOnly(1, 2),
 		"ContainsOnly()",
 	)
 }
@@ -249,7 +249,7 @@ func TestComparableArrayValidator_ContainsAnyOf(t *testing.T) {
 
 	testCases.run(
 		t,
-		ensure.ComparableArray[int]().ContainsAnyOf([]int{2, 3}),
+		ensure.ComparableArray[int]().ContainsAnyOf(2, 3),
 		"ContainsAnyOf()",
 	)
 }
@@ -266,7 +266,7 @@ func TestComparableArrayValidator_DoesNotContainAnyOf(t *testing.T) {
 
 	testCases.run(
 		t,
-		ensure.ComparableArray[int]().DoesNotContainAnyOf([]int{2, 3}),
+		ensure.ComparableArray[int]().DoesNotContainAnyOf(2, 3),
 		"DoesNotContainAnyOf()",
 	)
 }

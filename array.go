@@ -151,7 +151,7 @@ func (cv *ComparableArrayValidator[T]) DoesNotContain(item T) *ComparableArrayVa
 }
 
 // ContainsOnly causes a validation error if the array contains any value not in the provided list
-func (cv *ComparableArrayValidator[T]) ContainsOnly(items []T) *ComparableArrayValidator[T] {
+func (cv *ComparableArrayValidator[T]) ContainsOnly(items ...T) *ComparableArrayValidator[T] {
 	allow := map[T]bool{}
 
 	for _, item := range items {
@@ -193,7 +193,7 @@ func (cv *ComparableArrayValidator[T]) ContainsNoDuplicates() *ComparableArrayVa
 }
 
 // ContainsAnyOf causes a validation error if at least one of the provided values is not in the array
-func (cv *ComparableArrayValidator[T]) ContainsAnyOf(items []T) *ComparableArrayValidator[T] {
+func (cv *ComparableArrayValidator[T]) ContainsAnyOf(items ...T) *ComparableArrayValidator[T] {
 	expect := map[T]bool{}
 
 	for _, item := range items {
@@ -215,7 +215,7 @@ func (cv *ComparableArrayValidator[T]) ContainsAnyOf(items []T) *ComparableArray
 }
 
 // DoesNotContainAnyOf causes a validation error if at least one of the provided values is in the array
-func (cv *ComparableArrayValidator[T]) DoesNotContainAnyOf(items []T) *ComparableArrayValidator[T] {
+func (cv *ComparableArrayValidator[T]) DoesNotContainAnyOf(items ...T) *ComparableArrayValidator[T] {
 	expect := map[T]bool{}
 
 	for _, item := range items {
