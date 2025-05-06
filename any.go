@@ -92,9 +92,9 @@ func (av *AnyValidator[T]) Validate(i T, options ...*with.ValidationOptions) err
 }
 
 // ValidateUntyped applies all validators against a value of an unknown type and returns an error if all fail
-func (av *AnyValidator[T]) ValidateUntyped(i any, _ ...*with.ValidationOptions) error {
+func (av *AnyValidator[T]) ValidateUntyped(i any, options ...*with.ValidationOptions) error {
 	for _, validator := range av.validators {
-		if err := validator.ValidateUntyped(i); err == nil {
+		if err := validator.ValidateUntyped(i, options...); err == nil {
 			// If any pass without error, consider it a success
 			return nil
 		}
