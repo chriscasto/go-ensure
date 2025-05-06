@@ -223,7 +223,24 @@ func TestAnyValidator_Validate(t *testing.T) {
 }
 
 func TestAnyValidator_MultiError(t *testing.T) {
-	intTestCases := multiErrTestCases[int]{
+	// These cases should only return a single error if we aren't passing errors through
+	intTestCases1 := multiErrTestCases[int]{
+		"zero":  {0, 1}, // fails odd, greater than 1, equals 5
+		"one":   {1, 1}, // fails greater than 1, equals 5
+		"two":   {2, 1}, // fails odd, equals 5
+		"three": {3, 1}, // fails equals 5
+		"five":  {5, 0}, // fails none
+		"six":   {6, 1}, // fails odd, less than 6, equals 5
+	}
+
+	anyValid := ensure.Any[int](
+		ensure.Number[int]().IsOdd().IsGreaterThan(1).IsLessThan(6).Equals(5),
+	)
+
+	intTestCases1.run(t, anyValid)
+
+	// The same test cases will return multiple if we do pass through
+	intTestCases2 := multiErrTestCases[int]{
 		"zero":  {0, 3}, // fails odd, greater than 1, equals 5
 		"one":   {1, 2}, // fails greater than 1, equals 5
 		"two":   {2, 2}, // fails odd, equals 5
@@ -232,12 +249,8 @@ func TestAnyValidator_MultiError(t *testing.T) {
 		"six":   {6, 3}, // fails odd, less than 6, equals 5
 	}
 
-	intTestCases.run(t,
-		ensure.Any[int](
-			ensure.Number[int]().IsOdd().IsGreaterThan(1).IsLessThan(6).Equals(5),
-		).WithOptions(
-			// If validation fails, use the error(s) from the first number validator
-			with.AnyOptionPassThroughErrorsFrom(0),
-		),
-	)
+	intTestCases2.run(t, anyValid.WithOptions(
+		// If validation fails, use the error(s) from the first number validator
+		with.AnyOptionPassThroughErrorsFrom(0),
+	))
 }
